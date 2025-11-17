@@ -45,21 +45,32 @@ export default function PersonalityBuilderPage() {
     setError('')
 
     try {
+      console.log('Reading file:', file.name)
       const text = await file.text()
-      const messages = parseWhatsAppExport(text)
+      console.log('File size:', text.length, 'characters')
 
-      if (messages.length < 10) {
-        setError('Chat export bevat te weinig berichten (minimaal 10)')
+      const messages = parseWhatsAppExport(text)
+      console.log('Parsed messages:', messages.length)
+
+      if (messages.length === 0) {
+        setError('Geen berichten gevonden. Controleer of dit een geldig WhatsApp export bestand is. Het bestand moet beginnen met een datum en tijd.')
+        console.log('First 500 chars:', text.substring(0, 500))
+        return
+      }
+
+      if (messages.length < 5) {
+        setError(`Chat export bevat te weinig berichten (${messages.length} gevonden, minimaal 5 nodig)`)
         return
       }
 
       setAllMessages(messages)
       const uniqueSenders = getUniqueSenders(messages)
+      console.log('Unique senders:', uniqueSenders)
       setSenders(uniqueSenders)
       setStep('select')
     } catch (err) {
-      setError('Fout bij het lezen van het bestand')
-      console.error(err)
+      setError('Fout bij het lezen van het bestand: ' + (err as Error).message)
+      console.error('Upload error:', err)
     }
   }
 
