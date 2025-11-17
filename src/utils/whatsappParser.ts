@@ -2,6 +2,7 @@
  * WhatsApp Export Parser
  *
  * Parses WhatsApp chat exports (.txt format)
+ * Supports multiple date/time formats from different locales
  */
 
 import { WhatsAppMessage } from '../types'
@@ -14,38 +15,79 @@ export function parseWhatsAppExport(text: string): WhatsAppMessage[] {
   const messages: WhatsAppMessage[] = []
   const lines = text.split('\n')
 
-  // Common WhatsApp patterns:
+  // Common WhatsApp patterns (supporting multiple locales):
   // [DD/MM/YYYY, HH:MM:SS] Name: Message
+  // [DD/MM/YY, HH:MM:SS] Name: Message
   // DD/MM/YYYY, HH:MM - Name: Message
   // DD-MM-YYYY HH:MM - Name: Message
+  // [M/D/YY, H:MM:SS AM/PM] Name: Message (US format)
+  // DD.MM.YY, HH:MM - Name: Message (European format)
   const patterns = [
-    /\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]\s*([^:]+):\s*(.+)/,
-    /(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*-\s*([^:]+):\s*(.+)/,
-    /(\d{1,2}-\d{1,2}-\d{2,4})\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*-\s*([^:]+):\s*(.+)/,
+    // Bracket formats
+    /\[(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)\]\s*([^:]+?):\s*(.+)/i,
+    // Non-bracket formats
+    /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)\s*[-–]\s*([^:]+?):\s*(.+)/i,
+    // Alternative format with em-dash
+    /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*[-–]\s*([^:]+?):\s*(.+)/,
   ]
+
+  let currentMessage: WhatsAppMessage | null = null
 
   for (const line of lines) {
     if (!line.trim()) continue
 
+    // Remove invisible Unicode characters (left-to-right mark, etc.)
+    const cleanedLine = line.replace(/[\u200E\u200F\u202A-\u202E]/g, '')
+
+    // Skip WhatsApp system messages (Dutch and English)
+    if (cleanedLine.includes('end-to-end versleuteld') ||
+        cleanedLine.includes('end-to-end encrypted') ||
+        cleanedLine.includes('Messages and calls are') ||
+        cleanedLine.includes('Berichten en oproepen') ||
+        cleanedLine.includes('sticker weggelaten') ||
+        cleanedLine.includes('afbeelding weggelaten') ||
+        cleanedLine.includes('video weggelaten') ||
+        cleanedLine.includes('audio weggelaten') ||
+        cleanedLine.includes('GIF weggelaten') ||
+        cleanedLine.includes('document weggelaten') ||
+        cleanedLine.includes('Media omitted') ||
+        cleanedLine.includes('image omitted') ||
+        cleanedLine.includes('sticker omitted') ||
+        cleanedLine.includes('created this group') ||
+        cleanedLine.includes('changed the subject') ||
+        cleanedLine.includes('left') ||
+        cleanedLine.includes('was added') ||
+        cleanedLine.includes('joined using this')) {
+      continue
+    }
+
     let matched = false
     for (const pattern of patterns) {
-      const match = line.match(pattern)
+      const match = cleanedLine.match(pattern)
       if (match) {
         const [, date, time, sender, content] = match
-        messages.push({
+
+        // Filter out empty content or system messages
+        if (!content.trim() || content.trim() === '<Media omitted>') {
+          matched = true
+          break
+        }
+
+        currentMessage = {
           date: date.trim(),
           time: time.trim(),
           sender: sender.trim(),
           content: content.trim(),
-        })
+        }
+        messages.push(currentMessage)
         matched = true
         break
       }
     }
 
     // If not matched, it might be a continuation of previous message
-    if (!matched && messages.length > 0) {
-      messages[messages.length - 1].content += '\n' + line
+    if (!matched && currentMessage) {
+      currentMessage.content += '\n' + cleanedLine.trim()
     }
   }
 
@@ -57,7 +99,7 @@ export function parseWhatsAppExport(text: string): WhatsAppMessage[] {
  */
 export function isValidWhatsAppExport(text: string): boolean {
   const messages = parseWhatsAppExport(text)
-  return messages.length >= 5 // At least 5 messages to be valid
+  return messages.length >= 1 // At least 1 message to be valid
 }
 
 /**
@@ -77,4 +119,35 @@ export function filterBySender(
   sender: string
 ): WhatsAppMessage[] {
   return messages.filter((msg) => msg.sender === sender)
+}
+
+/**
+ * Debug helper - analyze export format
+ */
+export function analyzeExportFormat(text: string): {
+  totalLines: number
+  sampleLines: string[]
+  detectedPattern: string | null
+} {
+  const lines = text.split('\n').filter(l => l.trim())
+  const sampleLines = lines.slice(0, 5)
+
+  const patterns = [
+    { name: 'Bracket format', regex: /\[(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?)\]/ },
+    { name: 'Dash format', regex: /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*-/ },
+  ]
+
+  let detectedPattern = null
+  for (const pattern of patterns) {
+    if (lines.some(line => pattern.regex.test(line))) {
+      detectedPattern = pattern.name
+      break
+    }
+  }
+
+  return {
+    totalLines: lines.length,
+    sampleLines,
+    detectedPattern,
+  }
 }

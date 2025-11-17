@@ -29,7 +29,9 @@ export async function sendMessageToClaude(
   }
 
   // Convert app messages to Claude format
+  // Filter out error messages to avoid sending them to the API
   const claudeMessages: ClaudeMessage[] = messages
+    .filter((msg) => msg.status !== 'error')
     .slice(-MAX_CONTEXT_MESSAGES)
     .map((msg) => ({
       role: msg.sender === 'user' ? 'user' : 'assistant',
