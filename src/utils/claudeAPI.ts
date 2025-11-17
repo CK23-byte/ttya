@@ -1,14 +1,13 @@
 /**
  * Anthropic Claude API Integration
  *
- * Handles communication with Claude API for AI responses
+ * Handles communication with Claude API for AI responses via Vercel serverless function
  */
 
 import { Message } from '../types'
 
-const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY
-const API_URL = 'https://api.anthropic.com/v1/messages'
-const MODEL = 'claude-sonnet-4-20250514'
+// Use Vercel serverless function instead of direct API calls
+const API_ENDPOINT = '/api/chat'
 const MAX_TOKENS = 1024
 const MAX_CONTEXT_MESSAGES = 50
 
@@ -24,10 +23,6 @@ export async function sendMessageToClaude(
   messages: Message[],
   systemPrompt: string
 ): Promise<string> {
-  if (!API_KEY) {
-    throw new Error('Anthropic API key is not configured')
-  }
-
   // Convert app messages to Claude format
   // Filter out error messages to avoid sending them to the API
   const claudeMessages: ClaudeMessage[] = messages
@@ -39,31 +34,29 @@ export async function sendMessageToClaude(
     }))
 
   try {
-    const response = await fetch(API_URL, {
+    // Call our Vercel serverless function (keeps API key secure server-side)
+    const response = await fetch(API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
         messages: claudeMessages,
+        systemPrompt: systemPrompt,
+        maxTokens: MAX_TOKENS,
       }),
     })
 
     if (!response.ok) {
       const error = await response.json()
-      console.error('Claude API error:', error)
+      console.error('API error:', error)
       throw new Error(`API error: ${response.status}`)
     }
 
     const data = await response.json()
 
-    if (data.content && data.content[0] && data.content[0].text) {
-      return data.content[0].text
+    if (data.response) {
+      return data.response
     }
 
     throw new Error('Invalid response format from API')
