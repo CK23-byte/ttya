@@ -36,20 +36,34 @@ export function parseWhatsAppExport(text: string): WhatsAppMessage[] {
   for (const line of lines) {
     if (!line.trim()) continue
 
-    // Skip WhatsApp system messages
-    if (line.includes('end-to-end encrypted') ||
-        line.includes('Messages and calls are') ||
-        line.includes('created this group') ||
-        line.includes('changed the subject') ||
-        line.includes('left') ||
-        line.includes('was added') ||
-        line.includes('joined using this')) {
+    // Remove invisible Unicode characters (left-to-right mark, etc.)
+    const cleanedLine = line.replace(/[\u200E\u200F\u202A-\u202E]/g, '')
+
+    // Skip WhatsApp system messages (Dutch and English)
+    if (cleanedLine.includes('end-to-end versleuteld') ||
+        cleanedLine.includes('end-to-end encrypted') ||
+        cleanedLine.includes('Messages and calls are') ||
+        cleanedLine.includes('Berichten en oproepen') ||
+        cleanedLine.includes('sticker weggelaten') ||
+        cleanedLine.includes('afbeelding weggelaten') ||
+        cleanedLine.includes('video weggelaten') ||
+        cleanedLine.includes('audio weggelaten') ||
+        cleanedLine.includes('GIF weggelaten') ||
+        cleanedLine.includes('document weggelaten') ||
+        cleanedLine.includes('Media omitted') ||
+        cleanedLine.includes('image omitted') ||
+        cleanedLine.includes('sticker omitted') ||
+        cleanedLine.includes('created this group') ||
+        cleanedLine.includes('changed the subject') ||
+        cleanedLine.includes('left') ||
+        cleanedLine.includes('was added') ||
+        cleanedLine.includes('joined using this')) {
       continue
     }
 
     let matched = false
     for (const pattern of patterns) {
-      const match = line.match(pattern)
+      const match = cleanedLine.match(pattern)
       if (match) {
         const [, date, time, sender, content] = match
 
@@ -73,7 +87,7 @@ export function parseWhatsAppExport(text: string): WhatsAppMessage[] {
 
     // If not matched, it might be a continuation of previous message
     if (!matched && currentMessage) {
-      currentMessage.content += '\n' + line.trim()
+      currentMessage.content += '\n' + cleanedLine.trim()
     }
   }
 
