@@ -99,7 +99,7 @@ export function parseWhatsAppExport(text: string): WhatsAppMessage[] {
  */
 export function isValidWhatsAppExport(text: string): boolean {
   const messages = parseWhatsAppExport(text)
-  return messages.length >= 5 // At least 5 messages to be valid
+  return messages.length >= 1 // At least 1 message to be valid
 }
 
 /**

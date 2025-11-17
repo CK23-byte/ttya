@@ -58,11 +58,6 @@ export default function PersonalityBuilderPage() {
         return
       }
 
-      if (messages.length < 5) {
-        setError(`Chat export bevat te weinig berichten (${messages.length} gevonden, minimaal 5 nodig)`)
-        return
-      }
-
       setAllMessages(messages)
       const uniqueSenders = getUniqueSenders(messages)
       console.log('Unique senders:', uniqueSenders)
