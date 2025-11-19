@@ -1,5 +1,5 @@
 /**
- * Landing Page
+ * Landing Page - English Version
  *
  * Beautiful, empathetic landing page for TalkToYouAI
  */
@@ -39,17 +39,17 @@ export default function LandingPage() {
 
             {/* Headline */}
             <h2 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Blijf verbonden met
+              Stay connected with
               <br />
               <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-                diegenen die je mist
+                those you miss
               </span>
             </h2>
 
             {/* Subheadline */}
             <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Een veilige, privacy-first app die AI gebruikt om de persoonlijkheid
-              van geliefden te bewaren. Chat, deel herinneringen, en voel de verbinding.
+              A secure, privacy-first app that uses AI to preserve the personality
+              of loved ones. Chat, share memories, and feel the connection.
             </p>
 
             {/* CTA Buttons */}
@@ -58,14 +58,14 @@ export default function LandingPage() {
                 onClick={() => navigate('/setup')}
                 className="group px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
               >
-                Gratis Beginnen
+                Get Started Free
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
               <button
                 onClick={() => navigate('/login')}
                 className="px-8 py-4 bg-white text-gray-700 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200"
               >
-                Inloggen
+                Sign In
               </button>
             </div>
 
@@ -73,7 +73,7 @@ export default function LandingPage() {
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-green-600" />
-                <span>End-to-end versleuteld</span>
+                <span>End-to-end encrypted</span>
               </div>
               <div className="flex items-center gap-2">
                 <Lock className="w-5 h-5 text-green-600" />
@@ -81,7 +81,7 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-pink-600" />
-                <span>Met respect gemaakt</span>
+                <span>Built with respect</span>
               </div>
             </div>
           </div>
@@ -98,10 +98,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Zo werkt het
+              How it works
             </h3>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              In slechts 3 eenvoudige stappen kun je beginnen met het bewaren van herinneringen
+              In just 3 simple steps you can start preserving memories
             </p>
           </div>
 
@@ -112,12 +112,12 @@ export default function LandingPage() {
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Upload className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-sm font-semibold text-purple-600 mb-2">STAP 1</div>
+                <div className="text-sm font-semibold text-purple-600 mb-2">STEP 1</div>
                 <h4 className="text-xl font-bold text-gray-900 mb-3">
-                  Upload Herinneringen
+                  Upload Memories
                 </h4>
                 <p className="text-gray-600 leading-relaxed">
-                  Importeer WhatsApp chats, foto's, en audio. Alles wordt versleuteld opgeslagen.
+                  Import WhatsApp chats, photos, and audio. Everything is stored encrypted.
                 </p>
               </div>
             </div>
@@ -128,12 +128,12 @@ export default function LandingPage() {
                 <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <UserPlus className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-sm font-semibold text-pink-600 mb-2">STAP 2</div>
+                <div className="text-sm font-semibold text-pink-600 mb-2">STEP 2</div>
                 <h4 className="text-xl font-bold text-gray-900 mb-3">
-                  Maak een Profiel
+                  Create a Profile
                 </h4>
                 <p className="text-gray-600 leading-relaxed">
-                  De AI analyseert schrijfstijl, humor, en persoonlijkheid uit je uploads.
+                  AI analyzes writing style, humor, and personality from your uploads.
                 </p>
               </div>
             </div>
@@ -144,12 +144,12 @@ export default function LandingPage() {
                 <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <MessageCircle className="w-7 h-7 text-white" />
                 </div>
-                <div className="text-sm font-semibold text-blue-600 mb-2">STAP 3</div>
+                <div className="text-sm font-semibold text-blue-600 mb-2">STEP 3</div>
                 <h4 className="text-xl font-bold text-gray-900 mb-3">
-                  Begin te Chatten
+                  Start Chatting
                 </h4>
                 <p className="text-gray-600 leading-relaxed">
-                  Praat met de AI alsof je met je geliefde praat. Warm en herkenbaar.
+                  Talk with the AI as if you're talking to your loved one. Warm and familiar.
                 </p>
               </div>
             </div>
@@ -162,10 +162,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Waarom TalkToYouAI?
+              Why TalkToYouAI?
             </h3>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Gebouwd met privacy, veiligheid, en empathie als kernwaarden
+              Built with privacy, security, and empathy as core values
             </p>
           </div>
 
@@ -176,10 +176,10 @@ export default function LandingPage() {
                 <Shield className="w-6 h-6 text-green-600" />
               </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                AES-256 Encryptie
+                AES-256 Encryption
               </h4>
               <p className="text-gray-600 text-sm">
-                Alle data wordt client-side versleuteld. Niemand kan je herinneringen lezen.
+                All data is encrypted client-side. Nobody can read your memories.
               </p>
             </div>
 
@@ -192,7 +192,7 @@ export default function LandingPage() {
                 Zero Server Storage
               </h4>
               <p className="text-gray-600 text-sm">
-                Alles blijft lokaal in je browser. Volledige controle over je data.
+                Everything stays local in your browser. Full control over your data.
               </p>
             </div>
 
@@ -205,7 +205,7 @@ export default function LandingPage() {
                 WhatsApp-Style Chat
               </h4>
               <p className="text-gray-600 text-sm">
-                Vertrouwde interface waar je je direct thuis voelt.
+                Familiar interface where you instantly feel at home.
               </p>
             </div>
 
@@ -218,7 +218,7 @@ export default function LandingPage() {
                 AI Personality Analysis
               </h4>
               <p className="text-gray-600 text-sm">
-                Claude AI leert van echte berichten voor authentieke responses.
+                Claude AI learns from real messages for authentic responses.
               </p>
             </div>
 
@@ -228,10 +228,10 @@ export default function LandingPage() {
                 <Video className="w-6 h-6 text-indigo-600" />
               </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                Video Calls (Binnenkort)
+                Video Calls (Coming Soon)
               </h4>
               <p className="text-gray-600 text-sm">
-                Geanimeerde video gesprekken voor een nog diepere verbinding.
+                Animated video conversations for an even deeper connection.
               </p>
             </div>
 
@@ -241,10 +241,10 @@ export default function LandingPage() {
                 <Heart className="w-6 h-6 text-orange-600" />
               </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                Met Respect Gebouwd
+                Built with Respect
               </h4>
               <p className="text-gray-600 text-sm">
-                Een digitale herinnering, geen vervanging. Empathisch en zorgvuldig.
+                A digital memory, not a replacement. Empathetic and thoughtful.
               </p>
             </div>
           </div>
@@ -256,20 +256,20 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Shield className="w-16 h-16 text-white mx-auto mb-6 opacity-90" />
           <h3 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-            Je Privacy is Heilig
+            Your Privacy is Sacred
           </h3>
           <p className="text-xl text-white/90 mb-8 leading-relaxed">
-            TalkToYouAI slaat je herinneringen op met militaire-grade encryptie.
-            Je master wachtwoord wordt nooit opgeslagen, en alleen jij hebt toegang tot je data.
+            TalkToYouAI stores your memories with military-grade encryption.
+            Your master password is never stored, and only you have access to your data.
           </p>
           <div className="grid sm:grid-cols-3 gap-6 text-white">
             <div className="flex flex-col items-center">
               <CheckCircle2 className="w-8 h-8 mb-3" />
-              <div className="font-semibold">Geen Tracking</div>
+              <div className="font-semibold">No Tracking</div>
             </div>
             <div className="flex flex-col items-center">
               <CheckCircle2 className="w-8 h-8 mb-3" />
-              <div className="font-semibold">Geen Analytics</div>
+              <div className="font-semibold">No Analytics</div>
             </div>
             <div className="flex flex-col items-center">
               <CheckCircle2 className="w-8 h-8 mb-3" />
@@ -283,20 +283,20 @@ export default function LandingPage() {
       <div className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-            Klaar om te beginnen?
+            Ready to get started?
           </h3>
           <p className="text-xl text-gray-600 mb-10">
-            Begin vandaag nog met het bewaren van kostbare herinneringen
+            Start preserving precious memories today
           </p>
           <button
             onClick={() => navigate('/setup')}
             className="group px-10 py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-3 mx-auto"
           >
-            Gratis Account Maken
+            Create Free Account
             <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
           </button>
           <p className="text-sm text-gray-500 mt-6">
-            Geen credit card nodig • 100% gratis • Privacy gegarandeerd
+            No credit card needed • 100% free • Privacy guaranteed
           </p>
         </div>
       </div>
@@ -310,7 +310,7 @@ export default function LandingPage() {
               <span className="font-medium text-gray-900">TalkToYouAI</span>
             </div>
             <p className="text-sm">
-              Met liefde gebouwd • In nagedachtenis aan allen die we missen
+              Built with love • In memory of all those we miss
             </p>
             <p className="text-xs text-gray-500 mt-4">
               © 2024 TalkToYouAI • Privacy First • End-to-End Encrypted
