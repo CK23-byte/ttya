@@ -55,7 +55,7 @@ export default function LandingPage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <button
-                onClick={() => navigate('/setup')}
+                onClick={() => navigate('/chat')}
                 className="group px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
               >
                 Get Started Free
@@ -289,7 +289,7 @@ export default function LandingPage() {
             Start preserving precious memories today
           </p>
           <button
-            onClick={() => navigate('/setup')}
+            onClick={() => navigate('/chat')}
             className="group px-10 py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-3 mx-auto"
           >
             Create Free Account

@@ -23,9 +23,11 @@ import {
   MessageCircle
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { usePayment } from '../contexts/PaymentContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { sendMessageToClaude, generateSystemPrompt } from '../utils/claudeAPI'
 import TypingIndicator from '../components/TypingIndicator'
+import Paywall from '../components/Paywall'
 import { Message, PersonalityProfile } from '../types'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
@@ -41,6 +43,7 @@ interface ChatConversation {
 
 export default function ChatPage() {
   const { isAuthenticated, encryptionKey, updateActivity, logout } = useAuth()
+  const { subscription, updateSubscription } = usePayment()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [conversations, setConversations] = useState<ChatConversation[]>([])
@@ -50,6 +53,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [messageInput, setMessageInput] = useState('')
+  const [showPaywall, setShowPaywall] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Redirect if not authenticated
@@ -234,6 +238,17 @@ export default function ChatPage() {
     c.profile.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const handleSubscribe = async (plan: 'free' | 'pro' | 'lifetime') => {
+    try {
+      await updateSubscription(plan)
+      setShowPaywall(false)
+      // Navigate to personality builder after subscription
+      navigate('/personality-builder')
+    } catch (error) {
+      console.error('Error updating subscription:', error)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -254,7 +269,7 @@ export default function ChatPage() {
             <h2 className="text-xl font-semibold text-gray-800">Chats</h2>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate('/personality-builder')}
+                onClick={() => setShowPaywall(true)}
                 className="p-2 hover:bg-gray-200 rounded-full transition"
                 title="New Chat"
               >
@@ -295,7 +310,7 @@ export default function ChatPage() {
                 Create a personality profile to start chatting
               </p>
               <button
-                onClick={() => navigate('/personality-builder')}
+                onClick={() => setShowPaywall(true)}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
               >
                 Create Profile
@@ -493,6 +508,14 @@ export default function ChatPage() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* Paywall Modal */}
+      {showPaywall && (
+        <Paywall
+          onClose={() => setShowPaywall(false)}
+          onSubscribe={handleSubscribe}
+        />
       )}
     </div>
   )
