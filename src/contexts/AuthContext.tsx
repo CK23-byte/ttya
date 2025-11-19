@@ -57,22 +57,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsSetupComplete(setupComplete)
 
     // Only redirect if user is trying to access protected routes
-    // Allow landing page (/) to be accessible without redirect
     const currentPath = window.location.pathname
-    const publicPaths = ['/', '/setup', '/login']
+    const publicPaths = ['/', '/setup', '/login', '/pricing']
     const isPublicPath = publicPaths.includes(currentPath)
 
-    // Don't redirect if on landing page
-    if (currentPath === '/') {
+    // Don't redirect if on public pages
+    if (isPublicPath) {
       return
     }
 
-    // Redirect to setup if not complete and trying to access protected route
-    if (!setupComplete && currentPath !== '/setup') {
+    // For protected routes: redirect to setup if not complete, or login if not authenticated
+    if (!setupComplete) {
       navigate('/setup')
-    }
-    // Redirect to login if setup complete but not authenticated and trying to access protected route
-    else if (setupComplete && !authState.isAuthenticated && !isPublicPath) {
+    } else if (!authState.isAuthenticated) {
       navigate('/login')
     }
   }, [])
@@ -126,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       setIsSetupComplete(true)
 
-      navigate('/personality-builder')
+      navigate('/dashboard')
     } catch (error) {
       console.error('Error setting up master password:', error)
       throw new Error('Failed to setup master password')
@@ -172,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoginAttempts(0)
       setLockoutEndsAt(null)
 
-      navigate('/chat')
+      navigate('/dashboard')
 
       return { success: true }
     } catch (error) {
