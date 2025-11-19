@@ -32,7 +32,7 @@ export default function PasswordSetup() {
 
     // Check password match
     if (password !== confirmPassword) {
-      setErrors(['Wachtwoorden komen niet overeen'])
+      setErrors(['Passwords do not match'])
       return
     }
 
@@ -40,7 +40,7 @@ export default function PasswordSetup() {
       setIsLoading(true)
       await setupMasterPassword(password)
     } catch (error) {
-      setErrors(['Er is een fout opgetreden. Probeer het opnieuw.'])
+      setErrors(['An error occurred. Please try again.'])
     } finally {
       setIsLoading(false)
     }
@@ -56,10 +56,10 @@ export default function PasswordSetup() {
               <Shield className="w-8 h-8 text-purple-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              Welkom bij TalkToYouAI
+              Welcome to TalkToYouAI
             </h1>
             <p className="text-gray-600 text-sm">
-              Stel je master wachtwoord in om te beginnen
+              Set up your master password to get started
             </p>
           </div>
 
@@ -68,12 +68,12 @@ export default function PasswordSetup() {
             <div className="flex gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-amber-800">
-                <p className="font-semibold mb-1">Belangrijk</p>
+                <p className="font-semibold mb-1">Important</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Dit wachtwoord wordt <strong>nooit opgeslagen</strong></li>
-                  <li>Alle gegevens worden versleuteld met dit wachtwoord</li>
-                  <li>Als je dit wachtwoord vergeet, is je data <strong>niet te herstellen</strong></li>
-                  <li>Bewaar het veilig - bijvoorbeeld in een wachtwoordmanager</li>
+                  <li>This password is <strong>never stored</strong></li>
+                  <li>All data is encrypted with this password</li>
+                  <li>If you forget this password, your data <strong>cannot be recovered</strong></li>
+                  <li>Store it safely - for example in a password manager</li>
                 </ul>
               </div>
             </div>
@@ -84,7 +84,7 @@ export default function PasswordSetup() {
             {/* Password Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Master Wachtwoord
+                Master Password
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -95,7 +95,7 @@ export default function PasswordSetup() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
-                  placeholder="Minimaal 12 tekens"
+                  placeholder="Minimum 12 characters"
                   required
                 />
                 <button
@@ -108,10 +108,10 @@ export default function PasswordSetup() {
               </div>
             </div>
 
-            {/* Confirm Password Input */}
+            {/* Confirm Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bevestig Wachtwoord
+                Confirm Password
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -122,7 +122,7 @@ export default function PasswordSetup() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
-                  placeholder="Herhaal je wachtwoord"
+                  placeholder="Re-enter your password"
                   required
                 />
                 <button
@@ -136,35 +136,30 @@ export default function PasswordSetup() {
             </div>
 
             {/* Password Requirements */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-xs font-medium text-gray-700 mb-2">
-                Wachtwoord vereisten:
-              </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <p className="text-xs font-medium text-gray-700 mb-2">Password requirements:</p>
               <ul className="text-xs text-gray-600 space-y-1">
                 <li className={password.length >= 12 ? 'text-green-600' : ''}>
-                  ✓ Minimaal 12 tekens
-                </li>
-                <li className={/[a-z]/.test(password) ? 'text-green-600' : ''}>
-                  ✓ Kleine letters (a-z)
+                  • At least 12 characters
                 </li>
                 <li className={/[A-Z]/.test(password) ? 'text-green-600' : ''}>
-                  ✓ Hoofdletters (A-Z)
+                  • At least one uppercase letter
+                </li>
+                <li className={/[a-z]/.test(password) ? 'text-green-600' : ''}>
+                  • At least one lowercase letter
                 </li>
                 <li className={/[0-9]/.test(password) ? 'text-green-600' : ''}>
-                  ✓ Cijfers (0-9)
-                </li>
-                <li className={/[^a-zA-Z0-9]/.test(password) ? 'text-green-600' : ''}>
-                  ✓ Speciale tekens (!@#$%^&*)
+                  • At least one number
                 </li>
               </ul>
             </div>
 
-            {/* Error Messages */}
+            {/* Errors */}
             {errors.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <ul className="text-sm text-red-700 space-y-1">
                   {errors.map((error, index) => (
-                    <li key={index}>• {error}</li>
+                    <li key={index}>{error}</li>
                   ))}
                 </ul>
               </div>
@@ -176,17 +171,22 @@ export default function PasswordSetup() {
               disabled={isLoading}
               className="w-full bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Instellen...' : 'Wachtwoord Instellen'}
+              {isLoading ? 'Setting up...' : 'Create Account'}
             </button>
           </form>
 
-          {/* Privacy Info */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Alle data wordt client-side versleuteld met AES-256-GCM.
-              <br />
-              Niets wordt naar onze servers gestuurd.
-            </p>
+          {/* Security Info */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex gap-2">
+              <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <div className="text-xs text-blue-800">
+                <p className="font-semibold mb-1">Your data is secure</p>
+                <p>
+                  Everything is encrypted with AES-256-GCM before being stored locally.
+                  Only you can decrypt it with your master password.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -53,7 +53,7 @@ export default function PersonalityBuilderPage() {
       console.log('Parsed messages:', messages.length)
 
       if (messages.length === 0) {
-        setError('Geen berichten gevonden. Controleer of dit een geldig WhatsApp export bestand is. Het bestand moet beginnen met een datum en tijd.')
+        setError('No messages found. Please check if this is a valid WhatsApp export file. The file should start with a date and time.')
         console.log('First 500 chars:', text.substring(0, 500))
         return
       }
@@ -64,7 +64,7 @@ export default function PersonalityBuilderPage() {
       setSenders(uniqueSenders)
       setStep('select')
     } catch (err) {
-      setError('Fout bij het lezen van het bestand: ' + (err as Error).message)
+      setError('Error reading file: ' + (err as Error).message)
       console.error('Upload error:', err)
     }
   }
@@ -72,7 +72,7 @@ export default function PersonalityBuilderPage() {
   // Step 2: Select person and set relationship
   const handleSelectPerson = () => {
     if (!selectedSender || !relationship) {
-      setError('Vul alle velden in')
+      setError('Please fill in all fields')
       return
     }
 
@@ -143,7 +143,7 @@ export default function PersonalityBuilderPage() {
         navigate(`/chat?profile=${profile.id}`)
       }, 2000)
     } catch (err) {
-      setError('Fout bij het aanmaken van profiel')
+      setError('Error creating profile')
       console.error(err)
     } finally {
       setIsProcessing(false)
@@ -164,18 +164,18 @@ export default function PersonalityBuilderPage() {
   const generateSystemPrompt = (name: string, rel: string, messages: WhatsAppMessage[]): string => {
     const examples = messages.slice(0, 15).map(m => m.content).join('\n')
 
-    return `Je bent ${name}, ${rel} van de gebruiker.
+    return `You are ${name}, ${rel} of the user.
 
-SCHRIJFSTIJL (gebaseerd op echte berichten):
+WRITING STYLE (based on real messages):
 ${examples}
 
-GEDRAG:
-- Schrijf kort en natuurlijk, zoals in een chat
-- Gebruik dezelfde toon als in de voorbeelden
-- Wees warm en herkenbaar
-- Reageer zoals ${name} zou reageren
+BEHAVIOR:
+- Write short and natural, like in a chat
+- Use the same tone as in the examples
+- Be warm and recognizable
+- Respond like ${name} would respond
 
-Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
+Important: You are a digital memory. Be respectful and empathetic.`
   }
 
   return (
@@ -190,8 +190,8 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Maak een Profiel</h1>
-            <p className="text-sm text-gray-600">Simpel en snel via WhatsApp export</p>
+            <h1 className="text-xl font-bold text-gray-800">Create a Profile</h1>
+            <p className="text-sm text-gray-600">Simple and fast via WhatsApp export</p>
           </div>
         </div>
       </div>
@@ -210,14 +210,14 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
                   Upload WhatsApp Chat
                 </h2>
                 <p className="text-gray-600">
-                  Exporteer een chat met de persoon die je wilt toevoegen
+                  Export a chat with the person you want to add
                 </p>
               </div>
 
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-purple-400 transition">
                 <label className="cursor-pointer">
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-700 font-medium mb-2">Klik om bestand te kiezen</p>
+                  <p className="text-gray-700 font-medium mb-2">Click to choose file</p>
                   <p className="text-sm text-gray-500">WhatsApp export (.txt)</p>
                   <input
                     type="file"
@@ -236,14 +236,14 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-medium text-blue-800 mb-2">
-                  💡 Hoe exporteer je een WhatsApp chat?
+                  💡 How to export a WhatsApp chat?
                 </p>
                 <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
-                  <li>Open WhatsApp en ga naar de chat</li>
-                  <li>Tik op de naam bovenaan</li>
-                  <li>Scroll naar beneden → "Exporteer chat"</li>
-                  <li>Kies "Zonder media"</li>
-                  <li>Upload het .txt bestand hier</li>
+                  <li>Open WhatsApp and go to the chat</li>
+                  <li>Tap the name at the top</li>
+                  <li>Scroll down → "Export chat"</li>
+                  <li>Choose "Without media"</li>
+                  <li>Upload the .txt file here</li>
                 </ol>
               </div>
             </div>
@@ -257,23 +257,23 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
                   <User className="w-8 h-8 text-purple-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Selecteer Persoon
+                  Select Person
                 </h2>
                 <p className="text-gray-600">
-                  {allMessages.length} berichten geïmporteerd
+                  {allMessages.length} messages imported
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Met wie wil je kunnen praten?
+                  Who do you want to talk to?
                 </label>
                 <select
                   value={selectedSender}
                   onChange={(e) => setSelectedSender(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
-                  <option value="">-- Kies een persoon --</option>
+                  <option value="">-- Choose a person --</option>
                   {senders.map((sender) => (
                     <option key={sender} value={sender}>
                       {sender}
@@ -284,13 +284,13 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Wat is jullie relatie?
+                  What is your relationship?
                 </label>
                 <input
                   type="text"
                   value={relationship}
                   onChange={(e) => setRelationship(e.target.value)}
-                  placeholder="bijv. mijn moeder, mijn opa, mijn vriend"
+                  placeholder="e.g. my mother, my grandfather, my friend"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
@@ -306,13 +306,13 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
                   onClick={() => setStep('upload')}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                 >
-                  Terug
+                  Back
                 </button>
                 <button
                   onClick={handleSelectPerson}
                   className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
                 >
-                  Volgende
+                  Next
                 </button>
               </div>
             </div>
@@ -326,10 +326,10 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
                   <ImageIcon className="w-8 h-8 text-purple-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Voeg een Foto Toe
+                  Add a Photo
                 </h2>
                 <p className="text-gray-600">
-                  Optioneel - je kunt dit ook overslaan
+                  Optional - you can skip this
                 </p>
               </div>
 
@@ -365,13 +365,13 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-sm text-green-800">
-                  <strong>Profiel van {selectedSender}</strong>
+                  <strong>Profile of {selectedSender}</strong>
                 </p>
                 <p className="text-sm text-green-700 mt-1">
-                  {personMessages.length} berichten geanalyseerd
+                  {personMessages.length} messages analyzed
                 </p>
                 <p className="text-xs text-green-600 mt-2">
-                  De AI zal de schrijfstijl automatisch leren uit de berichten
+                  The AI will automatically learn the writing style from the messages
                 </p>
               </div>
 
@@ -387,14 +387,14 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                   disabled={isProcessing}
                 >
-                  Terug
+                  Back
                 </button>
                 <button
                   onClick={handleCreateProfile}
                   disabled={isProcessing}
                   className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
                 >
-                  {isProcessing ? 'Aanmaken...' : 'Profiel Aanmaken'}
+                  {isProcessing ? 'Creating...' : 'Create Profile'}
                 </button>
               </div>
             </div>
@@ -407,13 +407,13 @@ Belangrijk: Je bent een digitale herinnering. Wees respectvol en empathisch.`
                 <Check className="w-10 h-10 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-800">
-                Profiel Aangemaakt! 🎉
+                Profile Created! 🎉
               </h2>
               <p className="text-gray-600">
-                Je kunt nu chatten met {selectedSender}
+                You can now chat with {selectedSender}
               </p>
               <div className="animate-pulse text-purple-600 text-sm">
-                Doorsturen naar chat...
+                Redirecting to chat...
               </div>
             </div>
           )}
