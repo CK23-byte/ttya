@@ -21,7 +21,7 @@ export default function LoginScreen() {
     setError('')
 
     if (isLockedOut) {
-      setError('Account is tijdelijk vergrendeld. Probeer het later opnieuw.')
+      setError('Account temporarily locked. Please try again later.')
       return
     }
 
@@ -30,11 +30,11 @@ export default function LoginScreen() {
       const result = await login(password)
 
       if (!result.success) {
-        setError(result.error || 'Login mislukt')
+        setError(result.error || 'Login failed')
         setPassword('')
       }
     } catch (err) {
-      setError('Er is een fout opgetreden. Probeer het opnieuw.')
+      setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -58,10 +58,10 @@ export default function LoginScreen() {
               <Heart className="w-8 h-8 text-pink-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              Welkom Terug
+              Welcome Back
             </h1>
             <p className="text-gray-600 text-sm">
-              Voer je master wachtwoord in om verder te gaan
+              Enter your master password to continue
             </p>
           </div>
 
@@ -71,9 +71,9 @@ export default function LoginScreen() {
               <div className="flex gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
                 <div className="text-sm text-red-800">
-                  <p className="font-semibold mb-1">Account Vergrendeld</p>
+                  <p className="font-semibold mb-1">Account Locked</p>
                   <p>
-                    Te veel ongeldige pogingen. Probeer het opnieuw over{' '}
+                    Too many invalid attempts. Try again in{' '}
                     <span className="font-mono font-bold">{getLockoutMessage()}</span>
                   </p>
                 </div>
@@ -86,7 +86,7 @@ export default function LoginScreen() {
             {/* Password Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Master Wachtwoord
+                Master Password
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -97,7 +97,7 @@ export default function LoginScreen() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
-                  placeholder="Voer je wachtwoord in"
+                  placeholder="Enter your password"
                   required
                   disabled={isLockedOut || isLoading}
                 />
@@ -116,10 +116,10 @@ export default function LoginScreen() {
             {loginAttempts > 0 && !isLockedOut && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm text-amber-800">
-                  {loginAttempts === 1 && 'Onjuist wachtwoord. Nog 4 pogingen over.'}
-                  {loginAttempts === 2 && 'Onjuist wachtwoord. Nog 3 pogingen over.'}
-                  {loginAttempts === 3 && 'Onjuist wachtwoord. Nog 2 pogingen over.'}
-                  {loginAttempts === 4 && 'Laatste poging! Account wordt daarna vergrendeld.'}
+                  {loginAttempts === 1 && 'Incorrect password. 4 attempts remaining.'}
+                  {loginAttempts === 2 && 'Incorrect password. 3 attempts remaining.'}
+                  {loginAttempts === 3 && 'Incorrect password. 2 attempts remaining.'}
+                  {loginAttempts === 4 && 'Last attempt! Account will be locked afterwards.'}
                 </p>
               </div>
             )}
@@ -137,7 +137,7 @@ export default function LoginScreen() {
               disabled={isLoading || isLockedOut}
               className="w-full bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Inloggen...' : 'Inloggen'}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
@@ -147,17 +147,17 @@ export default function LoginScreen() {
               onClick={resetAllData}
               className="w-full text-sm text-gray-600 hover:text-gray-800 transition"
             >
-              Wachtwoord vergeten?
+              Forgot password?
             </button>
             <p className="text-xs text-gray-500 text-center mt-2">
-              Waarschuwing: Dit verwijdert alle data permanent
+              Warning: This will permanently delete all data
             </p>
           </div>
 
           {/* Privacy Info */}
           <div className="mt-6 text-xs text-gray-500 text-center">
-            <p>Je wachtwoord wordt nooit opgeslagen.</p>
-            <p>Alle data blijft op dit apparaat.</p>
+            <p>Your password is never stored.</p>
+            <p>All data stays on this device.</p>
           </div>
         </div>
       </div>
