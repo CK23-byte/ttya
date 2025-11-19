@@ -56,9 +56,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const setupComplete = localStorage.getItem(SETUP_COMPLETE_KEY) === 'true'
     setIsSetupComplete(setupComplete)
 
-    if (!setupComplete) {
+    // Only redirect if user is trying to access protected routes
+    // Allow landing page (/) to be accessible without redirect
+    const currentPath = window.location.pathname
+    const publicPaths = ['/', '/setup', '/login']
+    const isPublicPath = publicPaths.includes(currentPath)
+
+    // Don't redirect if on landing page
+    if (currentPath === '/') {
+      return
+    }
+
+    // Redirect to setup if not complete and trying to access protected route
+    if (!setupComplete && currentPath !== '/setup') {
       navigate('/setup')
-    } else if (!authState.isAuthenticated) {
+    }
+    // Redirect to login if setup complete but not authenticated and trying to access protected route
+    else if (setupComplete && !authState.isAuthenticated && !isPublicPath) {
       navigate('/login')
     }
   }, [])
