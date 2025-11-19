@@ -5,11 +5,6 @@
  * https://docs.d-id.com/reference/api-overview
  */
 
-export interface DIDConfig {
-  apiKey: string
-  baseURL?: string
-}
-
 export interface VideoGenerationOptions {
   sourceUrl?: string // URL to image/avatar
   script: string // What the avatar should say
@@ -24,14 +19,11 @@ export interface VideoStream {
   error?: string
 }
 
-const DEFAULT_BASE_URL = 'https://api.d-id.com'
-
 /**
  * Create a D-ID video stream
  */
 export async function createDIDVideo(
-  options: VideoGenerationOptions,
-  config: DIDConfig
+  options: VideoGenerationOptions
 ): Promise<VideoStream> {
   const response = await fetch('/api/did/create-video', {
     method: 'POST',
