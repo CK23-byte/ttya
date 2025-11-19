@@ -285,7 +285,12 @@ export default function ChatPage() {
         {/* Sidebar Header */}
         <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-semibold text-gray-800">Chats</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-gray-800">Chats</h2>
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
+                v2.1.0
+              </span>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCreateProfileClick}

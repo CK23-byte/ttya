@@ -23,6 +23,13 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+      {/* Version Badge */}
+      <div className="fixed top-4 left-4 z-50">
+        <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
+          <span className="text-xs font-semibold text-gray-600">v2.1.0</span>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
