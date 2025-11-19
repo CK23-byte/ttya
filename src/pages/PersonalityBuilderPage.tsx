@@ -8,11 +8,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload, User, Check, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { setSecure } from '../utils/secureStorage'
+import { setSecure, getSecure } from '../utils/secureStorage'
 import { parseWhatsAppExport, getUniqueSenders, filterBySender } from '../utils/whatsappParser'
 import { PersonalityProfile, WhatsAppMessage } from '../types'
 
-const PERSONALITY_STORAGE_KEY = 'personality_profile'
+const PERSONALITY_STORAGE_KEY = 'personality_profiles'
 
 type Step = 'upload' | 'select' | 'photo' | 'done'
 
@@ -116,7 +116,7 @@ export default function PersonalityBuilderPage() {
         typicalPhrases: typicalPhrases,
         hobbies: [],
         habits: [],
-        humorStyle: 'Geanalyseerd uit berichten',
+        humorStyle: 'Analyzed from messages',
         traits: [],
         tone: 'informal',
         emojiUsage: detectEmojiUsage(personMessages),
@@ -125,14 +125,22 @@ export default function PersonalityBuilderPage() {
         updatedAt: Date.now(),
       }
 
-      // Save encrypted profile
-      await setSecure(PERSONALITY_STORAGE_KEY, profile, encryptionKey)
+      // Load existing profiles and add new one
+      const existingProfiles = await getSecure<PersonalityProfile[]>(
+        PERSONALITY_STORAGE_KEY,
+        encryptionKey
+      ) || []
+
+      const updatedProfiles = [...existingProfiles, profile]
+
+      // Save encrypted profiles array
+      await setSecure(PERSONALITY_STORAGE_KEY, updatedProfiles, encryptionKey)
 
       setStep('done')
 
-      // Redirect to chat after 2 seconds
+      // Redirect to chat with new profile after 2 seconds
       setTimeout(() => {
-        navigate('/chat')
+        navigate(`/chat?profile=${profile.id}`)
       }, 2000)
     } catch (err) {
       setError('Fout bij het aanmaken van profiel')
