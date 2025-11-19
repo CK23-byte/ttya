@@ -11,9 +11,7 @@ import {
   Plus,
   MessageCircle,
   LogOut,
-  Settings,
   CreditCard,
-  User,
   Clock,
   Home
 } from 'lucide-react'
