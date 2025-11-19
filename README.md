@@ -2,6 +2,8 @@
 
 Een veilige, privacy-first applicatie om te blijven verbinden met geliefden door AI-gestuurde persoonlijkheidssimulatie.
 
+<!-- Deployment update: 2024-11-19 -->
+
 ## 🔐 Beveiliging & Privacy
 
 - **Client-Side Encryptie**: Alle data wordt versleuteld met AES-256-GCM voordat het wordt opgeslagen
