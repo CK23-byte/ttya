@@ -395,10 +395,18 @@ export default function ChatPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
-                <button className="p-2 hover:bg-gray-700/50 rounded-full transition">
+                <button
+                  onClick={() => navigate(`/video?profile=${activeConvo.profile.id}`)}
+                  className="p-2 hover:bg-gray-700/50 rounded-full transition"
+                  title="Video Call"
+                >
                   <Video className="w-5 h-5 text-gray-300" />
                 </button>
-                <button className="p-2 hover:bg-gray-700/50 rounded-full transition">
+                <button
+                  onClick={() => navigate(`/video?profile=${activeConvo.profile.id}`)}
+                  className="p-2 hover:bg-gray-700/50 rounded-full transition"
+                  title="Voice Call"
+                >
                   <Phone className="w-5 h-5 text-gray-300" />
                 </button>
                 <button className="p-2 hover:bg-gray-700/50 rounded-full transition">
