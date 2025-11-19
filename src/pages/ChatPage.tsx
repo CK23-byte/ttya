@@ -249,6 +249,25 @@ export default function ChatPage() {
     }
   }
 
+  const handleCreateProfileClick = () => {
+    // Check if user can create more profiles based on their subscription
+    if (!subscription) {
+      setShowPaywall(true)
+      return
+    }
+
+    const profileCount = conversations.length
+
+    // Check profile limit
+    if (profileCount >= subscription.profileLimit) {
+      // User has reached their limit - show paywall to upgrade
+      setShowPaywall(true)
+    } else {
+      // User can create more profiles - go to builder
+      navigate('/personality-builder')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -269,7 +288,7 @@ export default function ChatPage() {
             <h2 className="text-xl font-semibold text-gray-800">Chats</h2>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowPaywall(true)}
+                onClick={handleCreateProfileClick}
                 className="p-2 hover:bg-gray-200 rounded-full transition"
                 title="New Chat"
               >
@@ -310,7 +329,7 @@ export default function ChatPage() {
                 Create a personality profile to start chatting
               </p>
               <button
-                onClick={() => setShowPaywall(true)}
+                onClick={handleCreateProfileClick}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
               >
                 Create Profile
