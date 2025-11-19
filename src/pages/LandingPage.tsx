@@ -30,6 +30,22 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Top Navigation */}
+      <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <button
+          onClick={() => navigate('/pricing')}
+          className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold text-gray-700 hover:text-purple-600"
+        >
+          Pricing
+        </button>
+        <button
+          onClick={() => navigate('/login')}
+          className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold text-gray-700 hover:text-purple-600"
+        >
+          Sign In
+        </button>
+      </div>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
@@ -62,7 +78,7 @@ export default function LandingPage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <button
-                onClick={() => navigate('/chat')}
+                onClick={() => navigate('/dashboard')}
                 className="group px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
               >
                 Get Started Free
@@ -296,7 +312,7 @@ export default function LandingPage() {
             Start preserving precious memories today
           </p>
           <button
-            onClick={() => navigate('/chat')}
+            onClick={() => navigate('/dashboard')}
             className="group px-10 py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-3 mx-auto"
           >
             Create Free Account
