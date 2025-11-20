@@ -32,17 +32,31 @@ Add your D-ID API key to your environment:
 
 **Local Development (.env.local):**
 ```bash
+# For serverless functions (backend)
+DID_API_KEY=your_d_id_api_key_here
+
+# For frontend (if needed)
 VITE_DID_API_KEY=your_d_id_api_key_here
 ```
 
 **Vercel Deployment:**
 1. Go to your Vercel project settings
 2. Navigate to: Settings → Environment Variables
-3. Add variable:
+3. Add BOTH variables:
+
+   **Variable 1 (Required for serverless functions):**
+   - Name: `DID_API_KEY`
+   - Value: Your D-ID API key
+   - Environment: Production, Preview, Development (check all)
+
+   **Variable 2 (Optional for frontend):**
    - Name: `VITE_DID_API_KEY`
    - Value: Your D-ID API key
    - Environment: Production, Preview, Development (check all)
+
 4. Redeploy your project
+
+**Important:** Serverless functions use `DID_API_KEY` (without VITE_ prefix). The VITE_ prefix is only for frontend build-time variables.
 
 ### 2. Test the Integration
 
@@ -58,8 +72,9 @@ VITE_DID_API_KEY=your_d_id_api_key_here
 
 Check the browser console for any errors:
 - ✅ "D-ID session created" = Success
-- ❌ "D-ID API key not configured" = Missing env variable
+- ❌ "D-ID API key not configured" = Missing env variable (add `DID_API_KEY` to Vercel)
 - ❌ "Failed to create stream" = Check API key validity
+- ❌ API calls fail = Make sure you're using `DID_API_KEY` (not `VITE_DID_API_KEY`) in Vercel
 
 ## Features
 

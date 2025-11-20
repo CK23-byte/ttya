@@ -11,10 +11,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const DID_API_KEY = process.env.VITE_DID_API_KEY
+  // Use DID_API_KEY (without VITE_ prefix) for serverless functions
+  const DID_API_KEY = process.env.DID_API_KEY
 
   if (!DID_API_KEY) {
-    return res.status(500).json({ error: 'D-ID API key not configured' })
+    console.error('D-ID API key not configured. Make sure DID_API_KEY is set in Vercel environment variables.')
+    return res.status(500).json({
+      error: 'D-ID API key not configured',
+      hint: 'Set DID_API_KEY in Vercel Settings → Environment Variables'
+    })
   }
 
   const { sourceUrl } = req.body

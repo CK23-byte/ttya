@@ -11,9 +11,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const DID_API_KEY = process.env.VITE_DID_API_KEY
+  const DID_API_KEY = process.env.DID_API_KEY
 
   if (!DID_API_KEY) {
+    console.error('D-ID API key not configured')
     return res.status(500).json({ error: 'D-ID API key not configured' })
   }
 

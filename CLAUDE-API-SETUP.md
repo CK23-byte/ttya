@@ -4,11 +4,19 @@
 
 The chat functionality requires the Anthropic Claude API key to be configured.
 
-### Required Environment Variable
+### Required Environment Variables
 
+**For Vercel Deployment (Serverless Functions):**
+```bash
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
+
+**For Local Development (Frontend):**
 ```bash
 VITE_ANTHROPIC_API_KEY=your_anthropic_api_key_here
 ```
+
+**Important:** Serverless functions use `ANTHROPIC_API_KEY` (without VITE_ prefix). The VITE_ prefix is only for frontend build-time variables.
 
 ## Setup Instructions
 
@@ -22,9 +30,13 @@ VITE_ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 ### 2. Local Development
 
-Create a `.env.local` file in the project root:
+Create a `.env.local` file in the project root with BOTH variables:
 
 ```bash
+# For serverless functions (backend)
+ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
+
+# For frontend (if needed)
 VITE_ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
 ```
 
@@ -34,12 +46,24 @@ VITE_ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
 
 1. Go to your Vercel project dashboard
 2. Navigate to: **Settings → Environment Variables**
-3. Add the variable:
+3. Add BOTH variables:
+
+   **Variable 1 (Required for serverless functions):**
+   - **Name:** `ANTHROPIC_API_KEY`
+   - **Value:** Your Anthropic API key
+   - **Environment:** Production, Preview, Development (check all)
+
+   **Variable 2 (Optional for frontend):**
    - **Name:** `VITE_ANTHROPIC_API_KEY`
    - **Value:** Your Anthropic API key
    - **Environment:** Production, Preview, Development (check all)
+
 4. Click **Save**
 5. **Redeploy** your project for changes to take effect
+
+**Why two variables?**
+- `ANTHROPIC_API_KEY` is used by serverless functions (api/chat.ts)
+- `VITE_ANTHROPIC_API_KEY` would be used if frontend needs the key (not recommended for security)
 
 ## Verification
 
@@ -59,10 +83,11 @@ VITE_ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
 ### Common Issues
 
 **Problem: "API key not configured"**
-- **Solution:** Add `VITE_ANTHROPIC_API_KEY` to environment variables
-- For local: Create `.env.local` file
-- For Vercel: Add in Settings → Environment Variables
+- **Solution:** Add `ANTHROPIC_API_KEY` to environment variables (for serverless functions)
+- For local: Create `.env.local` file with both `ANTHROPIC_API_KEY` and `VITE_ANTHROPIC_API_KEY`
+- For Vercel: Add `ANTHROPIC_API_KEY` in Settings → Environment Variables
 - Restart dev server after adding
+- **Important:** Use `ANTHROPIC_API_KEY` (not `VITE_ANTHROPIC_API_KEY`) for Vercel!
 
 **Problem: "API error: 401"**
 - **Solution:** Invalid API key
