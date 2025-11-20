@@ -14,7 +14,8 @@ export interface PersonalityProfile {
   relationship: string
   birthDate?: string
   dateSince?: string
-  photoUrl?: string
+  photoUrl?: string // Legacy: single photo (kept for backwards compatibility)
+  photoUrls?: string[] // New: multiple photos for better D-ID avatars
   typicalPhrases: string[]
   hobbies: string[]
   habits: string[]

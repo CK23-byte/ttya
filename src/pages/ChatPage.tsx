@@ -333,9 +333,9 @@ export default function ChatPage() {
               >
                 {/* Avatar */}
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex-shrink-0 flex items-center justify-center text-white font-semibold">
-                  {convo.profile.photoUrl ? (
+                  {(convo.profile.photoUrls && convo.profile.photoUrls.length > 0) || convo.profile.photoUrl ? (
                     <img
-                      src={convo.profile.photoUrl}
+                      src={convo.profile.photoUrls?.[0] || convo.profile.photoUrl}
                       alt={convo.profile.name}
                       className="w-full h-full rounded-full object-cover"
                     />
@@ -375,9 +375,9 @@ export default function ChatPage() {
               <div className="flex items-center gap-3">
                 {/* Profile Avatar */}
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold">
-                  {activeConvo.profile.photoUrl ? (
+                  {(activeConvo.profile.photoUrls && activeConvo.profile.photoUrls.length > 0) || activeConvo.profile.photoUrl ? (
                     <img
-                      src={activeConvo.profile.photoUrl}
+                      src={activeConvo.profile.photoUrls?.[0] || activeConvo.profile.photoUrl}
                       alt={activeConvo.profile.name}
                       className="w-full h-full rounded-full object-cover"
                     />

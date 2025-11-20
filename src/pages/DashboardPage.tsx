@@ -222,9 +222,9 @@ export default function DashboardPage() {
                   <div className="flex items-start gap-4 mb-4">
                     {/* Avatar */}
                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex-shrink-0 flex items-center justify-center text-white font-semibold text-xl">
-                      {profile.photoUrl ? (
+                      {(profile.photoUrls && profile.photoUrls.length > 0) || profile.photoUrl ? (
                         <img
-                          src={profile.photoUrl}
+                          src={profile.photoUrls?.[0] || profile.photoUrl}
                           alt={profile.name}
                           className="w-full h-full rounded-full object-cover"
                         />

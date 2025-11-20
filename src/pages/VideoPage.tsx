@@ -93,8 +93,22 @@ export default function VideoPage() {
     setError(null)
 
     try {
-      // For now, use a default avatar image or profile photo
-      const avatarUrl = profile.photoUrl || 'https://create-images-results.d-id.com/DefaultPresenters/Noelle_f/image.jpeg'
+      // Use the first photo from photoUrls array, fallback to photoUrl, or use default
+      let avatarUrl: string
+
+      if (profile.photoUrls && profile.photoUrls.length > 0) {
+        // Use first photo from array (best quality for D-ID)
+        avatarUrl = profile.photoUrls[0]
+        console.log('Using first photo from photoUrls array for D-ID avatar')
+      } else if (profile.photoUrl) {
+        // Fallback to legacy single photo
+        avatarUrl = profile.photoUrl
+        console.log('Using legacy photoUrl for D-ID avatar')
+      } else {
+        // Use default D-ID avatar
+        avatarUrl = 'https://create-images-results.d-id.com/DefaultPresenters/Noelle_f/image.jpeg'
+        console.log('No custom photos available, using default D-ID avatar')
+      }
 
       // Create D-ID streaming session
       const session = await createDIDStreamingSession(avatarUrl)
@@ -186,9 +200,9 @@ export default function VideoPage() {
             </button>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold">
-                {profile.photoUrl ? (
+                {(profile.photoUrls && profile.photoUrls.length > 0) || profile.photoUrl ? (
                   <img
-                    src={profile.photoUrl}
+                    src={profile.photoUrls?.[0] || profile.photoUrl}
                     alt={profile.name}
                     className="w-full h-full rounded-full object-cover"
                   />

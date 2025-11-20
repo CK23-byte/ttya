@@ -20,10 +20,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { sourceUrl } = req.body
 
   if (!sourceUrl) {
+    console.error('D-ID stream creation failed: No source URL provided')
     return res.status(400).json({ error: 'Source URL is required' })
   }
 
   try {
+    console.log('Creating D-ID streaming session...', {
+      sourceUrl: sourceUrl.substring(0, 50) + '...', // Log partial URL for privacy
+      endpoint: 'https://api.d-id.com/talks/streams'
+    })
+
     // Create streaming session with D-ID
     const response = await fetch('https://api.d-id.com/talks/streams', {
       method: 'POST',
@@ -37,13 +43,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     })
 
+    console.log('D-ID API response status:', response.status)
+
     if (!response.ok) {
       const error = await response.json()
-      console.error('D-ID API error:', error)
-      return res.status(response.status).json({ error: error.message || 'Failed to create stream' })
+      console.error('D-ID API error response:', {
+        status: response.status,
+        error: error
+      })
+      return res.status(response.status).json({
+        error: error.message || 'Failed to create stream',
+        details: error
+      })
     }
 
     const data = await response.json()
+    console.log('D-ID stream created successfully:', {
+      id: data.id,
+      session_id: data.session_id,
+      hasOffer: !!data.offer
+    })
 
     return res.status(200).json({
       id: data.id,
@@ -52,6 +71,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   } catch (error) {
     console.error('Error creating D-ID stream:', error)
-    return res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    })
   }
 }

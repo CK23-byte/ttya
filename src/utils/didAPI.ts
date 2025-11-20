@@ -25,6 +25,11 @@ export interface VideoStream {
 export async function createDIDVideo(
   options: VideoGenerationOptions
 ): Promise<VideoStream> {
+  console.log('Creating D-ID video...', {
+    hasSourceUrl: !!options.sourceUrl,
+    scriptLength: options.script.length
+  })
+
   const response = await fetch('/api/did/create-video', {
     method: 'POST',
     headers: {
@@ -38,12 +43,17 @@ export async function createDIDVideo(
     }),
   })
 
+  console.log('D-ID video creation response status:', response.status)
+
   if (!response.ok) {
     const error = await response.json()
+    console.error('D-ID video creation error:', error)
     throw new Error(error.message || 'Failed to create video')
   }
 
-  return response.json()
+  const data = await response.json()
+  console.log('D-ID video created:', { id: data.id, status: data.status })
+  return data
 }
 
 /**
@@ -65,6 +75,11 @@ export async function getDIDVideoStatus(videoId: string): Promise<VideoStream> {
 export async function createDIDStreamingSession(
   sourceUrl: string
 ): Promise<{ id: string; session_id: string; offer: RTCSessionDescriptionInit }> {
+  console.log('Creating D-ID streaming session...', {
+    sourceUrl: sourceUrl.substring(0, 50) + '...',
+    endpoint: '/api/did/create-stream'
+  })
+
   const response = await fetch('/api/did/create-stream', {
     method: 'POST',
     headers: {
@@ -73,12 +88,21 @@ export async function createDIDStreamingSession(
     body: JSON.stringify({ sourceUrl }),
   })
 
+  console.log('D-ID streaming session response status:', response.status)
+
   if (!response.ok) {
     const error = await response.json()
+    console.error('D-ID streaming session error:', error)
     throw new Error(error.message || 'Failed to create streaming session')
   }
 
-  return response.json()
+  const data = await response.json()
+  console.log('D-ID streaming session created:', {
+    id: data.id,
+    session_id: data.session_id,
+    hasOffer: !!data.offer
+  })
+  return data
 }
 
 /**
@@ -88,6 +112,11 @@ export async function sendDIDStreamMessage(
   sessionId: string,
   message: string
 ): Promise<void> {
+  console.log('Sending D-ID stream message...', {
+    sessionId,
+    messageLength: message.length
+  })
+
   const response = await fetch('/api/did/stream-message', {
     method: 'POST',
     headers: {
@@ -99,20 +128,38 @@ export async function sendDIDStreamMessage(
     }),
   })
 
+  console.log('D-ID stream message response status:', response.status)
+
   if (!response.ok) {
-    throw new Error('Failed to send message')
+    const error = await response.json()
+    console.error('D-ID stream message error:', error)
+    throw new Error(error.message || 'Failed to send message')
   }
+
+  console.log('D-ID stream message sent successfully')
 }
 
 /**
  * Close streaming session
  */
 export async function closeDIDStreamSession(sessionId: string): Promise<void> {
-  await fetch('/api/did/close-stream', {
+  console.log('Closing D-ID streaming session:', sessionId)
+
+  const response = await fetch('/api/did/close-stream', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ sessionId }),
   })
+
+  console.log('D-ID close stream response status:', response.status)
+
+  if (!response.ok) {
+    const error = await response.json()
+    console.error('D-ID close stream error:', error)
+    // Don't throw error - closing is best effort
+  } else {
+    console.log('D-ID stream closed successfully')
+  }
 }
