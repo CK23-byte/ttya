@@ -34,6 +34,11 @@ export async function sendMessageToClaude(
     }))
 
   try {
+    console.log('Sending message to Claude API...', {
+      messageCount: claudeMessages.length,
+      endpoint: API_ENDPOINT
+    })
+
     // Call our Vercel serverless function (keeps API key secure server-side)
     const response = await fetch(API_ENDPOINT, {
       method: 'POST',
@@ -47,22 +52,29 @@ export async function sendMessageToClaude(
       }),
     })
 
+    console.log('API response status:', response.status)
+
     if (!response.ok) {
       const error = await response.json()
-      console.error('API error:', error)
-      throw new Error(`API error: ${response.status}`)
+      console.error('API error response:', error)
+      throw new Error(error.error || `API error: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('API response received:', { hasResponse: !!data.response })
 
     if (data.response) {
       return data.response
     }
 
+    console.error('Invalid response format:', data)
     throw new Error('Invalid response format from API')
   } catch (error) {
     console.error('Error calling Claude API:', error)
-    throw error
+    if (error instanceof Error) {
+      throw new Error(`Claude API error: ${error.message}`)
+    }
+    throw new Error('Unknown error calling Claude API')
   }
 }
 
@@ -76,21 +88,21 @@ export function generateSystemPrompt(
   typicalPhrases: string[],
   exampleMessages: string[]
 ): string {
-  return `Je bent ${name}, ${relationship} van de gebruiker.
+  return `You are ${name}, ${relationship} of the user.
 
-SCHRIJFSTIJL (gebaseerd op echte berichten):
-${exampleMessages.length > 0 ? exampleMessages.map((msg, i) => `${i + 1}. "${msg}"`).join('\n') : 'Geen voorbeelden beschikbaar'}
+WRITING STYLE (based on real messages):
+${exampleMessages.length > 0 ? exampleMessages.map((msg, i) => `${i + 1}. "${msg}"`).join('\n') : 'No example messages available'}
 
-PERSOONLIJKHEID:
-- Typische uitdrukkingen: ${typicalPhrases.join(', ') || 'geen specifieke uitdrukkingen'}
-- Toon: ${tone}
+PERSONALITY:
+- Typical expressions: ${typicalPhrases.join(', ') || 'no specific expressions'}
+- Tone: ${tone}
 
-GEDRAGSREGELS:
-- Reageer zoals ${name} zou reageren
-- Gebruik dezelfde schrijfstijl als in de voorbeelden
-- Wees warm, herkenbaar en authentiek
-- Refereer naar gedeelde herinneringen waar relevant
-- Houd berichten kort en natuurlijk (zoals in een chat)
+BEHAVIOR RULES:
+- Respond as ${name} would respond
+- Use the same writing style as in the examples
+- Be warm, recognizable, and authentic
+- Reference shared memories where relevant
+- Keep messages short and natural (like in a chat)
 
-Belangrijk: Je bent een digitale herinnering, geen vervanging. Wees respectvol en empathisch.`
+Important: You are a digital memory, not a replacement. Be respectful and empathetic.`
 }
