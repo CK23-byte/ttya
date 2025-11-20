@@ -4,7 +4,9 @@ import { PaymentProvider } from './contexts/PaymentContext'
 import LoginScreen from './components/LoginScreen'
 import PasswordSetup from './components/PasswordSetup'
 import LandingPage from './pages/LandingPage'
+import DashboardPage from './pages/DashboardPage'
 import ChatPage from './pages/ChatPage'
+import PricingPage from './pages/PricingPage'
 import MemoriesPage from './pages/MemoriesPage'
 import PersonalityBuilderPage from './pages/PersonalityBuilderPage'
 import VideoPage from './pages/VideoPage'
@@ -18,7 +20,9 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/setup" element={<PasswordSetup />} />
             <Route path="/login" element={<LoginScreen />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/chat" element={<ChatPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
             <Route path="/memories" element={<MemoriesPage />} />
             <Route path="/personality-builder" element={<PersonalityBuilderPage />} />
             <Route path="/video" element={<VideoPage />} />

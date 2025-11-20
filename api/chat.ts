@@ -7,7 +7,9 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const API_KEY = process.env.VITE_ANTHROPIC_API_KEY
+// Use ANTHROPIC_API_KEY (without VITE_ prefix) for serverless functions
+// VITE_ prefix is only for frontend build-time variables
+const API_KEY = process.env.ANTHROPIC_API_KEY
 const API_URL = 'https://api.anthropic.com/v1/messages'
 const MODEL = 'claude-sonnet-4-20250514'
 
@@ -31,8 +33,11 @@ export default async function handler(
 
   // Check API key
   if (!API_KEY) {
-    console.error('API key not configured')
-    return res.status(500).json({ error: 'API key not configured' })
+    console.error('Anthropic API key not configured. Make sure ANTHROPIC_API_KEY is set in Vercel environment variables.')
+    return res.status(500).json({
+      error: 'Anthropic API key not configured',
+      hint: 'Set ANTHROPIC_API_KEY in Vercel Settings → Environment Variables'
+    })
   }
 
   try {
