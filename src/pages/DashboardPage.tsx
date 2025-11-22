@@ -151,7 +151,7 @@ export default function DashboardPage() {
                 </p>
               </div>
               <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
-                v2.1.0
+                v2.2.0
               </span>
             </div>
 
