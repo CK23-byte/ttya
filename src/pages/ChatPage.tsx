@@ -27,6 +27,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { sendMessageToClaude, generateSystemPrompt } from '../utils/claudeAPI'
 import TypingIndicator from '../components/TypingIndicator'
+import EmojiPicker from '../components/EmojiPicker'
 import { Message, PersonalityProfile } from '../types'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
@@ -51,6 +52,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [messageInput, setMessageInput] = useState('')
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Redirect if not authenticated
@@ -463,9 +465,20 @@ export default function ChatPage() {
           {/* Input Area */}
           <div className="bg-[#1f2c34] border-t border-gray-700 px-4 py-3">
             <div className="max-w-4xl mx-auto flex items-center gap-3">
-              <button className="p-2 hover:bg-gray-700/50 rounded-full transition">
-                <Smile className="w-6 h-6 text-gray-400" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className={`p-2 hover:bg-gray-700/50 rounded-full transition ${showEmojiPicker ? 'bg-gray-700/50' : ''}`}
+                >
+                  <Smile className="w-6 h-6 text-gray-400" />
+                </button>
+                {showEmojiPicker && (
+                  <EmojiPicker
+                    onSelect={(emoji) => setMessageInput(prev => prev + emoji)}
+                    onClose={() => setShowEmojiPicker(false)}
+                  />
+                )}
+              </div>
               <button className="p-2 hover:bg-gray-700/50 rounded-full transition">
                 <Paperclip className="w-6 h-6 text-gray-400" />
               </button>
@@ -474,6 +487,7 @@ export default function ChatPage() {
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                onClick={() => setShowEmojiPicker(false)}
                 placeholder="Type a message"
                 className="flex-1 px-4 py-2.5 bg-[#2a3942] text-gray-100 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00a884]"
               />
