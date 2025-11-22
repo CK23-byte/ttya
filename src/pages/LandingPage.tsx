@@ -10,12 +10,8 @@ import { useNavigate } from 'react-router-dom'
 import {
   Heart,
   Lock,
-  MessageCircle,
   Shield,
-  Upload,
-  UserPlus,
   ArrowRight,
-  Sparkles,
   Send,
   Crown,
   Check
