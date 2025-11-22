@@ -47,13 +47,13 @@ export default function PasswordSetup() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-              <Shield className="w-8 h-8 text-purple-600" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-100 to-rose-100 rounded-full mb-4">
+              <Shield className="w-8 h-8 text-orange-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
               Welcome to TalkToYouAI
@@ -94,7 +94,7 @@ export default function PasswordSetup() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                   placeholder="Minimum 12 characters"
                   required
                 />
@@ -121,7 +121,7 @@ export default function PasswordSetup() {
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                   placeholder="Re-enter your password"
                   required
                 />
@@ -151,6 +151,9 @@ export default function PasswordSetup() {
                 <li className={/[0-9]/.test(password) ? 'text-green-600' : ''}>
                   • At least one number
                 </li>
+                <li className={/[^a-zA-Z0-9]/.test(password) ? 'text-green-600' : ''}>
+                  • At least one special character
+                </li>
               </ul>
             </div>
 
@@ -169,14 +172,14 @@ export default function PasswordSetup() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-orange-500 to-rose-500 text-white py-3 rounded-lg font-medium hover:from-orange-600 hover:to-rose-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Setting up...' : 'Create Account'}
             </button>
           </form>
 
           {/* Security Info */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
             <div className="flex gap-2">
               <Shield className="w-5 h-5 text-blue-600 flex-shrink-0" />
               <div className="text-xs text-blue-800">
