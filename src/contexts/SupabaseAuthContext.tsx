@@ -6,7 +6,8 @@
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { User, Session, AuthError } from '@supabase/supabase-js'
+import { User, Session, AuthError, AuthChangeEvent } from '@supabase/supabase-js'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { Profile, CREDIT_PRICING } from '../types/database'
 
@@ -38,8 +39,13 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [credits, setCredits] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const isConfigured = isSupabaseConfigured()
+
+  // Pages where we should NOT auto-redirect after sign in
+  const noRedirectPaths = ['/reset-password']
 
   // Initialize auth state
   useEffect(() => {
@@ -61,11 +67,25 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event: AuthChangeEvent, session) => {
         setSession(session)
         setUser(session?.user ?? null)
+
         if (session?.user) {
           await fetchProfile(session.user.id)
+
+          // Redirect to dashboard on sign in or email confirmation
+          // But not if we're on certain pages like password reset
+          if (
+            (event === 'SIGNED_IN' || event === 'USER_UPDATED') &&
+            !noRedirectPaths.includes(location.pathname)
+          ) {
+            // Check if we're on homepage or auth pages, then redirect to dashboard
+            const authPaths = ['/', '/auth', '/email-auth', '/login', '/setup']
+            if (authPaths.includes(location.pathname)) {
+              navigate('/dashboard')
+            }
+          }
         } else {
           setProfile(null)
           setCredits(0)
@@ -74,7 +94,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [isConfigured])
+  }, [isConfigured, navigate, location.pathname])
 
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
