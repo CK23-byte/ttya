@@ -1,11 +1,12 @@
 /**
- * Chat Page - WhatsApp Style with Sidebar
+ * Chat Page - Multi-Theme Chat Interface
  *
  * Features:
- * - Dark theme WhatsApp look
+ * - Theme switcher: WhatsApp, iMessage, Messenger
  * - Left sidebar with conversation list
  * - Right panel with active chat
  * - Persistent chat history per personality profile
+ * - Working emoji picker
  */
 
 import { useState, useEffect, useRef } from 'react'
@@ -21,7 +22,8 @@ import {
   Mic,
   Plus,
   MessageCircle,
-  Home
+  Home,
+  Palette
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
@@ -32,6 +34,63 @@ import { Message, PersonalityProfile } from '../types'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
 const PROFILES_STORAGE_KEY = 'personality_profiles'
+const THEME_STORAGE_KEY = 'chat_theme'
+
+type ChatTheme = 'whatsapp' | 'imessage' | 'messenger'
+
+const THEMES = {
+  whatsapp: {
+    name: 'WhatsApp',
+    icon: '💬',
+    bg: 'bg-[#0a1014]',
+    sidebar: 'bg-[#1f2c34]',
+    header: 'bg-[#1f2c34]',
+    input: 'bg-[#2a3942]',
+    userBubble: 'bg-[#005c4b] text-white',
+    aiBubble: 'bg-[#1f2c34] text-gray-100',
+    accent: '#00a884',
+    accentHover: '#00a884/90',
+    border: 'border-gray-700',
+    text: 'text-gray-100',
+    textMuted: 'text-gray-400',
+    placeholder: 'placeholder-gray-500',
+    pattern: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+  },
+  imessage: {
+    name: 'iMessage',
+    icon: '🍎',
+    bg: 'bg-gray-100',
+    sidebar: 'bg-white',
+    header: 'bg-gray-50',
+    input: 'bg-white',
+    userBubble: 'bg-blue-500 text-white',
+    aiBubble: 'bg-gray-200 text-gray-900',
+    accent: '#007AFF',
+    accentHover: '#007AFF/90',
+    border: 'border-gray-200',
+    text: 'text-gray-900',
+    textMuted: 'text-gray-500',
+    placeholder: 'placeholder-gray-400',
+    pattern: 'none',
+  },
+  messenger: {
+    name: 'Messenger',
+    icon: '💜',
+    bg: 'bg-white',
+    sidebar: 'bg-white',
+    header: 'bg-white',
+    input: 'bg-gray-100',
+    userBubble: 'bg-gradient-to-r from-blue-500 to-purple-500 text-white',
+    aiBubble: 'bg-gray-100 text-gray-900',
+    accent: '#0084FF',
+    accentHover: '#0084FF/90',
+    border: 'border-gray-200',
+    text: 'text-gray-900',
+    textMuted: 'text-gray-500',
+    placeholder: 'placeholder-gray-400',
+    pattern: 'none',
+  },
+}
 
 interface ChatConversation {
   profileId: string
@@ -53,7 +112,25 @@ export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [messageInput, setMessageInput] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showThemePicker, setShowThemePicker] = useState(false)
+  const [theme, setTheme] = useState<ChatTheme>('whatsapp')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Load saved theme
+  useEffect(() => {
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ChatTheme
+    if (savedTheme && THEMES[savedTheme]) {
+      setTheme(savedTheme)
+    }
+  }, [])
+
+  const handleThemeChange = (newTheme: ChatTheme) => {
+    setTheme(newTheme)
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme)
+    setShowThemePicker(false)
+  }
+
+  const currentTheme = THEMES[theme]
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -248,8 +325,8 @@ export default function ChatPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#0a1014]">
-        <div className="text-gray-400">Loading...</div>
+      <div className={`flex items-center justify-center h-screen ${currentTheme.bg}`}>
+        <div className={currentTheme.textMuted}>Loading...</div>
       </div>
     )
   }
@@ -257,51 +334,84 @@ export default function ChatPage() {
   const activeConvo = getActiveConversation()
 
   return (
-    <div className="flex h-screen bg-[#0a1014]">
+    <div className={`flex h-screen ${currentTheme.bg}`}>
       {/* Left Sidebar - Conversations List */}
-      <div className="w-full md:w-96 bg-[#1f2c34] border-r border-gray-700 flex flex-col">
+      <div className={`w-full md:w-96 ${currentTheme.sidebar} border-r ${currentTheme.border} flex flex-col`}>
         {/* Sidebar Header */}
-        <div className="bg-[#1f2c34] px-4 py-3 border-b border-gray-700">
+        <div className={`${currentTheme.sidebar} px-4 py-3 border-b ${currentTheme.border}`}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-gray-700/50 rounded-full transition"
+                className="p-2 hover:bg-black/10 rounded-full transition"
                 title="Home"
               >
-                <Home className="w-5 h-5 text-gray-300" />
+                <Home className={`w-5 h-5 ${currentTheme.textMuted}`} />
               </button>
-              <h2 className="text-xl font-semibold text-gray-100">Chats</h2>
-              <span className="px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs font-semibold rounded">
+              <h2 className={`text-xl font-semibold ${currentTheme.text}`}>Chats</h2>
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded">
                 v2.3.0
               </span>
             </div>
             <div className="flex items-center gap-2">
+              {/* Theme Switcher */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowThemePicker(!showThemePicker)}
+                  className="p-2 hover:bg-black/10 rounded-full transition flex items-center gap-1"
+                  title="Change Theme"
+                >
+                  <Palette className={`w-5 h-5 ${currentTheme.textMuted}`} />
+                </button>
+                {showThemePicker && (
+                  <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 min-w-[180px]">
+                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
+                      Choose Theme
+                    </div>
+                    {(Object.keys(THEMES) as ChatTheme[]).map((themeKey) => (
+                      <button
+                        key={themeKey}
+                        onClick={() => handleThemeChange(themeKey)}
+                        className={`w-full px-3 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition ${
+                          theme === themeKey ? 'bg-gray-100' : ''
+                        }`}
+                      >
+                        <span className="text-xl">{THEMES[themeKey].icon}</span>
+                        <span className="text-gray-900 font-medium">{THEMES[themeKey].name}</span>
+                        {theme === themeKey && (
+                          <span className="ml-auto text-green-500">✓</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-gray-700/50 rounded-full transition"
+                className="p-2 hover:bg-black/10 rounded-full transition"
                 title="New Chat"
               >
-                <Plus className="w-5 h-5 text-gray-300" />
+                <Plus className={`w-5 h-5 ${currentTheme.textMuted}`} />
               </button>
               <button
-                className="p-2 hover:bg-gray-700/50 rounded-full transition"
+                className="p-2 hover:bg-black/10 rounded-full transition"
                 title="Menu"
               >
-                <MoreVertical className="w-5 h-5 text-gray-300" />
+                <MoreVertical className={`w-5 h-5 ${currentTheme.textMuted}`} />
               </button>
             </div>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${currentTheme.textMuted}`} />
             <input
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[#2a3942] text-gray-100 placeholder-gray-500 border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00a884]"
+              className={`w-full pl-10 pr-4 py-2 ${currentTheme.input} ${currentTheme.text} ${currentTheme.placeholder} border ${currentTheme.border} rounded-lg text-sm focus:outline-none focus:ring-2`}
+              style={{ '--tw-ring-color': currentTheme.accent } as React.CSSProperties}
             />
           </div>
         </div>
@@ -310,16 +420,17 @@ export default function ChatPage() {
         <div className="flex-1 overflow-y-auto">
           {filteredConversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-              <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                <MessageCircle className="w-8 h-8 text-gray-500" />
+              <div className={`w-16 h-16 ${theme === 'whatsapp' ? 'bg-gray-700' : 'bg-gray-200'} rounded-full flex items-center justify-center mb-4`}>
+                <MessageCircle className={`w-8 h-8 ${currentTheme.textMuted}`} />
               </div>
-              <p className="text-gray-300 font-medium mb-2">No conversations yet</p>
-              <p className="text-gray-500 text-sm mb-4">
+              <p className={`${currentTheme.text} font-medium mb-2`}>No conversations yet</p>
+              <p className={`${currentTheme.textMuted} text-sm mb-4`}>
                 Create a personality profile to start chatting
               </p>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 bg-[#00a884] text-white rounded-lg hover:bg-[#00a884]/90 transition"
+                className="px-4 py-2 text-white rounded-lg transition"
+                style={{ backgroundColor: currentTheme.accent }}
               >
                 Create Profile
               </button>
@@ -329,8 +440,8 @@ export default function ChatPage() {
               <button
                 key={convo.profileId}
                 onClick={() => handleSelectConversation(convo.profileId)}
-                className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-[#2a3942] transition border-b border-gray-700 ${
-                  activeProfileId === convo.profileId ? 'bg-[#2a3942]' : ''
+                className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-black/5 transition border-b ${currentTheme.border} ${
+                  activeProfileId === convo.profileId ? 'bg-black/5' : ''
                 }`}
               >
                 {/* Avatar */}
@@ -349,16 +460,16 @@ export default function ChatPage() {
                 {/* Conversation Info */}
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-gray-100 truncate">
+                    <h3 className={`font-semibold ${currentTheme.text} truncate`}>
                       {convo.profile.name}
                     </h3>
                     {convo.lastMessage && (
-                      <span className="text-xs text-gray-500 ml-2">
+                      <span className={`text-xs ${currentTheme.textMuted} ml-2`}>
                         {formatLastSeen(convo.lastMessage.timestamp)}
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-400 truncate">
+                  <p className={`text-sm ${currentTheme.textMuted} truncate`}>
                     {convo.lastMessage?.content || 'No messages yet'}
                   </p>
                 </div>
@@ -372,7 +483,7 @@ export default function ChatPage() {
       {activeConvo ? (
         <div className="flex-1 flex flex-col">
           {/* Chat Header */}
-          <div className="bg-[#1f2c34] border-b border-gray-700 shadow-lg">
+          <div className={`${currentTheme.header} border-b ${currentTheme.border} shadow-sm`}>
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
                 {/* Profile Avatar */}
@@ -390,8 +501,8 @@ export default function ChatPage() {
 
                 {/* Profile Info */}
                 <div>
-                  <h2 className="font-semibold text-gray-100">{activeConvo.profile.name}</h2>
-                  <p className="text-xs text-gray-400 capitalize">{activeConvo.profile.relationship}</p>
+                  <h2 className={`font-semibold ${currentTheme.text}`}>{activeConvo.profile.name}</h2>
+                  <p className={`text-xs ${currentTheme.textMuted} capitalize`}>{activeConvo.profile.relationship}</p>
                 </div>
               </div>
 
@@ -399,20 +510,20 @@ export default function ChatPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigate(`/video?profile=${activeConvo.profile.id}`)}
-                  className="p-2 hover:bg-gray-700/50 rounded-full transition"
+                  className="p-2 hover:bg-black/10 rounded-full transition"
                   title="Video Call"
                 >
-                  <Video className="w-5 h-5 text-gray-300" />
+                  <Video className={`w-5 h-5 ${currentTheme.textMuted}`} />
                 </button>
                 <button
                   onClick={() => navigate(`/video?profile=${activeConvo.profile.id}`)}
-                  className="p-2 hover:bg-gray-700/50 rounded-full transition"
+                  className="p-2 hover:bg-black/10 rounded-full transition"
                   title="Voice Call"
                 >
-                  <Phone className="w-5 h-5 text-gray-300" />
+                  <Phone className={`w-5 h-5 ${currentTheme.textMuted}`} />
                 </button>
-                <button className="p-2 hover:bg-gray-700/50 rounded-full transition">
-                  <MoreVertical className="w-5 h-5 text-gray-300" />
+                <button className="p-2 hover:bg-black/10 rounded-full transition">
+                  <MoreVertical className={`w-5 h-5 ${currentTheme.textMuted}`} />
                 </button>
               </div>
             </div>
@@ -420,9 +531,9 @@ export default function ChatPage() {
 
           {/* Chat Messages */}
           <div
-            className="flex-1 overflow-y-auto px-4 py-6"
+            className={`flex-1 overflow-y-auto px-4 py-6 ${currentTheme.bg}`}
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+              backgroundImage: currentTheme.pattern
             }}
           >
             <div className="max-w-4xl mx-auto space-y-3">
@@ -432,17 +543,17 @@ export default function ChatPage() {
                   className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[75%] rounded-lg px-4 py-2 shadow-md ${
+                    className={`max-w-[75%] px-4 py-2 shadow-sm ${
                       message.sender === 'user'
-                        ? 'bg-[#005c4b] text-white'
-                        : 'bg-[#1f2c34] text-gray-100'
+                        ? `${currentTheme.userBubble} ${theme === 'imessage' ? 'rounded-2xl rounded-br-sm' : theme === 'messenger' ? 'rounded-full' : 'rounded-lg rounded-br-sm'}`
+                        : `${currentTheme.aiBubble} ${theme === 'imessage' ? 'rounded-2xl rounded-bl-sm' : theme === 'messenger' ? 'rounded-full' : 'rounded-lg rounded-bl-sm'}`
                     }`}
                   >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                       {message.content}
                     </p>
                     <div className="flex items-center justify-end gap-1 mt-1">
-                      <span className="text-[10px] text-gray-300 opacity-70">
+                      <span className={`text-[10px] ${message.sender === 'user' ? 'text-white/70' : currentTheme.textMuted} opacity-70`}>
                         {formatTime(message.timestamp)}
                       </span>
                     </div>
@@ -452,7 +563,7 @@ export default function ChatPage() {
 
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-[#1f2c34] rounded-lg px-4 py-3 shadow-md">
+                  <div className={`${currentTheme.aiBubble} ${theme === 'imessage' ? 'rounded-2xl rounded-bl-sm' : theme === 'messenger' ? 'rounded-full' : 'rounded-lg rounded-bl-sm'} px-4 py-3 shadow-sm`}>
                     <TypingIndicator />
                   </div>
                 </div>
@@ -463,14 +574,14 @@ export default function ChatPage() {
           </div>
 
           {/* Input Area */}
-          <div className="bg-[#1f2c34] border-t border-gray-700 px-4 py-3">
+          <div className={`${currentTheme.header} border-t ${currentTheme.border} px-4 py-3`}>
             <div className="max-w-4xl mx-auto flex items-center gap-3">
               <div className="relative">
                 <button
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className={`p-2 hover:bg-gray-700/50 rounded-full transition ${showEmojiPicker ? 'bg-gray-700/50' : ''}`}
+                  className={`p-2 hover:bg-black/10 rounded-full transition ${showEmojiPicker ? 'bg-black/10' : ''}`}
                 >
-                  <Smile className="w-6 h-6 text-gray-400" />
+                  <Smile className={`w-6 h-6 ${currentTheme.textMuted}`} />
                 </button>
                 {showEmojiPicker && (
                   <EmojiPicker
@@ -479,8 +590,8 @@ export default function ChatPage() {
                   />
                 )}
               </div>
-              <button className="p-2 hover:bg-gray-700/50 rounded-full transition">
-                <Paperclip className="w-6 h-6 text-gray-400" />
+              <button className="p-2 hover:bg-black/10 rounded-full transition">
+                <Paperclip className={`w-6 h-6 ${currentTheme.textMuted}`} />
               </button>
               <input
                 type="text"
@@ -489,33 +600,35 @@ export default function ChatPage() {
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 onClick={() => setShowEmojiPicker(false)}
                 placeholder="Type a message"
-                className="flex-1 px-4 py-2.5 bg-[#2a3942] text-gray-100 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00a884]"
+                className={`flex-1 px-4 py-2.5 ${currentTheme.input} ${currentTheme.text} ${currentTheme.placeholder} ${theme === 'messenger' ? 'rounded-full' : 'rounded-lg'} border ${currentTheme.border} focus:outline-none focus:ring-2`}
+                style={{ '--tw-ring-color': currentTheme.accent } as React.CSSProperties}
               />
               {messageInput.trim() ? (
                 <button
                   onClick={handleSendMessage}
-                  className="p-2.5 bg-[#00a884] hover:bg-[#00a884]/90 rounded-full transition"
+                  className="p-2.5 rounded-full transition text-white"
+                  style={{ backgroundColor: currentTheme.accent }}
                 >
-                  <Send className="w-5 h-5 text-white" />
+                  <Send className="w-5 h-5" />
                 </button>
               ) : (
-                <button className="p-2 hover:bg-gray-700/50 rounded-full transition">
-                  <Mic className="w-6 h-6 text-gray-400" />
+                <button className="p-2 hover:bg-black/10 rounded-full transition">
+                  <Mic className={`w-6 h-6 ${currentTheme.textMuted}`} />
                 </button>
               )}
             </div>
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center bg-[#0a1014]">
+        <div className={`flex-1 flex items-center justify-center ${currentTheme.bg}`}>
           <div className="text-center">
-            <div className="w-32 h-32 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-16 h-16 text-gray-600" />
+            <div className={`w-32 h-32 ${theme === 'whatsapp' ? 'bg-gray-800' : 'bg-gray-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <MessageCircle className={`w-16 h-16 ${currentTheme.textMuted}`} />
             </div>
-            <h3 className="text-2xl font-bold text-gray-100 mb-2">
+            <h3 className={`text-2xl font-bold ${currentTheme.text} mb-2`}>
               TalkToYouAI
             </h3>
-            <p className="text-gray-400">
+            <p className={currentTheme.textMuted}>
               Select a conversation to start chatting
             </p>
           </div>
