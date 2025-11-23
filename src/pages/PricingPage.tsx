@@ -31,6 +31,7 @@ import {
   SUBSCRIPTION_PLANS,
   redirectToCheckout,
   isStripeConfigured,
+  arePaymentLinksConfigured,
   PlanType,
   BillingPeriod
 } from '../lib/stripe'
@@ -51,7 +52,12 @@ export default function PricingPage() {
     }
 
     if (!isStripeConfigured()) {
-      setError('Payment system is being configured. Please try again later.')
+      setError('Stripe is nog niet geconfigureerd. Voeg je VITE_STRIPE_PUBLISHABLE_KEY toe aan .env')
+      return
+    }
+
+    if (!arePaymentLinksConfigured()) {
+      setError('Payment Links zijn nog niet geconfigureerd. Maak Payment Links aan in je Stripe Dashboard en voeg de URLs toe aan .env')
       return
     }
 
