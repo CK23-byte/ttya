@@ -1,11 +1,11 @@
 /**
- * Pricing Page - Subscription Plans
+ * Pricing Page - Subscription Plans & Credit Packs
  *
  * Features:
+ * - 4 subscription tiers (Free, Starter, Pro, Premium)
+ * - Voice & Video credit packs
  * - Monthly/yearly billing toggle
- * - Multiple subscription tiers
  * - Stripe checkout integration
- * - Free tier comparison
  */
 
 import { useState } from 'react'
@@ -16,23 +16,28 @@ import {
   MessageCircle,
   Users,
   Palette,
-  Headphones,
-  Video,
-  Mic,
   Heart,
   ArrowRight,
   Shield,
   Zap,
   Crown,
-  ArrowLeft
+  ArrowLeft,
+  Phone,
+  Video,
+  Upload,
+  Brain,
+  Clock
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import {
   SUBSCRIPTION_PLANS,
+  CREDIT_PACKS,
   redirectToCheckout,
+  buyCredits,
   isStripeConfigured,
   arePaymentLinksConfigured,
   PlanType,
+  CreditPackType,
   BillingPeriod
 } from '../lib/stripe'
 
@@ -45,6 +50,11 @@ export default function PricingPage() {
 
   const handleSubscribe = async (plan: PlanType) => {
     setError(null)
+
+    if (plan === 'free') {
+      navigate('/auth')
+      return
+    }
 
     if (!user) {
       navigate('/auth')
@@ -63,11 +73,6 @@ export default function PricingPage() {
 
     const priceId = SUBSCRIPTION_PLANS[plan][billingPeriod].priceId
 
-    if (!priceId) {
-      setError('This plan is not yet available. Please contact support.')
-      return
-    }
-
     setIsLoading(plan)
 
     try {
@@ -80,13 +85,34 @@ export default function PricingPage() {
     }
   }
 
+  const handleBuyCredits = async (pack: CreditPackType) => {
+    setError(null)
+
+    if (!user) {
+      navigate('/auth')
+      return
+    }
+
+    setIsLoading(pack)
+
+    try {
+      await buyCredits(pack, user.email || undefined)
+    } catch (err) {
+      console.error('Checkout error:', err)
+      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
+    } finally {
+      setIsLoading(null)
+    }
+  }
+
   const getIconForFeature = (feature: string) => {
-    if (feature.includes('message')) return <MessageCircle className="w-4 h-4" />
-    if (feature.includes('personalit')) return <Users className="w-4 h-4" />
-    if (feature.includes('theme')) return <Palette className="w-4 h-4" />
-    if (feature.includes('support')) return <Headphones className="w-4 h-4" />
-    if (feature.includes('Video')) return <Video className="w-4 h-4" />
-    if (feature.includes('Voice')) return <Mic className="w-4 h-4" />
+    if (feature.toLowerCase().includes('message')) return <MessageCircle className="w-4 h-4" />
+    if (feature.toLowerCase().includes('personal')) return <Users className="w-4 h-4" />
+    if (feature.toLowerCase().includes('theme')) return <Palette className="w-4 h-4" />
+    if (feature.toLowerCase().includes('memory')) return <Brain className="w-4 h-4" />
+    if (feature.toLowerCase().includes('fast') || feature.toLowerCase().includes('response')) return <Zap className="w-4 h-4" />
+    if (feature.toLowerCase().includes('upload') || feature.toLowerCase().includes('archive')) return <Upload className="w-4 h-4" />
+    if (feature.toLowerCase().includes('support')) return <Heart className="w-4 h-4" />
     return <Check className="w-4 h-4" />
   }
 
@@ -94,7 +120,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-80 transition"
@@ -133,7 +159,7 @@ export default function PricingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 px-4">
+      <section className="py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
@@ -183,50 +209,44 @@ export default function PricingPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="max-w-4xl mx-auto px-4 mb-8">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-center">
+        <div className="max-w-6xl mx-auto px-4 mb-8">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-center whitespace-pre-line">
             {error}
           </div>
         </div>
       )}
 
-      {/* Pricing Cards */}
-      <section className="pb-16 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-6">
+      {/* Text Chat Plans */}
+      <section className="pb-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+            Text Chat Subscriptions
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Free Plan */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 flex flex-col">
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col">
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-1">Free</h3>
                 <p className="text-gray-600 text-sm">Try it out</p>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-gray-900">$0</span>
+                  <span className="text-3xl font-bold text-gray-900">€0</span>
                   <span className="text-gray-500">/month</span>
                 </div>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
-                <li className="flex items-center gap-3 text-gray-600">
-                  <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
-                    <MessageCircle className="w-3 h-3 text-gray-500" />
-                  </div>
-                  <span>50 messages total</span>
-                </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Users className="w-3 h-3 text-gray-500" />
-                  </div>
-                  <span>2 AI personalities</span>
-                </li>
-                <li className="flex items-center gap-3 text-gray-600">
-                  <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Palette className="w-3 h-3 text-gray-500" />
-                  </div>
-                  <span>All chat themes</span>
-                </li>
+              <ul className="space-y-2 mb-6 flex-1 text-sm">
+                {SUBSCRIPTION_PLANS.free.features.map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2 text-gray-600">
+                    <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+                      {getIconForFeature(feature)}
+                    </div>
+                    <span>{feature}</span>
+                  </li>
+                ))}
               </ul>
 
               <button
@@ -238,33 +258,31 @@ export default function PricingPage() {
             </div>
 
             {/* Starter Plan */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 flex flex-col">
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {SUBSCRIPTION_PLANS.starter.name}
-                </h3>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col">
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-1">Starter</h3>
                 <p className="text-gray-600 text-sm">{SUBSCRIPTION_PLANS.starter.description}</p>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-gray-900">
-                    ${billingPeriod === 'monthly'
+                  <span className="text-3xl font-bold text-gray-900">
+                    €{billingPeriod === 'monthly'
                       ? SUBSCRIPTION_PLANS.starter.monthly.price
                       : (SUBSCRIPTION_PLANS.starter.yearly.price / 12).toFixed(2)}
                   </span>
                   <span className="text-gray-500">/month</span>
                 </div>
                 {billingPeriod === 'yearly' && (
-                  <p className="text-sm text-green-600 mt-1">
-                    Billed ${SUBSCRIPTION_PLANS.starter.yearly.price}/year
+                  <p className="text-xs text-green-600 mt-1">
+                    Billed €{SUBSCRIPTION_PLANS.starter.yearly.price}/year
                   </p>
                 )}
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="space-y-2 mb-6 flex-1 text-sm">
                 {SUBSCRIPTION_PLANS.starter.features.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-600">
+                  <li key={i} className="flex items-center gap-2 text-gray-600">
                     <div className="w-5 h-5 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
                       {getIconForFeature(feature)}
                     </div>
@@ -284,48 +302,42 @@ export default function PricingPage() {
                     Processing...
                   </>
                 ) : (
-                  <>
-                    Subscribe
-                    <ArrowRight className="w-4 h-4" />
-                  </>
+                  <>Subscribe <ArrowRight className="w-4 h-4" /></>
                 )}
               </button>
             </div>
 
-            {/* Pro Plan */}
-            <div className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl shadow-xl p-8 flex flex-col relative overflow-hidden">
-              {/* Popular Badge */}
-              <div className="absolute top-4 right-4 px-3 py-1 bg-white/20 text-white text-xs font-semibold rounded-full flex items-center gap-1">
+            {/* Pro Plan - Popular */}
+            <div className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl shadow-xl p-6 flex flex-col relative">
+              <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full flex items-center gap-1">
                 <Crown className="w-3 h-3" />
-                Most Popular
+                Popular
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-white mb-2">
-                  {SUBSCRIPTION_PLANS.pro.name}
-                </h3>
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-white mb-1">Pro</h3>
                 <p className="text-white/80 text-sm">{SUBSCRIPTION_PLANS.pro.description}</p>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-white">
-                    ${billingPeriod === 'monthly'
+                  <span className="text-3xl font-bold text-white">
+                    €{billingPeriod === 'monthly'
                       ? SUBSCRIPTION_PLANS.pro.monthly.price
                       : (SUBSCRIPTION_PLANS.pro.yearly.price / 12).toFixed(2)}
                   </span>
                   <span className="text-white/70">/month</span>
                 </div>
                 {billingPeriod === 'yearly' && (
-                  <p className="text-sm text-white/80 mt-1">
-                    Billed ${SUBSCRIPTION_PLANS.pro.yearly.price}/year
+                  <p className="text-xs text-white/80 mt-1">
+                    Billed €{SUBSCRIPTION_PLANS.pro.yearly.price}/year
                   </p>
                 )}
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="space-y-2 mb-6 flex-1 text-sm">
                 {SUBSCRIPTION_PLANS.pro.features.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3 text-white/90">
+                  <li key={i} className="flex items-center gap-2 text-white/90">
                     <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center text-white">
                       {getIconForFeature(feature)}
                     </div>
@@ -345,11 +357,189 @@ export default function PricingPage() {
                     Processing...
                   </>
                 ) : (
-                  <>
-                    Subscribe to Pro
-                    <ArrowRight className="w-4 h-4" />
-                  </>
+                  <>Subscribe to Pro <ArrowRight className="w-4 h-4" /></>
                 )}
+              </button>
+            </div>
+
+            {/* Premium Plan */}
+            <div className="bg-gray-900 rounded-2xl shadow-xl p-6 flex flex-col relative">
+              <div className="absolute top-3 right-3 px-2 py-1 bg-amber-400 text-gray-900 text-xs font-semibold rounded-full flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Premium
+              </div>
+
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-white mb-1">Premium</h3>
+                <p className="text-gray-400 text-sm">{SUBSCRIPTION_PLANS.premium.description}</p>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-white">
+                    €{billingPeriod === 'monthly'
+                      ? SUBSCRIPTION_PLANS.premium.monthly.price
+                      : (SUBSCRIPTION_PLANS.premium.yearly.price / 12).toFixed(2)}
+                  </span>
+                  <span className="text-gray-500">/month</span>
+                </div>
+                {billingPeriod === 'yearly' && (
+                  <p className="text-xs text-amber-400 mt-1">
+                    Billed €{SUBSCRIPTION_PLANS.premium.yearly.price}/year
+                  </p>
+                )}
+              </div>
+
+              <ul className="space-y-2 mb-6 flex-1 text-sm">
+                {SUBSCRIPTION_PLANS.premium.features.map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2 text-gray-300">
+                    <div className="w-5 h-5 bg-amber-400/20 rounded-full flex items-center justify-center text-amber-400">
+                      {getIconForFeature(feature)}
+                    </div>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => handleSubscribe('premium')}
+                disabled={isLoading === 'premium'}
+                className="w-full py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-gray-900 rounded-xl font-semibold hover:from-amber-500 hover:to-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading === 'premium' ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>Go Premium <ArrowRight className="w-4 h-4" /></>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Voice & Video Credits */}
+      <section className="py-12 px-4 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-4">
+              <Phone className="w-4 h-4" />
+              <Video className="w-4 h-4" />
+              Voice & Video Add-on
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              Voice & Video Credits
+            </h2>
+            <p className="text-gray-600 max-w-xl mx-auto">
+              Buy credits for voice and video calls. 1 credit = 1 minute of call time.
+              Works with any subscription plan.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Small Pack */}
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 p-6 flex flex-col hover:shadow-lg transition">
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-gray-900">{CREDIT_PACKS.small.name}</h3>
+                <p className="text-gray-500 text-sm">Perfect to try it out</p>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-gray-900">€{CREDIT_PACKS.small.price}</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  €{CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4 text-purple-500" />
+                  <span>{CREDIT_PACKS.small.credits} minutes</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleBuyCredits('small')}
+                disabled={isLoading === 'small'}
+                className="w-full py-3 border-2 border-purple-200 text-purple-700 rounded-xl font-medium hover:bg-purple-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isLoading === 'small' ? 'Processing...' : 'Buy Credits'}
+              </button>
+            </div>
+
+            {/* Medium Pack - Popular */}
+            <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-xl p-6 flex flex-col relative">
+              <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full">
+                Most Popular
+              </div>
+
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-white">{CREDIT_PACKS.medium.name}</h3>
+                <p className="text-white/80 text-sm">Best for regular use</p>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-white">€{CREDIT_PACKS.medium.price}</span>
+                </div>
+                <p className="text-xs text-white/70 mt-1">
+                  €{CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 mb-6 text-sm text-white/90">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{CREDIT_PACKS.medium.credits} minutes</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleBuyCredits('medium')}
+                disabled={isLoading === 'medium'}
+                className="w-full py-3 bg-white text-purple-600 rounded-xl font-semibold hover:bg-gray-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isLoading === 'medium' ? 'Processing...' : 'Buy Credits'}
+              </button>
+            </div>
+
+            {/* Large Pack - Best Value */}
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-purple-200 p-6 flex flex-col relative hover:shadow-lg transition">
+              <div className="absolute top-3 right-3 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                Best Value
+              </div>
+
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-gray-900">{CREDIT_PACKS.large.name}</h3>
+                <p className="text-gray-500 text-sm">For power users</p>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-gray-900">€{CREDIT_PACKS.large.price}</span>
+                </div>
+                <p className="text-xs text-green-600 mt-1">
+                  €{CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 20%!
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4 text-purple-500" />
+                  <span>{CREDIT_PACKS.large.credits} minutes</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleBuyCredits('large')}
+                disabled={isLoading === 'large'}
+                className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isLoading === 'large' ? 'Processing...' : 'Buy Credits'}
               </button>
             </div>
           </div>
@@ -395,6 +585,16 @@ export default function PricingPage() {
           <div className="space-y-6">
             <div className="border-b border-gray-200 pb-6">
               <h3 className="font-semibold text-gray-900 mb-2">
+                What's the difference between subscriptions and credits?
+              </h3>
+              <p className="text-gray-600">
+                Subscriptions give you access to text chat with your AI personalities.
+                Credits are used for voice and video calls - each credit equals 1 minute of call time.
+              </p>
+            </div>
+
+            <div className="border-b border-gray-200 pb-6">
+              <h3 className="font-semibold text-gray-900 mb-2">
                 Can I cancel my subscription anytime?
               </h3>
               <p className="text-gray-600">
@@ -405,21 +605,10 @@ export default function PricingPage() {
 
             <div className="border-b border-gray-200 pb-6">
               <h3 className="font-semibold text-gray-900 mb-2">
-                What payment methods do you accept?
+                Do credits expire?
               </h3>
               <p className="text-gray-600">
-                We accept all major credit cards (Visa, Mastercard, American Express),
-                as well as Apple Pay and Google Pay through our secure payment provider Stripe.
-              </p>
-            </div>
-
-            <div className="border-b border-gray-200 pb-6">
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Can I switch between monthly and yearly billing?
-              </h3>
-              <p className="text-gray-600">
-                Yes! You can switch between billing periods at any time. If you switch to yearly,
-                you'll save 17% compared to monthly billing.
+                No, your voice and video credits never expire. Use them whenever you want.
               </p>
             </div>
 
@@ -432,7 +621,6 @@ export default function PricingPage() {
                 with end-to-end encryption. They remain yours even after cancellation.
               </p>
             </div>
-
           </div>
         </div>
       </section>
