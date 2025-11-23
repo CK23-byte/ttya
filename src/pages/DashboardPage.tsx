@@ -12,7 +12,7 @@ import {
   MessageCircle,
   LogOut,
   Clock,
-  Home
+  Heart
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePayment } from '../contexts/PaymentContext'
@@ -128,36 +128,39 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 hover:bg-gray-100 rounded-full transition"
+                className="flex items-center gap-2 hover:opacity-80 transition"
                 title="Home"
               >
-                <Home className="w-5 h-5 text-gray-600" />
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-white" fill="currentColor" />
+                </div>
+                <span className="font-bold text-xl text-gray-800 hidden sm:inline">TalkToYouAI</span>
               </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">My Chats</h1>
-                <p className="text-sm text-gray-600">
-                  {subscription?.plan === 'free' && `${profiles.length}/1 profile used`}
-                  {subscription?.plan === 'pro' && `Pro Plan - ${profiles.length} profiles`}
-                  {subscription?.plan === 'lifetime' && `Lifetime - ${profiles.length} profiles`}
-                </p>
-              </div>
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
+              <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
                 v2.3.0
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium text-gray-800">My Chats</p>
+                <p className="text-xs text-gray-500">
+                  {subscription?.plan === 'free' && `${profiles.length}/1 profile`}
+                  {subscription?.plan === 'pro' && `Pro Plan`}
+                  {subscription?.plan === 'lifetime' && `Lifetime`}
+                </p>
+              </div>
               <button
                 onClick={logout}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-orange-50 rounded-lg transition"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Logout</span>
@@ -172,8 +175,8 @@ export default function DashboardPage() {
         {profiles.length === 0 ? (
           /* Empty State */
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-purple-100 rounded-full mb-6">
-              <MessageCircle className="w-12 h-12 text-purple-600" />
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-orange-100 to-rose-100 rounded-full mb-6">
+              <MessageCircle className="w-12 h-12 text-orange-500" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               No conversations yet
@@ -183,7 +186,7 @@ export default function DashboardPage() {
             </p>
             <button
               onClick={handleCreateProfile}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition"
+              className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition"
             >
               <Plus className="w-5 h-5" />
               Create First Profile
@@ -195,7 +198,7 @@ export default function DashboardPage() {
             <div className="mb-8">
               <button
                 onClick={handleCreateProfile}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transition"
+                className="group w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition"
               >
                 <Plus className="w-5 h-5" />
                 Create New Profile
@@ -208,12 +211,12 @@ export default function DashboardPage() {
                 <button
                   key={profile.id}
                   onClick={() => navigate(`/chat?profile=${profile.id}`)}
-                  className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-left group"
+                  className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 text-left group border border-transparent hover:border-orange-200"
                 >
                   {/* Profile Header */}
                   <div className="flex items-start gap-4 mb-4">
                     {/* Avatar */}
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex-shrink-0 flex items-center justify-center text-white font-semibold text-xl">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex-shrink-0 flex items-center justify-center text-white font-semibold text-xl shadow-lg">
                       {(profile.photoUrls && profile.photoUrls.length > 0) || profile.photoUrl ? (
                         <img
                           src={profile.photoUrls?.[0] || profile.photoUrl}
@@ -239,20 +242,20 @@ export default function DashboardPage() {
                   {/* Stats */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MessageCircle className="w-4 h-4" />
+                      <MessageCircle className="w-4 h-4 text-orange-500" />
                       <span>{profile.messageCount} messages</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock className="w-4 h-4" />
+                      <Clock className="w-4 h-4 text-orange-500" />
                       <span>{formatLastSeen(profile.lastMessageTime)}</span>
                     </div>
                   </div>
 
                   {/* Action Hint */}
-                  <div className="pt-4 border-t border-gray-100">
+                  <div className="pt-4 border-t border-orange-100">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-500">Click to open chat</span>
-                      <MessageCircle className="w-4 h-4 text-purple-600 group-hover:translate-x-1 transition-transform" />
+                      <MessageCircle className="w-4 h-4 text-orange-500 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </button>

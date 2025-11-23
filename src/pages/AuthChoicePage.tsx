@@ -30,7 +30,7 @@ export default function AuthChoicePage() {
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Terug naar home</span>
+          <span className="text-sm">Back to home</span>
         </button>
       </header>
 
@@ -42,10 +42,10 @@ export default function AuthChoicePage() {
               <Heart className="w-8 h-8 text-rose-500" />
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-3">
-              Kies hoe je wilt inloggen
+              Choose How to Sign In
             </h1>
             <p className="text-gray-600">
-              Selecteer de methode die het beste bij jou past
+              Select the method that works best for you
             </p>
           </div>
 
@@ -65,23 +65,23 @@ export default function AuthChoicePage() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-bold text-gray-800">E-mail Account</h3>
+                    <h3 className="text-lg font-bold text-gray-800">Email Account</h3>
                     <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                      Aanbevolen
+                      Recommended
                     </span>
                   </div>
                   <p className="text-gray-600 text-sm mb-4">
-                    Log in met je e-mailadres en krijg toegang tot het creditsysteem
+                    Sign in with your email and get access to the credit system
                   </p>
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-700">
                       <Cloud className="w-4 h-4 text-blue-500" />
-                      <span>Toegang op meerdere apparaten</span>
+                      <span>Access on multiple devices</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-700">
                       <Gift className="w-4 h-4 text-green-500" />
-                      <span>{CREDIT_PRICING.SIGNUP_BONUS} gratis credits bij registratie</span>
+                      <span>{CREDIT_PRICING.SIGNUP_BONUS} free credits on signup</span>
                     </div>
                   </div>
                 </div>
@@ -89,7 +89,7 @@ export default function AuthChoicePage() {
 
               {!supabaseConfigured && (
                 <p className="mt-4 text-xs text-gray-500 italic">
-                  E-mail login is momenteel niet beschikbaar
+                  Email login is currently unavailable
                 </p>
               )}
             </button>
@@ -105,20 +105,20 @@ export default function AuthChoicePage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-800 mb-1">
-                    Lokaal Wachtwoord
+                    Local Password
                   </h3>
                   <p className="text-gray-600 text-sm mb-4">
-                    Maximale privacy met lokale versleuteling
+                    Maximum privacy with local encryption
                   </p>
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-700">
                       <Smartphone className="w-4 h-4 text-purple-500" />
-                      <span>Alles blijft op dit apparaat</span>
+                      <span>Everything stays on this device</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-700">
                       <Shield className="w-4 h-4 text-blue-500" />
-                      <span>AES-256 versleuteling</span>
+                      <span>AES-256 encryption</span>
                     </div>
                   </div>
                 </div>
@@ -126,7 +126,7 @@ export default function AuthChoicePage() {
 
               {isSetupComplete && (
                 <p className="mt-4 text-xs text-green-600 font-medium">
-                  Je hebt al een lokaal account
+                  You already have a local account
                 </p>
               )}
             </button>
@@ -135,9 +135,9 @@ export default function AuthChoicePage() {
           {/* Info */}
           <div className="mt-8 bg-white/50 rounded-xl p-4 text-center">
             <p className="text-sm text-gray-600">
-              <strong>E-mail account:</strong> Je data wordt veilig opgeslagen in de cloud en je krijgt toegang tot het creditsysteem.
+              <strong>Email account:</strong> Your data is securely stored in the cloud and you get access to the credit system.
               <br />
-              <strong>Lokaal wachtwoord:</strong> Maximale privacy - alle data blijft op dit apparaat en is versleuteld.
+              <strong>Local password:</strong> Maximum privacy - all data stays on this device and is encrypted.
             </p>
           </div>
         </div>
