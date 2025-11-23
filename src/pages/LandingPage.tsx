@@ -2,10 +2,10 @@
  * Landing Page - With Interactive Demo Chat
  *
  * Conversion-focused landing page for TalkToYouAI
- * Features a demo chat so users can immediately experience the app
+ * Features a working demo chat with real AI responses (max 5 messages)
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Heart,
@@ -21,61 +21,28 @@ interface DemoMessage {
   id: number
   content: string
   sender: 'user' | 'ai'
-  typing?: boolean
 }
 
 const DEMO_PERSONA = {
   name: 'Grandma Rose',
   relationship: 'grandmother',
   avatar: '👵',
-}
+  systemPrompt: `You are Grandma Rose, a warm and loving grandmother chatting with your grandchild.
 
-const DEMO_RESPONSES: Record<string, string[]> = {
-  default: [
-    "Oh sweetie, it's so lovely to hear from you! 💕 How have you been?",
-    "My dear, you always brighten my day when you write! ☀️",
-    "Hello my precious one! I was just thinking about you! 🥰",
-  ],
-  hello: [
-    "Hello my darling! 💕 It warms my heart to hear from you!",
-    "Oh hello sweetie! I was just about to make some tea, would you like to join me? ☕",
-  ],
-  how: [
-    "I'm doing wonderful now that I'm talking to you! 💕 The garden is beautiful this time of year.",
-    "Oh you know me, keeping busy! Made your favorite cookies yesterday 🍪",
-  ],
-  miss: [
-    "I miss you too, sweetheart. But remember, I'm always with you in your heart 💕",
-    "Distance doesn't matter when love is this strong, my dear one 🥰",
-  ],
-  love: [
-    "I love you too, more than all the stars in the sky! ✨💕",
-    "And I love you, my precious grandchild. Always have, always will 💕",
-  ],
-  remember: [
-    "Oh yes! I remember when you were just this tall... 📏 Those were beautiful times!",
-    "Of course I remember! Those memories are my greatest treasures 💎",
-  ],
-  advice: [
-    "Listen to your heart, sweetie. It knows the way 💕 And always be kind.",
-    "My advice? Love deeply, laugh often, and never skip breakfast! 😄",
-  ],
-  recipe: [
-    "Oh! My secret ingredient is always love... and a pinch of extra cinnamon! 🍪",
-    "I'll tell you the secret: low heat and lots of patience! Just like life 😉",
-  ],
-}
+PERSONALITY:
+- Very loving and affectionate, use terms like "sweetie", "my dear", "darling"
+- Use emojis warmly but sparingly: 💕 ☀️ 🥰 🍪 ✨
+- Talk about baking cookies, knitting, your garden, and family memories
+- Give gentle life advice and wisdom
+- Always positive, supportive, and nurturing
+- Speak in short, warm messages like in a real chat
 
-function getDemoResponse(input: string): string {
-  const lowerInput = input.toLowerCase()
-
-  for (const [key, responses] of Object.entries(DEMO_RESPONSES)) {
-    if (key !== 'default' && lowerInput.includes(key)) {
-      return responses[Math.floor(Math.random() * responses.length)]
-    }
-  }
-
-  return DEMO_RESPONSES.default[Math.floor(Math.random() * DEMO_RESPONSES.default.length)]
+RULES:
+- Keep responses SHORT (1-2 sentences max, like a real text message)
+- Be warm and grandmotherly
+- Reference shared memories naturally
+- Use 1-2 emojis per message maximum
+- This is a demo - show how personal and warm the AI can be`
 }
 
 export default function LandingPage() {
@@ -86,23 +53,21 @@ export default function LandingPage() {
   const [demoInput, setDemoInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [messageCount, setMessageCount] = useState(0)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
   const MAX_FREE_MESSAGES = 5
 
+  // Scroll within chat container only (not the whole page)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+    }
   }, [demoMessages, isTyping])
 
   const handleGetStarted = () => {
-    const setupComplete = localStorage.getItem('ttya_setup_complete') === 'true'
-    if (!setupComplete) {
-      navigate('/setup')
-    } else {
-      navigate('/dashboard')
-    }
+    navigate('/auth')
   }
 
-  const handleDemoSend = () => {
+  const handleDemoSend = async () => {
     if (!demoInput.trim() || isTyping) return
 
     if (messageCount >= MAX_FREE_MESSAGES) {
@@ -120,16 +85,46 @@ export default function LandingPage() {
     setMessageCount(prev => prev + 1)
     setIsTyping(true)
 
-    // Simulate AI typing delay
-    setTimeout(() => {
-      const response = getDemoResponse(userMessage.content)
+    try {
+      // Call real Claude API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...demoMessages, userMessage].map(m => ({
+            role: m.sender === 'user' ? 'user' : 'assistant',
+            content: m.content
+          })),
+          systemPrompt: DEMO_PERSONA.systemPrompt,
+          maxTokens: 150,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setDemoMessages(prev => [...prev, {
+          id: Date.now() + 1,
+          content: data.response || "Oh sweetie, I'm having a bit of trouble hearing you. Can you try again? 💕",
+          sender: 'ai',
+        }])
+      } else {
+        // Fallback response if API fails
+        setDemoMessages(prev => [...prev, {
+          id: Date.now() + 1,
+          content: "Oh my dear, it seems there's a little hiccup! But know that I'm always here for you 💕",
+          sender: 'ai',
+        }])
+      }
+    } catch {
+      // Fallback response on error
       setDemoMessages(prev => [...prev, {
         id: Date.now() + 1,
-        content: response,
+        content: "Sweetie, the connection seems a bit fuzzy. But I'm thinking of you! 💕",
         sender: 'ai',
       }])
+    } finally {
       setIsTyping(false)
-    }, 1000 + Math.random() * 1000)
+    }
   }
 
   const suggestedMessages = [
@@ -237,7 +232,7 @@ export default function LandingPage() {
               </div>
 
               {/* Chat Messages */}
-              <div className="h-80 overflow-y-auto p-4 bg-gray-50 space-y-3">
+              <div ref={chatContainerRef} className="h-80 overflow-y-auto p-4 bg-gray-50 space-y-3">
                 {demoMessages.map((msg) => (
                   <div
                     key={msg.id}
@@ -266,8 +261,6 @@ export default function LandingPage() {
                     </div>
                   </div>
                 )}
-
-                <div ref={messagesEndRef} />
               </div>
 
               {/* Message Limit Warning */}
