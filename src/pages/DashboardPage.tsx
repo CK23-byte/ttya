@@ -11,7 +11,6 @@ import {
   Plus,
   MessageCircle,
   LogOut,
-  CreditCard,
   Clock,
   Home
 } from 'lucide-react'
@@ -156,13 +155,6 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate('/pricing')}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span className="hidden sm:inline">Pricing</span>
-              </button>
               <button
                 onClick={logout}
                 className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
