@@ -27,7 +27,7 @@ export default function PricingPage() {
       {/* Version Badge */}
       <div className="fixed top-4 left-4 z-50">
         <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
-          <span className="text-xs font-semibold text-gray-600">v2.2.0</span>
+          <span className="text-xs font-semibold text-gray-600">v2.3.0</span>
         </div>
       </div>
 
