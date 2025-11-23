@@ -427,15 +427,6 @@ export default function PricingPage() {
               </p>
             </div>
 
-            <div className="pb-6">
-              <h3 className="font-semibold text-gray-900 mb-2">
-                Do you offer refunds?
-              </h3>
-              <p className="text-gray-600">
-                We offer a 7-day money-back guarantee for first-time subscribers.
-                If you're not satisfied, contact us within 7 days for a full refund.
-              </p>
-            </div>
           </div>
         </div>
       </section>

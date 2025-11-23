@@ -692,6 +692,7 @@ export default function ChatPage() {
           hasVoiceSample={false}
           onUploadVoiceSample={handleVoiceSampleUpload}
           onBuyCredits={handleBuyVoiceCredits}
+          theme={theme}
         />
       )}
 
@@ -703,6 +704,7 @@ export default function ChatPage() {
           hasVisualMedia={!!(activeConvo.profile.photoUrl || activeConvo.profile.photoUrls?.length)}
           onUploadMedia={handleMediaUpload}
           onBuyCredits={handleBuyVideoCredits}
+          theme={theme}
         />
       )}
     </div>

@@ -113,7 +113,7 @@ export default function AttachmentPicker({ onClose, onUpload, profileName }: Att
           <input
             ref={textInputRef}
             type="file"
-            accept=".txt,.pdf,.doc,.docx"
+            accept=".txt,.pdf,.doc,.docx,.zip"
             multiple
             className="hidden"
             onChange={(e) => handleFileSelect(e, 'text')}
