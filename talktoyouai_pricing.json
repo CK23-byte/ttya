@@ -1,0 +1,103 @@
+{
+  "plans": [
+    {
+      "id": "free",
+      "name": "Free",
+      "monthly_price_eur": 0,
+      "yearly_price_eur": 0,
+      "text_messages_included": 50,
+      "voice_clips_included": 0,
+      "video_minutes_included": 0,
+      "estimated_cost_eur": 0.10,
+      "estimated_margin_eur": -0.10,
+      "estimated_margin_pct": null
+    },
+    {
+      "id": "starter",
+      "name": "Starter",
+      "monthly_price_eur": 9.99,
+      "yearly_price_eur": 99.00,
+      "text_messages_included": 1000,
+      "voice_clips_included": 0,
+      "video_minutes_included": 0,
+      "estimated_cost_eur": 2.00,
+      "estimated_margin_eur": 7.99,
+      "estimated_margin_pct": 400
+    },
+    {
+      "id": "pro",
+      "name": "Pro",
+      "monthly_price_eur": 19.99,
+      "yearly_price_eur": 199.00,
+      "text_messages_included": 3000,
+      "voice_clips_included": 10,
+      "video_minutes_included": 0,
+      "estimated_cost_eur": 7.50,
+      "estimated_margin_eur": 12.49,
+      "estimated_margin_pct": 166
+    },
+    {
+      "id": "premium",
+      "name": "Premium",
+      "monthly_price_eur": 49.99,
+      "yearly_price_eur": 499.00,
+      "text_messages_included": 5000,
+      "voice_clips_included": 30,
+      "video_minutes_included": 5,
+      "estimated_cost_eur": 18.50,
+      "estimated_margin_eur": 31.49,
+      "estimated_margin_pct": 170
+    }
+  ],
+  "addons": [
+    {
+      "id": "text_pack",
+      "name": "Extra Text Pack",
+      "price_eur": 4.99,
+      "type": "text",
+      "units_included": 500,
+      "unit_label": "messages",
+      "estimated_cost_eur": 1.00,
+      "estimated_margin_eur": 3.99,
+      "estimated_margin_pct": 399
+    },
+    {
+      "id": "voice_pack",
+      "name": "Voice Pack",
+      "price_eur": 9.99,
+      "type": "voice",
+      "units_included": 30,
+      "unit_label": "clips",
+      "estimated_cost_eur": 4.50,
+      "estimated_margin_eur": 5.49,
+      "estimated_margin_pct": 122
+    },
+    {
+      "id": "video_pack",
+      "name": "Video Pack",
+      "price_eur": 14.99,
+      "type": "video",
+      "units_included": 10,
+      "unit_label": "minutes",
+      "estimated_cost_eur": 10.00,
+      "estimated_margin_eur": 4.99,
+      "estimated_margin_pct": 50
+    }
+  ],
+  "cost_per_unit": {
+    "text_message_eur": 0.002,
+    "voice_clip_eur": 0.15,
+    "video_minute_eur": 1.00
+  },
+  "requirements": {
+    "voice_calls": {
+      "voice_sample_min_seconds": 10,
+      "description": "Requires at least 10 seconds of voice recording"
+    },
+    "video_calls": {
+      "voice_sample_min_seconds": 10,
+      "photos_or_video_required": true,
+      "description": "Requires photos or video of the person plus 10 seconds voice sample"
+    }
+  }
+}

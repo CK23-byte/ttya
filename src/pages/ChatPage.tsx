@@ -30,6 +30,9 @@ import { getSecure, setSecure } from '../utils/secureStorage'
 import { sendMessageToClaude, generateSystemPrompt } from '../utils/claudeAPI'
 import TypingIndicator from '../components/TypingIndicator'
 import EmojiPicker from '../components/EmojiPicker'
+import AttachmentPicker from '../components/AttachmentPicker'
+import VoiceCallModal from '../components/VoiceCallModal'
+import VideoCallModal from '../components/VideoCallModal'
 import { Message, PersonalityProfile } from '../types'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
@@ -113,6 +116,9 @@ export default function ChatPage() {
   const [messageInput, setMessageInput] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showThemePicker, setShowThemePicker] = useState(false)
+  const [showAttachmentPicker, setShowAttachmentPicker] = useState(false)
+  const [showVoiceCallModal, setShowVoiceCallModal] = useState(false)
+  const [showVideoCallModal, setShowVideoCallModal] = useState(false)
   const [theme, setTheme] = useState<ChatTheme>('whatsapp')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -323,6 +329,37 @@ export default function ChatPage() {
     }
   }
 
+  // Handle file attachments
+  const handleAttachmentUpload = (files: File[], type: 'photo' | 'video' | 'text') => {
+    console.log(`Uploading ${files.length} ${type} files:`, files.map(f => f.name))
+    // TODO: Store files locally and attach to profile
+    alert(`${files.length} ${type} file(s) uploaded successfully! These will help the AI better understand ${getActiveConversation()?.profile.name}.`)
+  }
+
+  // Handle voice sample upload
+  const handleVoiceSampleUpload = (file: File) => {
+    console.log('Voice sample uploaded:', file.name)
+    // TODO: Store voice sample with profile
+    alert(`Voice sample "${file.name}" uploaded! This will be used to generate voice calls.`)
+  }
+
+  // Handle media upload for video calls
+  const handleMediaUpload = (files: File[], type: 'photo' | 'video' | 'voice') => {
+    console.log(`Uploading ${files.length} ${type} files for video:`, files.map(f => f.name))
+    // TODO: Store media with profile
+  }
+
+  // Handle buy credits
+  const handleBuyVoiceCredits = () => {
+    alert('Voice credits purchase coming soon! This will redirect to Stripe checkout.')
+    setShowVoiceCallModal(false)
+  }
+
+  const handleBuyVideoCredits = () => {
+    alert('Video credits purchase coming soon! This will redirect to Stripe checkout.')
+    setShowVideoCallModal(false)
+  }
+
   if (isLoading) {
     return (
       <div className={`flex items-center justify-center h-screen ${currentTheme.bg}`}>
@@ -509,16 +546,16 @@ export default function ChatPage() {
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => navigate(`/video?profile=${activeConvo.profile.id}`)}
+                  onClick={() => setShowVideoCallModal(true)}
                   className="p-2 hover:bg-black/10 rounded-full transition"
-                  title="Video Call"
+                  title="Video Call - Buy Credits"
                 >
                   <Video className={`w-5 h-5 ${currentTheme.textMuted}`} />
                 </button>
                 <button
-                  onClick={() => navigate(`/video?profile=${activeConvo.profile.id}`)}
+                  onClick={() => setShowVoiceCallModal(true)}
                   className="p-2 hover:bg-black/10 rounded-full transition"
-                  title="Voice Call"
+                  title="Voice Call - Buy Credits"
                 >
                   <Phone className={`w-5 h-5 ${currentTheme.textMuted}`} />
                 </button>
@@ -590,7 +627,11 @@ export default function ChatPage() {
                   />
                 )}
               </div>
-              <button className="p-2 hover:bg-black/10 rounded-full transition">
+              <button
+                onClick={() => setShowAttachmentPicker(true)}
+                className="p-2 hover:bg-black/10 rounded-full transition"
+                title="Add photos, videos, or text samples"
+              >
                 <Paperclip className={`w-6 h-6 ${currentTheme.textMuted}`} />
               </button>
               <input
@@ -633,6 +674,36 @@ export default function ChatPage() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* Modals */}
+      {showAttachmentPicker && activeConvo && (
+        <AttachmentPicker
+          onClose={() => setShowAttachmentPicker(false)}
+          onUpload={handleAttachmentUpload}
+          profileName={activeConvo.profile.name}
+        />
+      )}
+
+      {showVoiceCallModal && activeConvo && (
+        <VoiceCallModal
+          onClose={() => setShowVoiceCallModal(false)}
+          profileName={activeConvo.profile.name}
+          hasVoiceSample={false}
+          onUploadVoiceSample={handleVoiceSampleUpload}
+          onBuyCredits={handleBuyVoiceCredits}
+        />
+      )}
+
+      {showVideoCallModal && activeConvo && (
+        <VideoCallModal
+          onClose={() => setShowVideoCallModal(false)}
+          profileName={activeConvo.profile.name}
+          hasVoiceSample={false}
+          hasVisualMedia={!!(activeConvo.profile.photoUrl || activeConvo.profile.photoUrls?.length)}
+          onUploadMedia={handleMediaUpload}
+          onBuyCredits={handleBuyVideoCredits}
+        />
       )}
     </div>
   )
