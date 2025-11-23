@@ -14,6 +14,7 @@ import MemoriesPage from './pages/MemoriesPage'
 import PersonalityBuilderPage from './pages/PersonalityBuilderPage'
 import VideoPage from './pages/VideoPage'
 import AccountPage from './pages/AccountPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               <Route path="/setup" element={<PasswordSetup />} />
               <Route path="/login" element={<LoginScreen />} />
               <Route path="/email-auth" element={<EmailAuth />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/pricing" element={<PricingPage />} />
