@@ -18,9 +18,9 @@ export const SUBSCRIPTION_PLANS = {
     name: 'Starter',
     description: 'Perfect for getting started',
     features: [
-      '100 messages per month',
-      '3 AI personalities',
-      'Basic chat themes',
+      '1,000 messages per month',
+      '5 AI personalities',
+      'All chat themes',
       'Email support',
     ],
     monthly: {

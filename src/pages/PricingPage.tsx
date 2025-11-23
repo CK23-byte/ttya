@@ -207,19 +207,19 @@ export default function PricingPage() {
                   <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
                     <MessageCircle className="w-3 h-3 text-gray-500" />
                   </div>
-                  <span>10 messages total</span>
+                  <span>50 messages total</span>
                 </li>
                 <li className="flex items-center gap-3 text-gray-600">
                   <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
                     <Users className="w-3 h-3 text-gray-500" />
                   </div>
-                  <span>1 AI personality</span>
+                  <span>2 AI personalities</span>
                 </li>
                 <li className="flex items-center gap-3 text-gray-600">
                   <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
                     <Palette className="w-3 h-3 text-gray-500" />
                   </div>
-                  <span>WhatsApp theme only</span>
+                  <span>All chat themes</span>
                 </li>
               </ul>
 
