@@ -22,6 +22,7 @@ import {
   Zap,
   Check
 } from 'lucide-react'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
 interface DemoMessage {
   id: number
@@ -80,6 +81,7 @@ const USE_CASES = [
 
 export default function LandingPage() {
   const navigate = useNavigate()
+  const { user } = useSupabaseAuth()
   const [demoMessages, setDemoMessages] = useState<DemoMessage[]>([
     { id: 1, content: "Hello sweetheart! 💕 It's Grandma Rose. I'm so happy to chat with you! Try saying hello!", sender: 'ai' }
   ])
@@ -88,6 +90,14 @@ export default function LandingPage() {
   const [messageCount, setMessageCount] = useState(0)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const MAX_FREE_MESSAGES = 5
+
+  const handleChatClick = () => {
+    if (user) {
+      navigate('/dashboard')
+    } else {
+      navigate('/auth')
+    }
+  }
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -159,6 +169,12 @@ export default function LandingPage() {
 
       {/* Top Navigation */}
       <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <button
+          onClick={handleChatClick}
+          className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold text-gray-700 hover:text-orange-600"
+        >
+          Chat
+        </button>
         <button
           onClick={() => navigate('/pricing')}
           className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold text-gray-700 hover:text-orange-600"
