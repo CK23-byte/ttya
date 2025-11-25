@@ -16,7 +16,11 @@ import {
   Users,
   Video,
   Lock,
-  Shield
+  Shield,
+  Upload,
+  Crown,
+  Zap,
+  Check
 } from 'lucide-react'
 
 interface DemoMessage {
@@ -338,33 +342,31 @@ export default function LandingPage() {
               Simple Setup
             </span>
             <h3 className="text-3xl font-bold text-gray-900">
-              Start Chatting in 3 Minutes
+              Start Chatting in 2 Steps
             </h3>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 gap-12 max-w-3xl mx-auto">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg">
-                1
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                <Upload className="w-10 h-10 text-white" />
               </div>
-              <h4 className="font-bold text-gray-900 mb-2 text-lg">Export Chat</h4>
-              <p className="text-gray-600">Export any WhatsApp conversation in just a few taps</p>
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-orange-600 font-bold text-xl">1</span>
+              </div>
+              <h4 className="font-bold text-gray-900 mb-2 text-lg">Upload Your Chat</h4>
+              <p className="text-gray-600">Export and upload any WhatsApp conversation. AI learns their personality instantly.</p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg">
-                2
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                <MessageCircle className="w-10 h-10 text-white" />
               </div>
-              <h4 className="font-bold text-gray-900 mb-2 text-lg">Upload & Train</h4>
-              <p className="text-gray-600">AI learns their unique voice, expressions, and personality</p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg">
-                3
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-orange-600 font-bold text-xl">2</span>
               </div>
-              <h4 className="font-bold text-gray-900 mb-2 text-lg">Start Talking</h4>
-              <p className="text-gray-600">Have meaningful conversations whenever you want</p>
+              <h4 className="font-bold text-gray-900 mb-2 text-lg">Start Chatting</h4>
+              <p className="text-gray-600">Have meaningful conversations whenever you want. It's that simple.</p>
             </div>
           </div>
         </div>
@@ -372,37 +374,94 @@ export default function LandingPage() {
 
       {/* Pricing Preview */}
       <div className="py-16 bg-gradient-to-r from-orange-500 to-rose-500">
-        <div className="max-w-5xl mx-auto px-4 text-center text-white">
+        <div className="max-w-6xl mx-auto px-4 text-center text-white">
           <Sparkles className="w-10 h-10 mx-auto mb-4 opacity-90" />
           <h3 className="text-3xl font-bold mb-4">
-            Simple Credit-Based Pricing
+            Simple, Transparent Pricing
           </h3>
           <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-            Buy credits, use them for conversations. No subscriptions, no surprises.
-            Start with 10 free credits on signup.
+            Choose a plan that fits your needs. Start free, upgrade anytime.
           </p>
 
-          <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left">
-              <div className="text-2xl font-bold mb-1">50</div>
-              <div className="text-sm text-white/80 mb-3">credits</div>
-              <div className="text-xl font-bold">$4.99</div>
-              <p className="text-xs text-white/70 mt-2">~50 messages</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-8">
+            {/* Free */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left hover:bg-white/15 transition">
+              <div className="text-2xl font-bold mb-1">Free</div>
+              <div className="text-xl font-bold mb-3">€0<span className="text-sm font-normal">/mo</span></div>
+              <ul className="space-y-2 text-sm text-white/80">
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>50 messages</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>1 AI personality</span>
+                </li>
+              </ul>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-5 text-left border-2 border-white/40 relative">
-              <span className="absolute -top-2 right-3 px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">
+
+            {/* Starter */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left hover:bg-white/15 transition">
+              <div className="text-2xl font-bold mb-1">Starter</div>
+              <div className="text-xl font-bold mb-3">€9.99<span className="text-sm font-normal">/mo</span></div>
+              <ul className="space-y-2 text-sm text-white/80">
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>1,500 messages/mo</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>3 AI personalities</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Pro - Popular */}
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-5 text-left border-2 border-white/40 relative hover:bg-white/25 transition">
+              <span className="absolute -top-2 right-3 px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full flex items-center gap-1">
+                <Crown className="w-3 h-3" />
                 Popular
               </span>
-              <div className="text-2xl font-bold mb-1">200</div>
-              <div className="text-sm text-white/80 mb-3">credits</div>
-              <div className="text-xl font-bold">$14.99</div>
-              <p className="text-xs text-white/70 mt-2">~200 messages</p>
+              <div className="text-2xl font-bold mb-1">Pro</div>
+              <div className="text-xl font-bold mb-3">€24.99<span className="text-sm font-normal">/mo</span></div>
+              <ul className="space-y-2 text-sm text-white/90">
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>6,000 messages/mo</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>10 AI personalities</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Memory enhancement</span>
+                </li>
+              </ul>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left">
-              <div className="text-2xl font-bold mb-1">500</div>
-              <div className="text-sm text-white/80 mb-3">credits</div>
-              <div className="text-xl font-bold">$29.99</div>
-              <p className="text-xs text-white/70 mt-2">Best value</p>
+
+            {/* Premium */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left hover:bg-white/15 transition relative">
+              <span className="absolute -top-2 right-3 px-2 py-0.5 bg-amber-400 text-gray-900 text-xs font-bold rounded-full flex items-center gap-1">
+                <Zap className="w-3 h-3" />
+                Premium
+              </span>
+              <div className="text-2xl font-bold mb-1">Premium</div>
+              <div className="text-xl font-bold mb-3">€49.99<span className="text-sm font-normal">/mo</span></div>
+              <ul className="space-y-2 text-sm text-white/80">
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>20,000 messages/mo</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Unlimited AI's</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Ultra fast responses</span>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -410,13 +469,13 @@ export default function LandingPage() {
             onClick={() => navigate('/pricing')}
             className="px-8 py-4 bg-white text-orange-600 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
           >
-            See All Plans
+            See All Plans & Add-ons
           </button>
 
-          {/* Video Coming Soon */}
-          <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full">
+          {/* Add-on Notice */}
+          <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-sm">
             <Video className="w-4 h-4" />
-            <span className="text-sm">Video calls coming soon!</span>
+            <span>+ Voice & Video credits available</span>
           </div>
         </div>
       </div>
