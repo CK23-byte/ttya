@@ -20,7 +20,14 @@ import {
   Upload,
   Crown,
   Zap,
-  Check
+  Check,
+  Mail,
+  Globe,
+  Camera,
+  Mic,
+  Archive,
+  Database,
+  AlertCircle
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
@@ -346,6 +353,565 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Real Stories Section */}
+      <div className="py-16 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1 bg-gradient-to-r from-orange-100 to-rose-100 text-orange-700 rounded-full text-sm font-semibold mb-4">
+              Real Stories, Real Connections
+            </span>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              For Every Moment That Matters
+            </h3>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Discover how TalkToYouAI helps people have those conversations, preserve memories, and share moments that truly matter.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Story 1: Het gesprek dat je nooit kon voeren */}
+            <div className="group">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Chat Interface Mockup */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      P
+                    </div>
+                    <span className="font-semibold text-gray-800">Dad</span>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-white space-y-3 min-h-[280px]">
+                  {/* User message */}
+                  <div className="flex justify-end">
+                    <div className="bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[85%] text-sm">
+                      Dad, I got a job offer in New York. Great career move, but I'd have to relocate. What would you do? 💭
+                    </div>
+                  </div>
+
+                  {/* AI response */}
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[85%] text-sm">
+                      <p className="mb-1">Sweetheart, what a wonderful dilemma to have! Remember when I got that offer from the tech firm? You were only 8.</p>
+                      <p className="mb-1">Mom and I debated for weeks... But sometimes you have to take the leap.</p>
+                      <p>If your heart says "yes," then go. You can always come home, kiddo 😊</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 bg-gradient-to-r from-orange-50 to-rose-50 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-orange-600" />
+                    <span className="text-xs text-gray-600 font-medium">Chat Interface</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 px-2">
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">The conversation you never got to have</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Lisa's father always gave the best advice. Now that he's gone, she can still ask for his wisdom - about career choices, relationships, or just an encouraging word.
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  "Ask the questions you never got to ask."
+                </p>
+              </div>
+            </div>
+
+            {/* Story 2: Oma's verhalen voor de volgende generatie */}
+            <div className="group">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Video Interface Mockup */}
+                <div className="bg-gradient-to-r from-purple-900 to-indigo-900 p-4 text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">Grandma Rose</span>
+                    <div className="flex gap-2">
+                      <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                        <Video className="w-3 h-3" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 min-h-[280px] flex flex-col justify-center">
+                  {/* Video "frame" */}
+                  <div className="bg-gradient-to-br from-rose-100 to-orange-100 rounded-xl p-6 border-4 border-white shadow-lg mb-3">
+                    <div className="text-center">
+                      <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl">
+                        👵
+                      </div>
+                      <div className="text-sm text-gray-700 italic">
+                        "...and then I would walk to the bakery every morning for fresh bread and pastries..."
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Child's question */}
+                  <div className="bg-white rounded-xl px-3 py-2 text-sm text-gray-700 shadow-sm border border-gray-200">
+                    "Grandma, tell me about when you were little! 🏠"
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 bg-gradient-to-r from-orange-50 to-rose-50 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <Video className="w-4 h-4 text-orange-600" />
+                    <span className="text-xs text-gray-600 font-medium">Video Call</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 px-2">
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">Stories for the next generation</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Emma (4) will never meet her great-grandmother, but she can still hear her stories, her voice, and her laughter. Grandma's memories live on.
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  "Stories that connect generations."
+                </p>
+              </div>
+            </div>
+
+            {/* Story 3: Een laatste verjaardag samen */}
+            <div className="group">
+              <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Voice Interface Mockup */}
+                <div className="p-4 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      T
+                    </div>
+                    <span className="font-semibold text-white">Tim</span>
+                  </div>
+                </div>
+
+                <div className="p-6 min-h-[280px] flex flex-col justify-center items-center">
+                  {/* Profile photo */}
+                  <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full mb-4 flex items-center justify-center text-4xl shadow-xl">
+                    👨
+                  </div>
+
+                  <div className="text-amber-400 text-2xl mb-1">🎂 30 years</div>
+                  <div className="text-gray-400 text-sm mb-4">March 8, 2024</div>
+
+                  {/* Audio waveform */}
+                  <div className="w-full mb-3">
+                    <div className="flex items-center justify-center gap-1 h-12">
+                      {[...Array(20)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1 bg-gradient-to-t from-orange-500 to-rose-400 rounded-full animate-pulse"
+                          style={{
+                            height: `${Math.random() * 100 + 20}%`,
+                            animationDelay: `${i * 50}ms`
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div className="bg-gray-800/50 rounded-xl px-4 py-3 text-sm text-gray-200 text-center border border-gray-700">
+                    "Bro, remember our pact? Skydiving on our 30th? You'd laugh that I did it without you 😄..."
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 bg-gray-800/50 border-t border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-orange-500 animate-pulse" />
+                    <span className="text-xs text-gray-400 font-medium">Voice Call Active</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 px-2">
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">One last birthday together</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Thomas lost his twin brother Tim in a car accident. On what would have been Tim's 30th birthday, he can still mark this moment "together" - with Tim's voice, humor, and responses.
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  "Moments that matter, together."
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center mt-12">
+            <button
+              onClick={() => navigate('/auth')}
+              className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2"
+            >
+              Create Your First Memory
+              <Heart className="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Your Memories, Preserved Forever */}
+      <div className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Main Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Your Memories,{' '}
+              <span className="bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+                Preserved Forever
+              </span>
+            </h2>
+            <p className="text-2xl text-gray-700 font-medium mb-4">
+              Every conversation holds a lifetime
+            </p>
+            <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
+              We lose more than we realize when someone passes away. Not just their presence, but their voice, their humor,
+              the way they said your name, their advice, their stories. All those text messages, voice notes, photos, and moments –
+              they don't have to disappear. <span className="font-semibold text-gray-900">TalkToYouAI transforms your digital memories into a living connection.</span>
+            </p>
+          </div>
+
+          {/* The Digital Legacy Section */}
+          <div className="mb-20">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-semibold mb-4">
+                <Archive className="w-4 h-4" />
+                The Digital Legacy We Forget About
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900 mb-4">What We Actually Lose</h3>
+              <p className="text-gray-600 max-w-3xl mx-auto">
+                When someone passes, we often think about the big things: their belongings, photographs, maybe some videos.
+                But there's an entire world of their personality captured in digital form that usually gets lost.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* WhatsApp Messages */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                    <MessageCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">10,000+ Messages</h4>
+                    <p className="text-sm text-gray-600">WhatsApp, Telegram, SMS</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Their daily thoughts and feelings</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>How they gave advice</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Their sense of humor in real-time</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>How they celebrated your wins</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Voice Notes */}
+              <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                    <Mic className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Hours of Voice</h4>
+                    <p className="text-sm text-gray-600">Voice notes & recordings</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <span>Their actual voice, tone, and inflection</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <span>How they pronounced your name</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <span>Their laugh, sighs, excitement</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <span>The way they said "I love you"</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Photos & Videos */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Thousands of Photos</h4>
+                    <p className="text-sm text-gray-600">Photos & videos</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <span>Their facial expressions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <span>How they moved and gestured</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <span>Their smile in different moments</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <span>The way they looked at you</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Social Media */}
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                    <Globe className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Social Media Posts</h4>
+                    <p className="text-sm text-gray-600">Facebook, Instagram, Twitter</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>Their opinions and worldviews</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>What made them laugh or angry</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>Their interests and passions</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Emails */}
+              <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl p-6 border border-rose-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-rose-500 rounded-xl flex items-center justify-center">
+                    <Mail className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Emails & Letters</h4>
+                    <p className="text-sm text-gray-600">Written correspondence</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-rose-600 mt-0.5 flex-shrink-0" />
+                    <span>Their writing style</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-rose-600 mt-0.5 flex-shrink-0" />
+                    <span>How they structured thoughts</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-rose-600 mt-0.5 flex-shrink-0" />
+                    <span>Important life advice they shared</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Recorded Conversations */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center">
+                    <Video className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Video Recordings</h4>
+                    <p className="text-sm text-gray-600">Family moments captured</p>
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <span>Family dinners on video</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <span>Birthday messages</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <span>Random vlogs or home videos</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Quality Levels Section */}
+          <div className="mb-16">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-100 to-rose-100 text-orange-700 rounded-full text-sm font-semibold mb-4">
+                <Database className="w-4 h-4" />
+                Quality Levels
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900 mb-4">How Much Data Do You Need?</h3>
+              <p className="text-gray-600 max-w-3xl mx-auto">
+                More data creates a more accurate and nuanced AI personality. But even with limited data, we can create something meaningful.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {/* Minimum */}
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-orange-300 transition">
+                <div className="text-center mb-4">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                    <Archive className="w-8 h-8 text-gray-600" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-xl mb-2">Minimum Viable</h4>
+                  <p className="text-3xl font-bold text-orange-600 mb-1">1,000+</p>
+                  <p className="text-sm text-gray-600">messages or equivalent</p>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-gray-600 mt-0.5" />
+                    <span>Basic personality captured</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-gray-600 mt-0.5" />
+                    <span>Common phrases and tone</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-gray-600 mt-0.5" />
+                    <span>General conversation style</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Good */}
+              <div className="bg-gradient-to-br from-orange-50 to-rose-50 rounded-2xl p-6 border-2 border-orange-300 relative">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
+                  RECOMMENDED
+                </div>
+                <div className="text-center mb-4">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-3">
+                    <Database className="w-8 h-8 text-orange-600" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-xl mb-2">Good Profile</h4>
+                  <p className="text-3xl font-bold text-orange-600 mb-1">5,000+</p>
+                  <p className="text-sm text-gray-600">messages or equivalent</p>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5" />
+                    <span>Nuanced personality traits</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5" />
+                    <span>Specific memories referenced</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5" />
+                    <span>Emotional depth in responses</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Exceptional */}
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-orange-300 transition">
+                <div className="text-center mb-4">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-100 to-rose-100 rounded-full mb-3">
+                    <Sparkles className="w-8 h-8 text-orange-600" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-xl mb-2">Exceptional</h4>
+                  <p className="text-3xl font-bold text-orange-600 mb-1">10,000+</p>
+                  <p className="text-sm text-gray-600">messages or equivalent</p>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5" />
+                    <span>Remarkably accurate personality</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5" />
+                    <span>Context-aware responses</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-orange-600 mt-0.5" />
+                    <span>Feels remarkably real</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Privacy & Security */}
+          <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl p-8 md:p-12 text-white mb-12">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <Shield className="w-10 h-10 text-orange-400" />
+                <h3 className="text-3xl font-bold">Your Data, Your Privacy</h3>
+              </div>
+              <p className="text-lg text-gray-300 text-center mb-8">
+                We understand how precious and private these memories are. That's why we've built TalkToYouAI with security and privacy at its core.
+              </p>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <Lock className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">End-to-End Encryption</h4>
+                  <p className="text-sm text-gray-400">Your data is encrypted with AES-256 before it ever leaves your device</p>
+                </div>
+                <div className="text-center">
+                  <Users className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">You Own Your Data</h4>
+                  <p className="text-sm text-gray-400">Download or delete your profiles anytime. No questions asked.</p>
+                </div>
+                <div className="text-center">
+                  <Shield className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">Never Shared or Sold</h4>
+                  <p className="text-sm text-gray-400">Your memories stay yours. We never share or sell your data.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Urgency CTA */}
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full text-sm font-semibold mb-6">
+              <AlertCircle className="w-4 h-4" />
+              Don't Wait Until It's Too Late
+            </div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">
+              Digital Memories Don't Last Forever
+            </h3>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+              Phone upgrades, cloud storage limits, forgotten passwords, account deletions – every day, precious memories are lost.
+              <span className="font-semibold text-gray-900"> Start preserving what matters today.</span>
+            </p>
+            <button
+              onClick={() => navigate('/auth')}
+              className="group px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-3"
+            >
+              Start Preserving Memories Now
+              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       </div>

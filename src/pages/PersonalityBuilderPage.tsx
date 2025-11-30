@@ -193,7 +193,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
@@ -217,8 +217,8 @@ Important: You are a digital memory. Be respectful and empathetic.`
           {step === 'upload' && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-                  <Upload className="w-8 h-8 text-purple-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+                  <Upload className="w-8 h-8 text-orange-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   Upload WhatsApp Chat
@@ -228,7 +228,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                 </p>
               </div>
 
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-purple-400 transition">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-orange-400 transition">
                 <label className="cursor-pointer">
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-700 font-medium mb-2">Click to choose file</p>
@@ -267,8 +267,8 @@ Important: You are a digital memory. Be respectful and empathetic.`
           {step === 'select' && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-                  <User className="w-8 h-8 text-purple-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+                  <User className="w-8 h-8 text-orange-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   Select Person
@@ -285,7 +285,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                 <select
                   value={selectedSender}
                   onChange={(e) => setSelectedSender(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="">-- Choose a person --</option>
                   {senders.map((sender) => (
@@ -305,7 +305,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                   value={relationship}
                   onChange={(e) => setRelationship(e.target.value)}
                   placeholder="e.g. my mother, my grandfather, my friend"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
 
@@ -324,7 +324,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                 </button>
                 <button
                   onClick={handleSelectPerson}
-                  className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg hover:from-orange-600 hover:to-rose-600 transition"
                 >
                   Next
                 </button>
@@ -336,8 +336,8 @@ Important: You are a digital memory. Be respectful and empathetic.`
           {step === 'photo' && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-                  <ImageIcon className="w-8 h-8 text-purple-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
+                  <ImageIcon className="w-8 h-8 text-orange-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   Add Photos for Video Calls
@@ -357,7 +357,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                     <img
                       src={url}
                       alt={`${selectedSender} ${index + 1}`}
-                      className="w-full aspect-square rounded-lg object-cover border-2 border-purple-200"
+                      className="w-full aspect-square rounded-lg object-cover border-2 border-orange-200"
                     />
                     <button
                       onClick={() => removePhoto(index)}
@@ -371,7 +371,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                 {/* Add Photo Button */}
                 {photoUrls.length < 5 && (
                   <label className="cursor-pointer">
-                    <div className="w-full aspect-square rounded-lg bg-gray-100 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-purple-400 transition">
+                    <div className="w-full aspect-square rounded-lg bg-gray-100 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-orange-400 transition">
                       <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
                       <span className="text-xs text-gray-500">Add Photo</span>
                       <span className="text-xs text-gray-400">({photoUrls.length}/5)</span>
@@ -425,7 +425,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                 <button
                   onClick={handleCreateProfile}
                   disabled={isProcessing}
-                  className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg hover:from-orange-600 hover:to-rose-600 transition disabled:opacity-50"
                 >
                   {isProcessing ? 'Creating...' : 'Create Profile'}
                 </button>
@@ -445,7 +445,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
               <p className="text-gray-600">
                 You can now chat with {selectedSender}
               </p>
-              <div className="animate-pulse text-purple-600 text-sm">
+              <div className="animate-pulse text-orange-600 text-sm">
                 Redirecting to chat...
               </div>
             </div>
