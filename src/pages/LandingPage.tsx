@@ -358,10 +358,10 @@ export default function LandingPage() {
               Real Stories, Real Connections
             </span>
             <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Voor Elk Moment Dat Er Toe Doet
+              For Every Moment That Matters
             </h3>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Ontdek hoe TalkToYouAI mensen helpt om die gesprekken te voeren, herinneringen te bewaren en momenten te delen die er echt toe doen.
+              Discover how TalkToYouAI helps people have those conversations, preserve memories, and share moments that truly matter.
             </p>
           </div>
 
@@ -375,7 +375,7 @@ export default function LandingPage() {
                     <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                       P
                     </div>
-                    <span className="font-semibold text-gray-800">Papa</span>
+                    <span className="font-semibold text-gray-800">Dad</span>
                   </div>
                 </div>
 
@@ -383,16 +383,16 @@ export default function LandingPage() {
                   {/* User message */}
                   <div className="flex justify-end">
                     <div className="bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[85%] text-sm">
-                      Papa, ik heb een baanaanbod gekregen in Amsterdam. Goede carrièrestap, maar ik moet verhuizen. Wat zou jij doen? 💭
+                      Dad, I got a job offer in New York. Great career move, but I'd have to relocate. What would you do? 💭
                     </div>
                   </div>
 
                   {/* AI response */}
                   <div className="flex justify-start">
                     <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[85%] text-sm">
-                      <p className="mb-1">Liefje, wat een mooi dilemma! Weet je nog toen ik voor ASML werd gevraagd? Jij was toen 8.</p>
-                      <p className="mb-1">Moeder en ik hebben wekenlang afgewogen... Maar soms moet je een sprong wagen.</p>
-                      <p>Als je hart "ja" zegt, ga dan. Amsterdam is maar een uurtje rijden hè, gekkie 😊</p>
+                      <p className="mb-1">Sweetheart, what a wonderful dilemma to have! Remember when I got that offer from the tech firm? You were only 8.</p>
+                      <p className="mb-1">Mom and I debated for weeks... But sometimes you have to take the leap.</p>
+                      <p>If your heart says "yes," then go. You can always come home, kiddo 😊</p>
                     </div>
                   </div>
                 </div>
@@ -406,12 +406,12 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-4 px-2">
-                <h4 className="font-bold text-gray-900 mb-2 text-lg">Het gesprek dat je nooit kon voeren</h4>
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">The conversation you never got to have</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Lisa's vader gaf altijd het beste advies. Nu hij er niet meer is, kan ze nog steeds zijn wijsheid vragen - voor carrièrekeuzes, relaties, of gewoon een bemoedigend woord.
+                  Lisa's father always gave the best advice. Now that he's gone, she can still ask for his wisdom - about career choices, relationships, or just an encouraging word.
                 </p>
                 <p className="text-xs text-gray-500 italic">
-                  "Stel de vragen die je nooit meer kon stellen."
+                  "Ask the questions you never got to ask."
                 </p>
               </div>
             </div>
@@ -422,7 +422,7 @@ export default function LandingPage() {
                 {/* Video Interface Mockup */}
                 <div className="bg-gradient-to-r from-purple-900 to-indigo-900 p-4 text-white">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">Oma Gertrude</span>
+                    <span className="font-semibold">Grandma Rose</span>
                     <div className="flex gap-2">
                       <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
                         <Video className="w-3 h-3" />
@@ -439,14 +439,14 @@ export default function LandingPage() {
                         👵
                       </div>
                       <div className="text-sm text-gray-700 italic">
-                        "...en toen ging ik elke dag met de fiets naar de bakker voor verse broodjes..."
+                        "...and then I would walk to the bakery every morning for fresh bread and pastries..."
                       </div>
                     </div>
                   </div>
 
                   {/* Child's question */}
                   <div className="bg-white rounded-xl px-3 py-2 text-sm text-gray-700 shadow-sm border border-gray-200">
-                    "Oma, vertel over toen je klein was! 🏠"
+                    "Grandma, tell me about when you were little! 🏠"
                   </div>
                 </div>
 
@@ -459,12 +459,12 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-4 px-2">
-                <h4 className="font-bold text-gray-900 mb-2 text-lg">Verhalen voor de volgende generatie</h4>
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">Stories for the next generation</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Emma (4) zal haar overgrootmoeder nooit ontmoeten, maar ze kan wel haar verhalen horen, haar stem, en haar lachen. Oma's herinneringen blijven leven.
+                  Emma (4) will never meet her great-grandmother, but she can still hear her stories, her voice, and her laughter. Grandma's memories live on.
                 </p>
                 <p className="text-xs text-gray-500 italic">
-                  "Verhalen die generaties verbinden."
+                  "Stories that connect generations."
                 </p>
               </div>
             </div>
@@ -488,8 +488,8 @@ export default function LandingPage() {
                     👨
                   </div>
 
-                  <div className="text-amber-400 text-2xl mb-1">🎂 30 jaar</div>
-                  <div className="text-gray-400 text-sm mb-4">8 maart 2024</div>
+                  <div className="text-amber-400 text-2xl mb-1">🎂 30 years</div>
+                  <div className="text-gray-400 text-sm mb-4">March 8, 2024</div>
 
                   {/* Audio waveform */}
                   <div className="w-full mb-3">
@@ -509,7 +509,7 @@ export default function LandingPage() {
 
                   {/* Message */}
                   <div className="bg-gray-800/50 rounded-xl px-4 py-3 text-sm text-gray-200 text-center border border-gray-700">
-                    "Bro, weet je nog onze pact? Op onze 30e een skydive doen? Jij zou het grappig vinden dat ik het zonder jou heb gedaan 😄..."
+                    "Bro, remember our pact? Skydiving on our 30th? You'd laugh that I did it without you 😄..."
                   </div>
                 </div>
 
@@ -522,12 +522,12 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-4 px-2">
-                <h4 className="font-bold text-gray-900 mb-2 text-lg">Een laatste verjaardag samen</h4>
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">One last birthday together</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Thomas verloor zijn tweelingbroer Tim bij een auto-ongeluk. Op wat Tim's 30e verjaardag zou zijn, kan hij dit moment toch "samen" markeren - met Tim's stem, humor en reacties.
+                  Thomas lost his twin brother Tim in a car accident. On what would have been Tim's 30th birthday, he can still mark this moment "together" - with Tim's voice, humor, and responses.
                 </p>
                 <p className="text-xs text-gray-500 italic">
-                  "Momenten die er toe doen, samen."
+                  "Moments that matter, together."
                 </p>
               </div>
             </div>
@@ -539,7 +539,7 @@ export default function LandingPage() {
               onClick={() => navigate('/auth')}
               className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2"
             >
-              Maak Je Eerste Herinnering
+              Create Your First Memory
               <Heart className="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" />
             </button>
           </div>
