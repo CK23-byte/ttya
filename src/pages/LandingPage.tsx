@@ -25,12 +25,9 @@ import {
   Globe,
   Camera,
   Mic,
-  FileText,
-  Phone,
   Archive,
   Database,
-  AlertCircle,
-  Clock
+  AlertCircle
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
