@@ -350,6 +350,202 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Real Stories Section */}
+      <div className="py-16 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1 bg-gradient-to-r from-orange-100 to-rose-100 text-orange-700 rounded-full text-sm font-semibold mb-4">
+              Real Stories, Real Connections
+            </span>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Voor Elk Moment Dat Er Toe Doet
+            </h3>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Ontdek hoe TalkToYouAI mensen helpt om die gesprekken te voeren, herinneringen te bewaren en momenten te delen die er echt toe doen.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Story 1: Het gesprek dat je nooit kon voeren */}
+            <div className="group">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Chat Interface Mockup */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      P
+                    </div>
+                    <span className="font-semibold text-gray-800">Papa</span>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-white space-y-3 min-h-[280px]">
+                  {/* User message */}
+                  <div className="flex justify-end">
+                    <div className="bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[85%] text-sm">
+                      Papa, ik heb een baanaanbod gekregen in Amsterdam. Goede carrièrestap, maar ik moet verhuizen. Wat zou jij doen? 💭
+                    </div>
+                  </div>
+
+                  {/* AI response */}
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[85%] text-sm">
+                      <p className="mb-1">Liefje, wat een mooi dilemma! Weet je nog toen ik voor ASML werd gevraagd? Jij was toen 8.</p>
+                      <p className="mb-1">Moeder en ik hebben wekenlang afgewogen... Maar soms moet je een sprong wagen.</p>
+                      <p>Als je hart "ja" zegt, ga dan. Amsterdam is maar een uurtje rijden hè, gekkie 😊</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 bg-gradient-to-r from-orange-50 to-rose-50 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-orange-600" />
+                    <span className="text-xs text-gray-600 font-medium">Chat Interface</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 px-2">
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">Het gesprek dat je nooit kon voeren</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Lisa's vader gaf altijd het beste advies. Nu hij er niet meer is, kan ze nog steeds zijn wijsheid vragen - voor carrièrekeuzes, relaties, of gewoon een bemoedigend woord.
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  "Stel de vragen die je nooit meer kon stellen."
+                </p>
+              </div>
+            </div>
+
+            {/* Story 2: Oma's verhalen voor de volgende generatie */}
+            <div className="group">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Video Interface Mockup */}
+                <div className="bg-gradient-to-r from-purple-900 to-indigo-900 p-4 text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">Oma Gertrude</span>
+                    <div className="flex gap-2">
+                      <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                        <Video className="w-3 h-3" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 min-h-[280px] flex flex-col justify-center">
+                  {/* Video "frame" */}
+                  <div className="bg-gradient-to-br from-rose-100 to-orange-100 rounded-xl p-6 border-4 border-white shadow-lg mb-3">
+                    <div className="text-center">
+                      <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl">
+                        👵
+                      </div>
+                      <div className="text-sm text-gray-700 italic">
+                        "...en toen ging ik elke dag met de fiets naar de bakker voor verse broodjes..."
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Child's question */}
+                  <div className="bg-white rounded-xl px-3 py-2 text-sm text-gray-700 shadow-sm border border-gray-200">
+                    "Oma, vertel over toen je klein was! 🏠"
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 bg-gradient-to-r from-orange-50 to-rose-50 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <Video className="w-4 h-4 text-orange-600" />
+                    <span className="text-xs text-gray-600 font-medium">Video Call</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 px-2">
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">Verhalen voor de volgende generatie</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Emma (4) zal haar overgrootmoeder nooit ontmoeten, maar ze kan wel haar verhalen horen, haar stem, en haar lachen. Oma's herinneringen blijven leven.
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  "Verhalen die generaties verbinden."
+                </p>
+              </div>
+            </div>
+
+            {/* Story 3: Een laatste verjaardag samen */}
+            <div className="group">
+              <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Voice Interface Mockup */}
+                <div className="p-4 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      T
+                    </div>
+                    <span className="font-semibold text-white">Tim</span>
+                  </div>
+                </div>
+
+                <div className="p-6 min-h-[280px] flex flex-col justify-center items-center">
+                  {/* Profile photo */}
+                  <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full mb-4 flex items-center justify-center text-4xl shadow-xl">
+                    👨
+                  </div>
+
+                  <div className="text-amber-400 text-2xl mb-1">🎂 30 jaar</div>
+                  <div className="text-gray-400 text-sm mb-4">8 maart 2024</div>
+
+                  {/* Audio waveform */}
+                  <div className="w-full mb-3">
+                    <div className="flex items-center justify-center gap-1 h-12">
+                      {[...Array(20)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1 bg-gradient-to-t from-orange-500 to-rose-400 rounded-full animate-pulse"
+                          style={{
+                            height: `${Math.random() * 100 + 20}%`,
+                            animationDelay: `${i * 50}ms`
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div className="bg-gray-800/50 rounded-xl px-4 py-3 text-sm text-gray-200 text-center border border-gray-700">
+                    "Bro, weet je nog onze pact? Op onze 30e een skydive doen? Jij zou het grappig vinden dat ik het zonder jou heb gedaan 😄..."
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 bg-gray-800/50 border-t border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-orange-500 animate-pulse" />
+                    <span className="text-xs text-gray-400 font-medium">Voice Call Active</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 px-2">
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">Een laatste verjaardag samen</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Thomas verloor zijn tweelingbroer Tim bij een auto-ongeluk. Op wat Tim's 30e verjaardag zou zijn, kan hij dit moment toch "samen" markeren - met Tim's stem, humor en reacties.
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  "Momenten die er toe doen, samen."
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center mt-12">
+            <button
+              onClick={() => navigate('/auth')}
+              className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2"
+            >
+              Maak Je Eerste Herinnering
+              <Heart className="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" />
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* How It Works */}
       <div className="py-16">
         <div className="max-w-5xl mx-auto px-4">
