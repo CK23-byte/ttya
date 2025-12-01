@@ -20,6 +20,7 @@ import LivingLegacyPricingPage from './pages/LivingLegacyPricingPage'
 import LivingLegacyOnboardingPage from './pages/LivingLegacyOnboardingPage'
 import LivingLegacyCreationDashboard from './pages/LivingLegacyCreationDashboard'
 import LivingLegacyRecordMessagePage from './pages/LivingLegacyRecordMessagePage'
+import LivingLegacyFinalizationPage from './pages/LivingLegacyFinalizationPage'
 import VoiceCallPage from './pages/VoiceCallPage'
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
               <Route path="/living-legacy/onboarding" element={<LivingLegacyOnboardingPage />} />
               <Route path="/living-legacy/create/:profileId" element={<LivingLegacyCreationDashboard />} />
               <Route path="/living-legacy/:profileId/record" element={<LivingLegacyRecordMessagePage />} />
+              <Route path="/living-legacy/:profileId/finalize" element={<LivingLegacyFinalizationPage />} />
             </Routes>
           </PaymentProvider>
         </AuthProvider>
