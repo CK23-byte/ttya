@@ -15,6 +15,7 @@ import PersonalityBuilderPage from './pages/PersonalityBuilderPage'
 import VideoPage from './pages/VideoPage'
 import AccountPage from './pages/AccountPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import LivingLegacyPage from './pages/LivingLegacyPage'
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
               <Route path="/personality-builder" element={<PersonalityBuilderPage />} />
               <Route path="/video" element={<VideoPage />} />
               <Route path="/account" element={<AccountPage />} />
+              <Route path="/living-legacy" element={<LivingLegacyPage />} />
             </Routes>
           </PaymentProvider>
         </AuthProvider>
