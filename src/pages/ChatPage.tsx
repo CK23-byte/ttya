@@ -553,11 +553,21 @@ export default function ChatPage() {
                   <Video className={`w-5 h-5 ${currentTheme.textMuted}`} />
                 </button>
                 <button
-                  onClick={() => setShowVoiceCallModal(true)}
-                  className="p-2 hover:bg-black/10 rounded-full transition"
-                  title="Voice Call - Buy Credits"
+                  onClick={() => {
+                    // Navigate to voice call with personality data
+                    const profile = activeConvo.profile
+                    const params = new URLSearchParams({
+                      personalityId: activeConvo.profileId,
+                      name: profile.name,
+                      relationship: profile.relationship || '',
+                      description: profile.personality || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
+                    })
+                    navigate(`/voice-call?${params.toString()}`)
+                  }}
+                  className="p-2 hover:bg-green-500/20 rounded-full transition group"
+                  title="Start Voice Call (OpenAI Realtime API)"
                 >
-                  <Phone className={`w-5 h-5 ${currentTheme.textMuted}`} />
+                  <Phone className={`w-5 h-5 ${currentTheme.textMuted} group-hover:text-green-500 transition`} />
                 </button>
                 <button className="p-2 hover:bg-black/10 rounded-full transition">
                   <MoreVertical className={`w-5 h-5 ${currentTheme.textMuted}`} />

@@ -12,7 +12,9 @@ import {
   MessageCircle,
   LogOut,
   Clock,
-  Heart
+  Heart,
+  Phone,
+  Video
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePayment } from '../contexts/PaymentContext'
@@ -208,10 +210,9 @@ export default function DashboardPage() {
             {/* Profile Cards Grid */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {profiles.map((profile) => (
-                <button
+                <div
                   key={profile.id}
-                  onClick={() => navigate(`/chat?profile=${profile.id}`)}
-                  className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 text-left group border border-transparent hover:border-orange-200"
+                  className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 text-left group border border-transparent hover:border-orange-200"
                 >
                   {/* Profile Header */}
                   <div className="flex items-start gap-4 mb-4">
@@ -251,14 +252,46 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Action Hint */}
-                  <div className="pt-4 border-t border-orange-100">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Click to open chat</span>
-                      <MessageCircle className="w-4 h-4 text-orange-500 group-hover:translate-x-1 transition-transform" />
+                  {/* Action Buttons */}
+                  <div className="pt-4 border-t border-orange-100 space-y-2">
+                    {/* Primary: Open Chat */}
+                    <button
+                      onClick={() => navigate(`/chat?profile=${profile.id}`)}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-rose-600 transition flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Open Chat
+                    </button>
+
+                    {/* Secondary: Voice & Video */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const params = new URLSearchParams({
+                            personalityId: profile.id,
+                            name: profile.name,
+                            relationship: profile.relationship || '',
+                            description: profile.personality || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
+                          })
+                          navigate(`/voice-call?${params.toString()}`)
+                        }}
+                        className="flex-1 px-3 py-2 bg-green-50 text-green-700 rounded-lg font-medium hover:bg-green-100 transition flex items-center justify-center gap-2 border border-green-200"
+                        title="Start Voice Call"
+                      >
+                        <Phone className="w-4 h-4" />
+                        Call
+                      </button>
+                      <button
+                        onClick={() => navigate(`/video?profile=${profile.id}`)}
+                        className="flex-1 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium hover:bg-purple-100 transition flex items-center justify-center gap-2 border border-purple-200"
+                        title="Start Video Call"
+                      >
+                        <Video className="w-4 h-4" />
+                        Video
+                      </button>
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </>
