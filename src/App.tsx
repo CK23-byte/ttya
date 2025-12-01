@@ -16,6 +16,8 @@ import VideoPage from './pages/VideoPage'
 import AccountPage from './pages/AccountPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import LivingLegacyPage from './pages/LivingLegacyPage'
+import LivingLegacyPricingPage from './pages/LivingLegacyPricingPage'
+import LivingLegacyOnboardingPage from './pages/LivingLegacyOnboardingPage'
 import VoiceCallPage from './pages/VoiceCallPage'
 
 function App() {
@@ -40,6 +42,8 @@ function App() {
               <Route path="/voice-call" element={<VoiceCallPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/living-legacy" element={<LivingLegacyPage />} />
+              <Route path="/pricing/living-legacy" element={<LivingLegacyPricingPage />} />
+              <Route path="/living-legacy/onboarding" element={<LivingLegacyOnboardingPage />} />
             </Routes>
           </PaymentProvider>
         </AuthProvider>
