@@ -100,36 +100,65 @@ export const SUBSCRIPTION_PLANS = {
   },
 } as const
 
-// Voice & Video Credit Packs (separate from text subscriptions)
-// 1 credit = 1 minute of voice call OR 1 minute of video call
-export const CREDIT_PACKS = {
+// Voice Credits (separate from text subscriptions)
+// 1 voice credit = 1 minute of voice call
+export const VOICE_CREDIT_PACKS = {
   small: {
-    name: '50 Credits',
+    name: '50 Voice Credits',
     credits: 50,
     price: 4.99,
     pricePerCredit: 0.10,
-    priceId: 'credits_50',
+    priceId: 'voice_credits_50',
   },
   medium: {
-    name: '100 Credits',
+    name: '100 Voice Credits',
     credits: 100,
     price: 8.99,
     pricePerCredit: 0.09,
     popular: true,
-    priceId: 'credits_100',
+    priceId: 'voice_credits_100',
   },
   large: {
-    name: '500 Credits',
+    name: '500 Voice Credits',
     credits: 500,
     price: 39.99,
     pricePerCredit: 0.08,
     bestValue: true,
-    priceId: 'credits_500',
+    priceId: 'voice_credits_500',
+  },
+} as const
+
+// Video Credits (separate from text subscriptions and voice credits)
+// 1 video credit = 1 minute of video call
+export const VIDEO_CREDIT_PACKS = {
+  small: {
+    name: '50 Video Credits',
+    credits: 50,
+    price: 4.99,
+    pricePerCredit: 0.10,
+    priceId: 'video_credits_50',
+  },
+  medium: {
+    name: '100 Video Credits',
+    credits: 100,
+    price: 8.99,
+    pricePerCredit: 0.09,
+    popular: true,
+    priceId: 'video_credits_100',
+  },
+  large: {
+    name: '500 Video Credits',
+    credits: 500,
+    price: 39.99,
+    pricePerCredit: 0.08,
+    bestValue: true,
+    priceId: 'video_credits_500',
   },
 } as const
 
 export type PlanType = keyof typeof SUBSCRIPTION_PLANS
-export type CreditPackType = keyof typeof CREDIT_PACKS
+export type VoiceCreditPackType = keyof typeof VOICE_CREDIT_PACKS
+export type VideoCreditPackType = keyof typeof VIDEO_CREDIT_PACKS
 export type BillingPeriod = 'monthly' | 'yearly'
 
 // Payment Links - Create these in Stripe Dashboard > Products > Payment Links
@@ -141,10 +170,14 @@ export const PAYMENT_LINKS: Record<string, string> = {
   pro_yearly: import.meta.env.VITE_STRIPE_PRO_YEARLY_LINK || '',
   premium_monthly: import.meta.env.VITE_STRIPE_PREMIUM_MONTHLY_LINK || '',
   premium_yearly: import.meta.env.VITE_STRIPE_PREMIUM_YEARLY_LINK || '',
-  // Credit Packs
-  credits_50: import.meta.env.VITE_STRIPE_CREDITS_50_LINK || '',
-  credits_100: import.meta.env.VITE_STRIPE_CREDITS_100_LINK || '',
-  credits_500: import.meta.env.VITE_STRIPE_CREDITS_500_LINK || '',
+  // Voice Credit Packs
+  voice_credits_50: import.meta.env.VITE_STRIPE_VOICE_CREDITS_50_LINK || '',
+  voice_credits_100: import.meta.env.VITE_STRIPE_VOICE_CREDITS_100_LINK || '',
+  voice_credits_500: import.meta.env.VITE_STRIPE_VOICE_CREDITS_500_LINK || '',
+  // Video Credit Packs
+  video_credits_50: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_50_LINK || '',
+  video_credits_100: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_100_LINK || '',
+  video_credits_500: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_500_LINK || '',
 }
 
 // Redirect to Stripe Payment Link
@@ -170,9 +203,15 @@ export async function redirectToCheckout(priceId: string, userEmail?: string): P
   window.location.href = url.toString()
 }
 
-// Helper to buy credits
-export async function buyCredits(packType: CreditPackType, userEmail?: string): Promise<void> {
-  const pack = CREDIT_PACKS[packType]
+// Helper to buy voice credits
+export async function buyVoiceCredits(packType: VoiceCreditPackType, userEmail?: string): Promise<void> {
+  const pack = VOICE_CREDIT_PACKS[packType]
+  await redirectToCheckout(pack.priceId, userEmail)
+}
+
+// Helper to buy video credits
+export async function buyVideoCredits(packType: VideoCreditPackType, userEmail?: string): Promise<void> {
+  const pack = VIDEO_CREDIT_PACKS[packType]
   await redirectToCheckout(pack.priceId, userEmail)
 }
 
@@ -193,10 +232,15 @@ Ga naar: https://dashboard.stripe.com/products
 - Premium Monthly: €49.99/maand
 - Premium Yearly: €499/jaar
 
-**Credit Packs (one-time):**
-- 50 Credits: €4.99
-- 100 Credits: €8.99
-- 500 Credits: €39.99
+**Voice Credit Packs (one-time):**
+- 50 Voice Credits: €4.99
+- 100 Voice Credits: €8.99
+- 500 Voice Credits: €39.99
+
+**Video Credit Packs (one-time):**
+- 50 Video Credits: €4.99
+- 100 Video Credits: €8.99
+- 500 Video Credits: €39.99
 
 ### Stap 2: Maak Payment Links
 Voor elk product:
@@ -214,10 +258,15 @@ VITE_STRIPE_PRO_YEARLY_LINK=https://buy.stripe.com/xxx
 VITE_STRIPE_PREMIUM_MONTHLY_LINK=https://buy.stripe.com/xxx
 VITE_STRIPE_PREMIUM_YEARLY_LINK=https://buy.stripe.com/xxx
 
-# Credit Packs
-VITE_STRIPE_CREDITS_50_LINK=https://buy.stripe.com/xxx
-VITE_STRIPE_CREDITS_100_LINK=https://buy.stripe.com/xxx
-VITE_STRIPE_CREDITS_500_LINK=https://buy.stripe.com/xxx
+# Voice Credit Packs
+VITE_STRIPE_VOICE_CREDITS_50_LINK=https://buy.stripe.com/xxx
+VITE_STRIPE_VOICE_CREDITS_100_LINK=https://buy.stripe.com/xxx
+VITE_STRIPE_VOICE_CREDITS_500_LINK=https://buy.stripe.com/xxx
+
+# Video Credit Packs
+VITE_STRIPE_VIDEO_CREDITS_50_LINK=https://buy.stripe.com/xxx
+VITE_STRIPE_VIDEO_CREDITS_100_LINK=https://buy.stripe.com/xxx
+VITE_STRIPE_VIDEO_CREDITS_500_LINK=https://buy.stripe.com/xxx
 \`\`\`
 
 ### Stap 4: Herstart de dev server
