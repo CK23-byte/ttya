@@ -271,7 +271,7 @@ export default function DashboardPage() {
                             personalityId: profile.id,
                             name: profile.name,
                             relationship: profile.relationship || '',
-                            description: profile.personality || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
+                            description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
                           })
                           navigate(`/voice-call?${params.toString()}`)
                         }}
