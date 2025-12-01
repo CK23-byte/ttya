@@ -33,11 +33,6 @@ import {
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
-interface FAQItem {
-  question: string
-  answer: string
-}
-
 export default function LivingLegacyPage() {
   const navigate = useNavigate()
   const { user } = useSupabaseAuth()
