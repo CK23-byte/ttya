@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Plus, X, User, Heart, Users, Shield, FileText, Settings } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
@@ -56,11 +56,34 @@ const STEPS = [
 export default function LivingLegacyOnboardingPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const tier = (searchParams.get('tier') || 'complete') as 'essential' | 'complete' | 'premium'
   const { user } = useSupabaseAuth()
+
+  // Get tier from URL params or localStorage
+  const getTier = (): 'essential' | 'complete' | 'premium' => {
+    const urlTier = searchParams.get('tier')
+    if (urlTier) return urlTier as 'essential' | 'complete' | 'premium'
+
+    const storedTier = localStorage.getItem('living-legacy-tier')
+    if (storedTier) {
+      localStorage.removeItem('living-legacy-tier') // Clear after reading
+      return storedTier as 'essential' | 'complete' | 'premium'
+    }
+
+    return 'complete'
+  }
+
+  const tier = getTier()
 
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Auth guard - redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      localStorage.setItem('living-legacy-tier', tier)
+      navigate('/auth')
+    }
+  }, [user, navigate, tier])
   const [formData, setFormData] = useState<OnboardingData>({
     fullName: '',
     dateOfBirth: '',
