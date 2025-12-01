@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, ArrowRight, Shield, Heart, Clock, Users } from 'lucide-react'
+import { Check, ArrowRight, Shield, Heart, Clock } from 'lucide-react'
 
 interface PricingTier {
   id: 'essential' | 'complete' | 'premium'
@@ -76,11 +75,9 @@ const tiers: PricingTier[] = [
 
 export default function LivingLegacyPricingPage() {
   const navigate = useNavigate()
-  const [selectedTier, setSelectedTier] = useState<'essential' | 'complete' | 'premium' | null>(null)
 
   const handleGetStarted = (tierId: 'essential' | 'complete' | 'premium') => {
-    setSelectedTier(tierId)
-    // Navigate to onboarding (will create this next)
+    // Navigate to onboarding
     navigate(`/living-legacy/onboarding?tier=${tierId}`)
   }
 
