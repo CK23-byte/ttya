@@ -31,19 +31,13 @@ import {
   Camera,
   Upload
 } from 'lucide-react'
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
 export default function LivingLegacyPage() {
   const navigate = useNavigate()
-  const { user } = useSupabaseAuth()
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null)
 
   const handleGetStarted = () => {
-    if (user) {
-      navigate('/dashboard?legacy=true')
-    } else {
-      navigate('/auth?intent=legacy')
-    }
+    navigate('/pricing/living-legacy')
   }
 
   const toggleFAQ = (index: number) => {
@@ -902,7 +896,7 @@ export default function LivingLegacyPage() {
               <ArrowRight className="w-6 h-6" />
             </button>
             <button
-              onClick={() => navigate('/pricing')}
+              onClick={() => navigate('/pricing/living-legacy')}
               className="px-10 py-5 bg-transparent border-2 border-white text-white rounded-xl font-bold text-xl hover:bg-white/10 transition-all flex items-center gap-3"
             >
               View Pricing
