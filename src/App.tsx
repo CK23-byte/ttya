@@ -16,6 +16,7 @@ import VideoPage from './pages/VideoPage'
 import AccountPage from './pages/AccountPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import LivingLegacyPage from './pages/LivingLegacyPage'
+import VoiceCallPage from './pages/VoiceCallPage'
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
               <Route path="/memories" element={<MemoriesPage />} />
               <Route path="/personality-builder" element={<PersonalityBuilderPage />} />
               <Route path="/video" element={<VideoPage />} />
+              <Route path="/voice-call" element={<VoiceCallPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/living-legacy" element={<LivingLegacyPage />} />
             </Routes>
