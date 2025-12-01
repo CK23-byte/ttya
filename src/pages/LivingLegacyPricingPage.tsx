@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Check, ArrowRight, Shield, Heart, Clock } from 'lucide-react'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
 interface PricingTier {
   id: 'essential' | 'complete' | 'premium'
@@ -75,8 +76,18 @@ const tiers: PricingTier[] = [
 
 export default function LivingLegacyPricingPage() {
   const navigate = useNavigate()
+  const { user } = useSupabaseAuth()
 
   const handleGetStarted = (tierId: 'essential' | 'complete' | 'premium') => {
+    // Check if user is authenticated
+    if (!user) {
+      // Store selected tier for after login
+      localStorage.setItem('living-legacy-tier', tierId)
+      // Redirect to auth page
+      navigate('/auth')
+      return
+    }
+
     // Navigate to onboarding
     navigate(`/living-legacy/onboarding?tier=${tierId}`)
   }
