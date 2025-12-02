@@ -29,15 +29,25 @@ import {
   Baby,
   MessageCircle,
   Camera,
-  Upload
+  Upload,
+  AlertCircle,
+  UserPlus
 } from 'lucide-react'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
 export default function LivingLegacyPage() {
   const navigate = useNavigate()
+  const { user } = useSupabaseAuth()
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null)
 
   const handleGetStarted = () => {
-    navigate('/pricing/living-legacy')
+    if (!user) {
+      // Store intent and redirect to auth
+      localStorage.setItem('living-legacy-intent', 'true')
+      navigate('/auth')
+    } else {
+      navigate('/pricing/living-legacy')
+    }
   }
 
   const toggleFAQ = (index: number) => {
@@ -133,6 +143,236 @@ export default function LivingLegacyPage() {
               <h3 className="font-bold text-lg mb-2">Forever Preserved</h3>
               <p className="text-gray-600">50+ year hosting guarantee for your family</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What is Living Legacy - Introduction */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Wat is een{' '}
+              <span className="bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+                Living Legacy
+              </span>
+              ?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+              Een Living Legacy is jouw digitale erfenis die je <strong>zelf creëert terwijl je nog leeft</strong>.
+              Het is fundamenteel anders dan een gewoon gedenk-profiel.
+            </p>
+          </div>
+
+          {/* Comparison Visual */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* Standard Profile */}
+            <div className="bg-gray-50 rounded-2xl p-8 border-2 border-gray-200 relative">
+              <div className="absolute top-4 right-4">
+                <div className="px-3 py-1 bg-gray-300 text-gray-700 rounded-full text-sm font-semibold">
+                  Standaard Profiel
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
+                  <Users className="w-8 h-8 text-gray-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Nabestaanden maken profiel</h3>
+                  <p className="text-sm text-gray-600">Na overlijden</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">Familie verzamelt data</p>
+                    <p className="text-sm text-gray-600">WhatsApp berichten, foto's van telefoon</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">Bestaande content</p>
+                    <p className="text-sm text-gray-600">Alleen wat al bestaat, geen nieuwe opnames</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">Direct actief</p>
+                    <p className="text-sm text-gray-600">Meteen toegankelijk na aanmaken</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">Abonnement</p>
+                    <p className="text-sm text-gray-600">Maandelijkse kosten</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Living Legacy */}
+            <div className="bg-gradient-to-br from-orange-50 to-rose-50 rounded-2xl p-8 border-2 border-orange-300 relative shadow-lg">
+              <div className="absolute top-4 right-4">
+                <div className="px-3 py-1 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full text-sm font-semibold flex items-center gap-1">
+                  <Sparkles className="w-4 h-4" />
+                  Living Legacy
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center">
+                  <UserPlus className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Jij maakt je eigen profiel</h3>
+                  <p className="text-sm text-orange-700 font-semibold">Terwijl je nog leeft</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">Jij hebt volledige controle</p>
+                    <p className="text-sm text-gray-700">Bepaal zelf wat je wil delen en opnemen</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">Intentionele opnames</p>
+                    <p className="text-sm text-gray-700">Nieuwe video's, audio, specifieke boodschappen</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">Notaris-gecontroleerde activatie</p>
+                    <p className="text-sm text-gray-700">Wordt pas actief na jouw overlijden</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-gray-900">Eenmalige investering</p>
+                    <p className="text-sm text-gray-700">€499-€1999, geen abonnement</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Benefit */}
+          <div className="bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl p-8 md:p-12 text-white text-center">
+            <h3 className="text-3xl md:text-4xl font-bold mb-4">
+              Het Grote Verschil
+            </h3>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-95">
+              Bij een Living Legacy <strong>creëer je bewust jouw eigen erfenis</strong>.
+              Je neemt specifieke boodschappen op voor je geliefden, deelt je levensverhaal
+              in je eigen woorden, en zorgt dat je stem en gezicht behouden blijven.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={handleGetStarted}
+                className="px-10 py-5 bg-white text-orange-600 rounded-xl font-bold text-xl hover:bg-orange-50 transition-all shadow-2xl flex items-center gap-3 justify-center"
+              >
+                <Sparkles className="w-6 h-6" />
+                Start Met Jouw Legacy
+                <ArrowRight className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It's Created */}
+      <section className="py-20 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Hoe Creëer Je Jouw{' '}
+              <span className="bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+                Living Legacy
+              </span>
+              ?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Een stapsgewijs proces dat je volledig zelf bepaalt, in je eigen tempo
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {/* Step 1 */}
+            <div className="bg-white rounded-xl p-6 shadow-md border border-orange-100">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-4">
+                1
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Kies Je Plan</h3>
+              <p className="text-gray-600">
+                Essential, Complete of Premium. Elke tier heeft andere features.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-white rounded-xl p-6 shadow-md border border-orange-100">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-4">
+                2
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Neem Op</h3>
+              <p className="text-gray-600">
+                Video's, audio, tekst. Vertel je verhaal, deel wijsheid, maak tijdcapsules.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-white rounded-xl p-6 shadow-md border border-orange-100">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-4">
+                3
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Preview & Test</h3>
+              <p className="text-gray-600">
+                Test je legacy voordat je finaliseert. Bekijk hoe het eruit ziet.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="bg-white rounded-xl p-6 shadow-md border border-orange-100">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-4">
+                4
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Genereer Notaris Link</h3>
+              <p className="text-gray-600">
+                Krijg een unieke link die je executor activeert na jouw overlijden.
+              </p>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <button
+              onClick={handleGetStarted}
+              className="px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold text-xl hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-3"
+            >
+              <Sparkles className="w-6 h-6" />
+              Begin Nu Met Jouw Legacy
+              <ArrowRight className="w-6 h-6" />
+            </button>
+            <p className="text-sm text-gray-600 mt-4">
+              Geen creditcard nodig om te starten · Werk in je eigen tempo · Altijd aanpasbaar
+            </p>
           </div>
         </div>
       </section>
