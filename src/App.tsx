@@ -24,6 +24,10 @@ import LivingLegacyVoiceSetupPage from './pages/LivingLegacyVoiceSetupPage'
 import LivingLegacyAvatarSetupPage from './pages/LivingLegacyAvatarSetupPage'
 import LivingLegacyPreviewPage from './pages/LivingLegacyPreviewPage'
 import LivingLegacyFinalizationPage from './pages/LivingLegacyFinalizationPage'
+import LivingLegacyMessageRecordingPage from './pages/LivingLegacyMessageRecordingPage'
+import LivingLegacyTimeCapsulePage from './pages/LivingLegacyTimeCapsulePage'
+import LivingLegacyRecipientManagementPage from './pages/LivingLegacyRecipientManagementPage'
+import LivingLegacyProgressDashboardPage from './pages/LivingLegacyProgressDashboardPage'
 import VoiceCallPage from './pages/VoiceCallPage'
 
 function App() {
@@ -56,6 +60,10 @@ function App() {
               <Route path="/living-legacy/:profileId/avatar-setup" element={<LivingLegacyAvatarSetupPage />} />
               <Route path="/living-legacy/:profileId/preview" element={<LivingLegacyPreviewPage />} />
               <Route path="/living-legacy/:profileId/finalize" element={<LivingLegacyFinalizationPage />} />
+              <Route path="/living-legacy/record-message" element={<LivingLegacyMessageRecordingPage />} />
+              <Route path="/living-legacy/time-capsule" element={<LivingLegacyTimeCapsulePage />} />
+              <Route path="/living-legacy/recipients" element={<LivingLegacyRecipientManagementPage />} />
+              <Route path="/living-legacy/progress" element={<LivingLegacyProgressDashboardPage />} />
             </Routes>
           </PaymentProvider>
         </AuthProvider>
