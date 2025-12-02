@@ -189,7 +189,7 @@ export default function LandingPage() {
           Pricing
         </button>
         <button
-          onClick={() => navigate('/pricing/living-legacy')}
+          onClick={() => navigate('/living-legacy')}
           className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold text-gray-700 hover:text-orange-600"
         >
           Living Legacy
