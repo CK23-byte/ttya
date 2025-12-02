@@ -1,5 +1,5 @@
 /**
- * Living Legacy Page - Conversion-Optimized
+ * Living Legacy Page - Conversion-Optimized v2.4.0
  *
  * A conversion-focused landing page that guides users through understanding
  * Living Legacy with interactive preview questions and clear CTAs.
