@@ -87,7 +87,7 @@ export default function LivingLegacyPage() {
               onClick={handleStartOnboarding}
               className="px-6 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-rose-600 transition-all shadow-md"
             >
-              Start Nu
+              Get Started
             </button>
           </div>
         </div>
@@ -99,19 +99,19 @@ export default function LivingLegacyPage() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 rounded-full text-orange-700 font-medium mb-6">
               <Sparkles className="w-5 h-5" />
-              <span>Jouw stem, voor altijd bewaard</span>
+              <span>Your voice, preserved forever</span>
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Creëer Jouw{' '}
+              Create Your{' '}
               <span className="bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
                 Living Legacy
               </span>
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Maak je eigen digitale erfenis <strong>terwijl je nog leeft</strong>.
-              Deel je verhaal, wijsheid en liefde met je geliefden - voor altijd.
+              Create your own digital legacy <strong>while you're still alive</strong>.
+              Share your story, wisdom, and love with your loved ones - forever.
             </p>
           </div>
 
@@ -121,8 +121,8 @@ export default function LivingLegacyPage() {
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
                 <Video className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-lg mb-2">Video Boodschappen</h3>
-              <p className="text-gray-600 text-sm">Neem persoonlijke video's op voor je geliefden</p>
+              <h3 className="font-bold text-lg mb-2">Video Messages</h3>
+              <p className="text-gray-600 text-sm">Record personal videos for your loved ones</p>
               <div className="mt-4 bg-gray-100 rounded-lg h-32 flex items-center justify-center">
                 <Play className="w-12 h-12 text-gray-400" />
               </div>
@@ -132,8 +132,8 @@ export default function LivingLegacyPage() {
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
                 <Mic className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-lg mb-2">Je Eigen Stem</h3>
-              <p className="text-gray-600 text-sm">AI leert jouw stem, gezicht en persoonlijkheid</p>
+              <h3 className="font-bold text-lg mb-2">Your Own Voice</h3>
+              <p className="text-gray-600 text-sm">AI learns your voice, face, and personality</p>
               <div className="mt-4 bg-gray-100 rounded-lg h-32 flex items-center justify-center">
                 <div className="flex gap-1">
                   {[...Array(20)].map((_, i) => (
@@ -147,17 +147,17 @@ export default function LivingLegacyPage() {
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
                 <Gift className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-lg mb-2">Tijdcapsules</h3>
-              <p className="text-gray-600 text-sm">Berichten voor toekomstige momenten</p>
+              <h3 className="font-bold text-lg mb-2">Time Capsules</h3>
+              <p className="text-gray-600 text-sm">Messages for future moments</p>
               <div className="mt-4 space-y-2">
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  📅 18e verjaardag Emma
+                  📅 Emma's 18th Birthday
                 </div>
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  💍 Bruiloft Tim
+                  💍 Tim's Wedding
                 </div>
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  👶 Eerste kleinkind
+                  👶 First Grandchild
                 </div>
               </div>
             </div>
@@ -170,26 +170,26 @@ export default function LivingLegacyPage() {
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Probeer Het Nu - Beantwoord 3 Snelle Vragen
+              Try It Now - Answer 3 Quick Questions
             </h2>
             <p className="text-xl text-gray-600">
-              Ontdek hoe krachtig een Living Legacy kan zijn voor jou
+              Discover how powerful a Living Legacy can be for you
             </p>
           </div>
 
-          {/* Question 1: Voor wie? */}
+          {/* Question 1: For whom? */}
           <div className="bg-gradient-to-br from-orange-50 to-rose-50 rounded-2xl p-8 mb-6 border-2 border-orange-200">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold">
                 1
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Voor wie maak je dit?</h3>
+              <h3 className="text-2xl font-bold text-gray-900">Who are you creating this for?</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { id: 'partner', label: 'Mijn Partner', icon: Heart },
-                { id: 'children', label: 'Mijn Kinderen', icon: Users },
-                { id: 'grandchildren', label: 'Kleinkinderen', icon: Baby }
+                { id: 'partner', label: 'My Partner', icon: Heart },
+                { id: 'children', label: 'My Children', icon: Users },
+                { id: 'grandchildren', label: 'Grandchildren', icon: Baby }
               ].map((option) => (
                 <button
                   key={option.id}
@@ -209,7 +209,7 @@ export default function LivingLegacyPage() {
             </div>
           </div>
 
-          {/* Question 2: Wat wil je delen? */}
+          {/* Question 2: What to share? */}
           <div className={`bg-gradient-to-br from-orange-50 to-rose-50 rounded-2xl p-8 mb-6 border-2 border-orange-200 transition-all ${
             !selectedRecipient ? 'opacity-50' : 'opacity-100'
           }`}>
@@ -217,13 +217,13 @@ export default function LivingLegacyPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold">
                 2
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Wat wil je vooral delen?</h3>
+              <h3 className="text-2xl font-bold text-gray-900">What do you want to share most?</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { id: 'lifestory', label: 'Mijn Levensverhaal', icon: BookOpen },
-                { id: 'advice', label: 'Advies & Wijsheid', icon: Sparkles },
-                { id: 'timecapsules', label: 'Tijdcapsule Berichten', icon: Gift }
+                { id: 'lifestory', label: 'My Life Story', icon: BookOpen },
+                { id: 'advice', label: 'Advice & Wisdom', icon: Sparkles },
+                { id: 'timecapsules', label: 'Time Capsule Messages', icon: Gift }
               ].map((option) => (
                 <button
                   key={option.id}
@@ -244,7 +244,7 @@ export default function LivingLegacyPage() {
             </div>
           </div>
 
-          {/* Question 3: Hoe wil je je uitdrukken? */}
+          {/* Question 3: How to express? */}
           <div className={`bg-gradient-to-br from-orange-50 to-rose-50 rounded-2xl p-8 mb-8 border-2 border-orange-200 transition-all ${
             !selectedContent ? 'opacity-50' : 'opacity-100'
           }`}>
@@ -252,12 +252,12 @@ export default function LivingLegacyPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold">
                 3
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Hoe wil je je uitdrukken?</h3>
+              <h3 className="text-2xl font-bold text-gray-900">How do you want to express yourself?</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { id: 'text', label: 'Geschreven Tekst', icon: FileText },
-                { id: 'voice', label: 'Spraak + Stem AI', icon: Mic },
+                { id: 'text', label: 'Written Text', icon: FileText },
+                { id: 'voice', label: 'Voice + Voice AI', icon: Mic },
                 { id: 'video', label: 'Video + Avatar', icon: Video }
               ].map((option) => (
                 <button
@@ -284,26 +284,26 @@ export default function LivingLegacyPage() {
             <div className="bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl p-8 text-white text-center animate-fade-in">
               <Sparkles className="w-16 h-16 mx-auto mb-4" />
               <h3 className="text-3xl font-bold mb-4">
-                Perfect! Zo kan jouw Living Legacy eruitzien
+                Perfect! This is what your Living Legacy could look like
               </h3>
               <p className="text-xl mb-2 opacity-90">
-                📝 {selectedContent === 'lifestory' ? 'Levensverhaal' : selectedContent === 'advice' ? 'Advies & Wijsheid' : 'Tijdcapsule Berichten'}
+                📝 {selectedContent === 'lifestory' ? 'Life Story' : selectedContent === 'advice' ? 'Advice & Wisdom' : 'Time Capsule Messages'}
               </p>
               <p className="text-xl mb-2 opacity-90">
-                👥 Voor: {selectedRecipient === 'partner' ? 'Je Partner' : selectedRecipient === 'children' ? 'Je Kinderen' : 'Je Kleinkinderen'}
+                👥 For: {selectedRecipient === 'partner' ? 'Your Partner' : selectedRecipient === 'children' ? 'Your Children' : 'Your Grandchildren'}
               </p>
               <p className="text-xl mb-6 opacity-90">
-                🎬 Formaat: {selectedFormat === 'text' ? 'Geschreven Tekst' : selectedFormat === 'voice' ? 'Met Jouw Stem' : 'Video met Avatar'}
+                🎬 Format: {selectedFormat === 'text' ? 'Written Text' : selectedFormat === 'voice' ? 'With Your Voice' : 'Video with Avatar'}
               </p>
 
               {showPreviewResult ? (
-                <div className="text-lg">Redirecting naar onboarding...</div>
+                <div className="text-lg">Redirecting to onboarding...</div>
               ) : (
                 <button
                   onClick={handlePreviewComplete}
                   className="px-10 py-5 bg-white text-orange-600 rounded-xl font-bold text-xl hover:bg-orange-50 transition-all shadow-2xl inline-flex items-center gap-3"
                 >
-                  Start Nu Je Living Legacy
+                  Start Your Living Legacy Now
                   <ArrowRight className="w-6 h-6" />
                 </button>
               )}
@@ -316,17 +316,17 @@ export default function LivingLegacyPage() {
       <section className="py-16 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 text-center">
-            Het Verschil Met Een Standaard Profiel
+            The Difference from a Standard Profile
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Standard Profile */}
             <div className="bg-gray-100 rounded-xl p-6 border-2 border-gray-300">
-              <h3 className="text-xl font-bold mb-4 text-gray-700">❌ Standaard Profiel</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-700">❌ Standard Profile</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>• Familie verzamelt data na overlijden</li>
-                <li>• Alleen bestaande content</li>
-                <li>• Geen controle over je verhaal</li>
-                <li>• Abonnement nodig</li>
+                <li>• Family collects data after passing</li>
+                <li>• Only existing content</li>
+                <li>• No control over your story</li>
+                <li>• Subscription required</li>
               </ul>
             </div>
 
@@ -334,10 +334,10 @@ export default function LivingLegacyPage() {
             <div className="bg-gradient-to-br from-orange-100 to-rose-100 rounded-xl p-6 border-2 border-orange-400 shadow-lg">
               <h3 className="text-xl font-bold mb-4 text-orange-700">✅ Living Legacy</h3>
               <ul className="space-y-2 text-gray-700">
-                <li>• <strong>Jij</strong> creëert je eigen erfenis</li>
-                <li>• Intentionele opnames & boodschappen</li>
-                <li>• Volledige controle over je verhaal</li>
-                <li>• Eenmalige investering (€499-€1999)</li>
+                <li>• <strong>You</strong> create your own legacy</li>
+                <li>• Intentional recordings & messages</li>
+                <li>• Full control over your story</li>
+                <li>• One-time investment (€499-€1999)</li>
               </ul>
             </div>
           </div>
@@ -348,10 +348,10 @@ export default function LivingLegacyPage() {
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">
-            Hoe Werkt Het?
+            How It Works
           </h2>
           <p className="text-xl text-gray-600 mb-12 text-center">
-            In 4 simpele stappen naar jouw eigen Living Legacy
+            4 simple steps to your own Living Legacy
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -359,25 +359,25 @@ export default function LivingLegacyPage() {
               {
                 step: 1,
                 title: 'Start Onboarding',
-                description: 'Beantwoord vragen over wie je bent en voor wie je dit maakt',
+                description: 'Answer questions about who you are and who you\'re creating this for',
                 icon: Users
               },
               {
                 step: 2,
-                title: 'Neem Op',
-                description: 'Video, audio of tekst - deel je verhaal zoals jij wilt',
+                title: 'Record',
+                description: 'Video, audio, or text - share your story the way you want',
                 icon: Camera
               },
               {
                 step: 3,
                 title: 'Preview & Test',
-                description: 'Bekijk hoe je legacy eruitziet voordat je finaliseert',
+                description: 'See how your legacy looks before you finalize it',
                 icon: Play
               },
               {
                 step: 4,
-                title: 'Bewaar & Beveilig',
-                description: 'Krijg een notaris-link voor activatie na overlijden',
+                title: 'Save & Secure',
+                description: 'Get a notary link for activation after passing',
                 icon: Shield
               }
             ].map((item) => (
@@ -397,7 +397,7 @@ export default function LivingLegacyPage() {
               onClick={handleStartOnboarding}
               className="px-10 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold text-lg hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg inline-flex items-center gap-2"
             >
-              Start Nu
+              Get Started
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
@@ -408,28 +408,28 @@ export default function LivingLegacyPage() {
       <section className="py-16 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
-            Voorbeelden Van Living Legacy's
+            Real Living Legacy Examples
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                name: 'Maria, 68 jaar',
-                scenario: 'Palliatieve zorg',
-                content: 'Liet 47 video boodschappen achter voor haar 3 kinderen en 5 kleinkinderen. Inclusief tijdcapsules voor toekomstige bruiloften.',
-                quote: '"Ik weet nu dat mijn kleinkinderen me altijd kunnen horen. Dat geeft me zoveel vrede."'
+                name: 'Sarah, 68',
+                scenario: 'Palliative care',
+                content: 'Left 47 video messages for her 3 children and 5 grandchildren. Including time capsules for future weddings.',
+                quote: '"I know now that my grandchildren will always be able to hear me. That gives me so much peace."'
               },
               {
-                name: 'Jeroen, 45 jaar',
-                scenario: 'Jonge vader',
-                content: 'Maakte vooruitziend een legacy voor zijn 2 jonge kinderen. Met advies voor hun 18e, 21e en 25e verjaardag.',
-                quote: '"Als vader wil ik er altijd zijn. Dit geeft me die zekerheid."'
+                name: 'Michael, 45',
+                scenario: 'Young father',
+                content: 'Proactively created a legacy for his 2 young children. With advice for their 18th, 21st, and 25th birthdays.',
+                quote: '"As a father, I want to always be there. This gives me that certainty."'
               },
               {
-                name: 'Sophie, 72 jaar',
-                scenario: 'Familiegeschiedenis',
-                content: 'Deelde haar levensverhaal en familiegeschiedenis spanning 4 generaties. 12 uur aan verhalen en wijsheid.',
-                quote: '"Mijn achterkleinkinderen zullen weten waar ze vandaan komen."'
+                name: 'Eleanor, 72',
+                scenario: 'Family historian',
+                content: 'Shared her life story and family history spanning 4 generations. 12 hours of stories and wisdom.',
+                quote: '"My great-grandchildren will know where they come from."'
               }
             ].map((example, index) => (
               <div key={index} className="bg-white rounded-xl p-6 shadow-md border border-orange-200">
@@ -455,7 +455,7 @@ export default function LivingLegacyPage() {
               onClick={handleStartOnboarding}
               className="px-10 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold text-lg hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg inline-flex items-center gap-2"
             >
-              Jouw Verhaal Verdient Dit Ook
+              Your Story Deserves This Too
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>
@@ -466,17 +466,17 @@ export default function LivingLegacyPage() {
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
-            Vertrouwd Door Honderden Families
+            Trusted by Hundreds of Families
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <div className="text-center">
               <div className="text-5xl font-bold text-orange-600 mb-2">500+</div>
-              <p className="text-gray-600">Living Legacy's Gemaakt</p>
+              <p className="text-gray-600">Living Legacies Created</p>
             </div>
             <div className="text-center">
               <div className="text-5xl font-bold text-orange-600 mb-2">10,000+</div>
-              <p className="text-gray-600">Boodschappen Opgenomen</p>
+              <p className="text-gray-600">Messages Recorded</p>
             </div>
             <div className="text-center">
               <div className="text-5xl font-bold text-orange-600 mb-2">4.9/5</div>
@@ -485,7 +485,7 @@ export default function LivingLegacyPage() {
                   <Star key={i} className="w-5 h-5 fill-orange-400 text-orange-400" />
                 ))}
               </div>
-              <p className="text-gray-600">Gemiddelde Beoordeling</p>
+              <p className="text-gray-600">Average Rating</p>
             </div>
           </div>
 
@@ -493,7 +493,7 @@ export default function LivingLegacyPage() {
             onClick={handleStartOnboarding}
             className="px-10 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold text-lg hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg inline-flex items-center gap-2"
           >
-            Word De Volgende
+            Be the Next
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -503,10 +503,10 @@ export default function LivingLegacyPage() {
       <section id="pricing" className="py-16 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">
-            Kies Jouw Plan
+            Choose Your Plan
           </h2>
           <p className="text-xl text-gray-600 mb-12 text-center">
-            Eenmalige investering, voor altijd bewaard
+            One-time investment, preserved forever
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -517,29 +517,29 @@ export default function LivingLegacyPage() {
               <ul className="space-y-2 mb-6 text-sm">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>Tekst-based AI</span>
+                  <span>Text-based AI</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>50+ berichten</span>
+                  <span>50+ messages</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>5 familie leden</span>
+                  <span>5 family members</span>
                 </li>
               </ul>
               <button
                 onClick={handleStartOnboarding}
                 className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-bold hover:from-orange-600 hover:to-rose-600 transition-all"
               >
-                Start Nu
+                Get Started
               </button>
             </div>
 
             {/* Complete - Popular */}
             <div className="bg-gradient-to-br from-orange-100 to-rose-100 rounded-xl p-6 border-4 border-orange-500 relative transform scale-105 shadow-xl">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-rose-500 text-white px-4 py-1 rounded-full text-sm font-bold">
-                POPULAIR
+                MOST POPULAR
               </div>
               <h3 className="text-2xl font-bold mb-2">Complete</h3>
               <div className="text-4xl font-bold text-orange-600 mb-4">€999</div>
@@ -554,18 +554,18 @@ export default function LivingLegacyPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>Unlimited berichten</span>
+                  <span>Unlimited messages</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>15 familie leden</span>
+                  <span>15 family members</span>
                 </li>
               </ul>
               <button
                 onClick={handleStartOnboarding}
                 className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-bold hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg"
               >
-                Start Nu
+                Get Started
               </button>
             </div>
 
@@ -576,7 +576,7 @@ export default function LivingLegacyPage() {
               <ul className="space-y-2 mb-6 text-sm">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span><strong>Professionele opname</strong></span>
+                  <span><strong>Professional recording</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
@@ -584,7 +584,7 @@ export default function LivingLegacyPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>Unlimited familie</span>
+                  <span>Unlimited family</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
@@ -595,13 +595,13 @@ export default function LivingLegacyPage() {
                 onClick={handleStartOnboarding}
                 className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-bold hover:from-orange-600 hover:to-rose-600 transition-all"
               >
-                Start Nu
+                Get Started
               </button>
             </div>
           </div>
 
           <p className="text-center text-gray-600 mt-8">
-            ✓ 50+ jaar hosting garantie • ✓ AES-256 encryptie • ✓ Altijd aanpasbaar
+            ✓ 50+ year hosting guarantee • ✓ AES-256 encryption • ✓ Always editable
           </p>
         </div>
       </section>
@@ -610,20 +610,20 @@ export default function LivingLegacyPage() {
       <section className="py-20 bg-gradient-to-r from-orange-600 to-rose-600 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Jouw Verhaal Verdient Bewaard Te Blijven
+            Your Story Deserves to Be Preserved
           </h2>
           <p className="text-xl md:text-2xl mb-8 opacity-90">
-            Start vandaag nog met je Living Legacy. In minder dan 30 minuten klaar om op te nemen.
+            Start your Living Legacy today. Ready to record in less than 30 minutes.
           </p>
           <button
             onClick={handleStartOnboarding}
             className="px-12 py-5 bg-white text-orange-600 rounded-xl font-bold text-xl hover:bg-orange-50 transition-all shadow-2xl inline-flex items-center gap-3"
           >
-            Begin Nu Gratis
+            Start for Free
             <ArrowRight className="w-6 h-6" />
           </button>
           <p className="text-sm mt-6 opacity-75">
-            Geen creditcard nodig • Start gratis • Betaal pas bij finaliseren
+            No credit card required • Start free • Pay only when finalizing
           </p>
         </div>
       </section>
