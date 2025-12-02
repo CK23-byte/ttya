@@ -20,6 +20,9 @@ import LivingLegacyPricingPage from './pages/LivingLegacyPricingPage'
 import LivingLegacyOnboardingPage from './pages/LivingLegacyOnboardingPage'
 import LivingLegacyCreationDashboard from './pages/LivingLegacyCreationDashboard'
 import LivingLegacyRecordMessagePage from './pages/LivingLegacyRecordMessagePage'
+import LivingLegacyVoiceSetupPage from './pages/LivingLegacyVoiceSetupPage'
+import LivingLegacyAvatarSetupPage from './pages/LivingLegacyAvatarSetupPage'
+import LivingLegacyPreviewPage from './pages/LivingLegacyPreviewPage'
 import LivingLegacyFinalizationPage from './pages/LivingLegacyFinalizationPage'
 import VoiceCallPage from './pages/VoiceCallPage'
 
@@ -49,6 +52,9 @@ function App() {
               <Route path="/living-legacy/onboarding" element={<LivingLegacyOnboardingPage />} />
               <Route path="/living-legacy/create/:profileId" element={<LivingLegacyCreationDashboard />} />
               <Route path="/living-legacy/:profileId/record" element={<LivingLegacyRecordMessagePage />} />
+              <Route path="/living-legacy/:profileId/voice-setup" element={<LivingLegacyVoiceSetupPage />} />
+              <Route path="/living-legacy/:profileId/avatar-setup" element={<LivingLegacyAvatarSetupPage />} />
+              <Route path="/living-legacy/:profileId/preview" element={<LivingLegacyPreviewPage />} />
               <Route path="/living-legacy/:profileId/finalize" element={<LivingLegacyFinalizationPage />} />
             </Routes>
           </PaymentProvider>
