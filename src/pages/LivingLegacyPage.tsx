@@ -40,13 +40,15 @@ export default function LivingLegacyPage() {
   const { user } = useSupabaseAuth()
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null)
 
-  const handleGetStarted = () => {
+  const handleStartOnboarding = () => {
     if (!user) {
-      // Store intent and redirect to auth
-      localStorage.setItem('living-legacy-intent', 'true')
+      // Store intent and redirect to auth, then directly to onboarding
+      localStorage.setItem('living-legacy-direct-onboarding', 'true')
+      localStorage.setItem('living-legacy-tier', 'complete') // Default tier
       navigate('/auth')
     } else {
-      navigate('/pricing/living-legacy')
+      // Go directly to onboarding with default tier
+      navigate('/living-legacy/onboarding?tier=complete')
     }
   }
 
@@ -76,16 +78,16 @@ export default function LivingLegacyPage() {
               Home
             </button>
             <button
-              onClick={() => navigate('/pricing')}
+              onClick={() => navigate('/pricing/living-legacy')}
               className="text-gray-600 hover:text-orange-600 font-medium transition-colors"
             >
               Pricing
             </button>
             <button
-              onClick={handleGetStarted}
+              onClick={handleStartOnboarding}
               className="px-6 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-rose-600 transition-all shadow-md"
             >
-              Get Started
+              Start Onboarding
             </button>
           </div>
         </div>
@@ -113,7 +115,7 @@ export default function LivingLegacyPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <button
-              onClick={handleGetStarted}
+              onClick={handleStartOnboarding}
               className="px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold text-lg hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               Start Creating Your Legacy
@@ -286,7 +288,7 @@ export default function LivingLegacyPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={handleGetStarted}
+                onClick={handleStartOnboarding}
                 className="px-10 py-5 bg-white text-orange-600 rounded-xl font-bold text-xl hover:bg-orange-50 transition-all shadow-2xl flex items-center gap-3 justify-center"
               >
                 <Sparkles className="w-6 h-6" />
@@ -363,7 +365,7 @@ export default function LivingLegacyPage() {
           {/* CTA */}
           <div className="text-center">
             <button
-              onClick={handleGetStarted}
+              onClick={handleStartOnboarding}
               className="px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold text-xl hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-3"
             >
               <Sparkles className="w-6 h-6" />
@@ -912,7 +914,7 @@ export default function LivingLegacyPage() {
                 </li>
               </ul>
               <button
-                onClick={handleGetStarted}
+                onClick={handleStartOnboarding}
                 className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-bold hover:from-orange-600 hover:to-rose-600 transition-all"
               >
                 Get Started
@@ -960,7 +962,7 @@ export default function LivingLegacyPage() {
                 </li>
               </ul>
               <button
-                onClick={handleGetStarted}
+                onClick={handleStartOnboarding}
                 className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-bold hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg"
               >
                 Get Started
@@ -1005,7 +1007,7 @@ export default function LivingLegacyPage() {
                 </li>
               </ul>
               <button
-                onClick={handleGetStarted}
+                onClick={handleStartOnboarding}
                 className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-bold hover:from-orange-600 hover:to-rose-600 transition-all"
               >
                 Get Started
@@ -1129,7 +1131,7 @@ export default function LivingLegacyPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <button
-              onClick={handleGetStarted}
+              onClick={handleStartOnboarding}
               className="px-10 py-5 bg-white text-orange-600 rounded-xl font-bold text-xl hover:bg-orange-50 transition-all shadow-2xl flex items-center gap-3"
             >
               Create Your Living Legacy
