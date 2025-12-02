@@ -25,11 +25,9 @@ import {
   ChevronRight,
   Baby
 } from 'lucide-react'
-import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
 export default function LivingLegacyPage() {
   const navigate = useNavigate()
-  const { user } = useSupabaseAuth()
 
   // Preview questions state
   const [selectedRecipient, setSelectedRecipient] = useState<string>('')
@@ -38,13 +36,10 @@ export default function LivingLegacyPage() {
   const [showPreviewResult, setShowPreviewResult] = useState(false)
 
   const handleStartOnboarding = () => {
-    if (!user) {
-      localStorage.setItem('living-legacy-direct-onboarding', 'true')
-      localStorage.setItem('living-legacy-tier', 'complete')
-      navigate('/auth')
-    } else {
-      navigate('/living-legacy/onboarding?tier=complete')
-    }
+    // Always navigate to Living Legacy auth page first
+    // (separate authentication from regular chat)
+    localStorage.setItem('living-legacy-tier', 'complete')
+    navigate('/living-legacy/auth')
   }
 
   const handlePreviewComplete = () => {
