@@ -4,6 +4,7 @@
 
 import { useState } from 'react'
 import { Upload, FileText, Check, X } from 'lucide-react'
+import JSZip from 'jszip'
 import { parseWhatsAppExport, isValidWhatsAppExport, getUniqueSenders } from '../utils/whatsappParser'
 import { WhatsAppMessage } from '../types'
 
@@ -21,12 +22,34 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
     setError('')
 
     if (!file.name.endsWith('.txt') && !file.name.endsWith('.zip')) {
-      setError('Alleen .txt bestanden worden ondersteund')
+      setError('Alleen .txt of .zip bestanden worden ondersteund')
       return
     }
 
     try {
-      const text = await file.text()
+      let text: string
+
+      // Handle ZIP files
+      if (file.name.endsWith('.zip')) {
+        const zip = new JSZip()
+        const zipContent = await zip.loadAsync(file)
+
+        // Find the .txt file in the ZIP
+        const txtFile = Object.keys(zipContent.files).find(
+          filename => filename.endsWith('.txt') && !filename.startsWith('__MACOSX')
+        )
+
+        if (!txtFile) {
+          setError('Geen .txt bestand gevonden in het ZIP archief')
+          return
+        }
+
+        text = await zipContent.files[txtFile].async('text')
+      } else {
+        // Handle plain .txt files
+        text = await file.text()
+      }
+
       const parsedMessages = parseWhatsAppExport(text)
 
       if (!isValidWhatsAppExport(text)) {
@@ -96,7 +119,7 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
           Sleep je WhatsApp export hier of klik om te uploaden
         </p>
         <p className="text-xs text-gray-500 mb-4">
-          .txt bestand (geëxporteerd vanuit WhatsApp)
+          .txt of .zip bestand (geëxporteerd vanuit WhatsApp, Messenger, Telegram, etc.)
         </p>
         <label className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg cursor-pointer hover:bg-purple-700 transition">
           Bestand Kiezen
@@ -166,15 +189,23 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
       {/* Instructions */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800 font-medium mb-2">
-          Hoe exporteer je WhatsApp berichten?
+          Hoe exporteer je berichten?
         </p>
-        <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
-          <li>Open de chat in WhatsApp</li>
-          <li>Tik op de naam bovenaan</li>
-          <li>Scroll naar beneden en kies "Exporteer chat"</li>
-          <li>Kies "Zonder media"</li>
-          <li>Upload het .txt bestand hier</li>
-        </ol>
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-blue-800 font-semibold mb-1">WhatsApp:</p>
+            <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside pl-2">
+              <li>Open de chat in WhatsApp</li>
+              <li>Tik op de naam bovenaan</li>
+              <li>Scroll naar beneden en kies "Exporteer chat"</li>
+              <li>Kies "Zonder media" voor .txt of "Met media" voor .zip</li>
+              <li>Upload het bestand hier</li>
+            </ol>
+          </div>
+          <p className="text-xs text-blue-600 italic">
+            Messenger, Telegram en andere apps hebben vergelijkbare export opties in de chat instellingen.
+          </p>
+        </div>
       </div>
     </div>
   )
