@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Upload,
@@ -16,20 +16,23 @@ import {
   Camera,
   Loader2,
   CheckCircle2,
-  MessageCircle
+  MessageCircle,
+  Image as ImageIcon,
+  Star
 } from 'lucide-react'
 import DirectRecordingModal from '../components/DirectRecordingModal'
 import * as AvatarService from '../services/avatar.service'
 
 interface UploadedFile {
   id: string
-  type: 'text' | 'voice' | 'video'
+  type: 'text' | 'voice' | 'video' | 'photo'
   file: File
   name: string
   size: number
   uploadedAt: Date
   preview?: string
   duration?: number
+  isFavorite?: boolean
 }
 
 interface AvatarQuality {
@@ -37,6 +40,7 @@ interface AvatarQuality {
   voiceClarity: number
   visualQuality: number
   textContent: number
+  photoQuality: number
 }
 
 export default function LivingLegacyUploadDashboard() {
@@ -44,6 +48,7 @@ export default function LivingLegacyUploadDashboard() {
   const textInputRef = useRef<HTMLInputElement>(null)
   const voiceInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   const [uploads, setUploads] = useState<UploadedFile[]>([])
   const [showDirectRecording, setShowDirectRecording] = useState(false)
@@ -55,20 +60,69 @@ export default function LivingLegacyUploadDashboard() {
   const [creationProgress, setCreationProgress] = useState('')
   const [avatarId, setAvatarId] = useState<string | null>(null)
 
+  // Load saved avatar state
+  useEffect(() => {
+    const savedAvatarId = localStorage.getItem('living_legacy_avatar_id')
+    const savedAvatarCreated = localStorage.getItem('living_legacy_avatar_created')
+
+    if (savedAvatarId && savedAvatarCreated === 'true') {
+      setAvatarId(savedAvatarId)
+      setAvatarCreated(true)
+    }
+
+    // Load saved uploads
+    const savedUploads = localStorage.getItem('living_legacy_uploads')
+    if (savedUploads) {
+      try {
+        const parsedUploads = JSON.parse(savedUploads)
+        // Note: Files can't be serialized, so we only restore metadata
+        setUploads(parsedUploads.map((u: any) => ({
+          ...u,
+          uploadedAt: new Date(u.uploadedAt),
+          file: null // Files need to be re-uploaded on reload
+        })).filter((u: any) => u.file !== null))
+      } catch (e) {
+        console.error('Error loading saved uploads:', e)
+      }
+    }
+  }, [])
+
+  // Save uploads to localStorage
+  useEffect(() => {
+    if (uploads.length > 0) {
+      try {
+        const uploadsToSave = uploads.map(u => ({
+          id: u.id,
+          type: u.type,
+          name: u.name,
+          size: u.size,
+          uploadedAt: u.uploadedAt.toISOString(),
+          preview: u.preview,
+          isFavorite: u.isFavorite
+        }))
+        localStorage.setItem('living_legacy_uploads', JSON.stringify(uploadsToSave))
+      } catch (e) {
+        console.error('Error saving uploads:', e)
+      }
+    }
+  }, [uploads])
+
   // Calculate avatar quality based on uploads
   const avatarQuality: AvatarQuality = {
     overall: Math.min(
       100,
       (uploads.filter(u => u.type === 'text').length * 10 +
         uploads.filter(u => u.type === 'voice').length * 15 +
-        uploads.filter(u => u.type === 'video').length * 25)
+        uploads.filter(u => u.type === 'video').length * 20 +
+        uploads.filter(u => u.type === 'photo').length * 10)
     ),
     voiceClarity: Math.min(100, uploads.filter(u => u.type === 'voice').length * 20),
     visualQuality: Math.min(100, uploads.filter(u => u.type === 'video').length * 25),
-    textContent: Math.min(100, uploads.filter(u => u.type === 'text').length * 15)
+    textContent: Math.min(100, uploads.filter(u => u.type === 'text').length * 15),
+    photoQuality: Math.min(100, uploads.filter(u => u.type === 'photo').length * 15)
   }
 
-  const handleFileUpload = (type: 'text' | 'voice' | 'video', files: FileList | null) => {
+  const handleFileUpload = (type: 'text' | 'voice' | 'video' | 'photo', files: FileList | null) => {
     if (!files || files.length === 0) return
 
     Array.from(files).forEach(file => {
@@ -78,11 +132,12 @@ export default function LivingLegacyUploadDashboard() {
         file,
         name: file.name,
         size: file.size,
-        uploadedAt: new Date()
+        uploadedAt: new Date(),
+        isFavorite: false
       }
 
-      // Create preview for video
-      if (type === 'video') {
+      // Create preview for video and photos
+      if (type === 'video' || type === 'photo') {
         const url = URL.createObjectURL(file)
         newUpload.preview = url
       }
@@ -92,7 +147,18 @@ export default function LivingLegacyUploadDashboard() {
   }
 
   const deleteUpload = (id: string) => {
+    const upload = uploads.find(u => u.id === id)
+    if (upload?.preview) {
+      URL.revokeObjectURL(upload.preview)
+    }
     setUploads(prev => prev.filter(u => u.id !== id))
+  }
+
+  const toggleFavoritePhoto = (id: string) => {
+    setUploads(prev => prev.map(u => ({
+      ...u,
+      isFavorite: u.id === id ? true : (u.type === 'photo' ? false : u.isFavorite)
+    })))
   }
 
   const formatFileSize = (bytes: number): string => {
@@ -114,6 +180,13 @@ export default function LivingLegacyUploadDashboard() {
     return 'Getting Started'
   }
 
+  const getBlurAmount = (quality: number) => {
+    // More quality = less blur
+    // 0% quality = 20px blur
+    // 100% quality = 0px blur
+    return Math.max(0, 20 - (quality / 100) * 20)
+  }
+
   const handleCreateAvatar = async () => {
     try {
       setIsCreatingAvatar(true)
@@ -127,6 +200,7 @@ export default function LivingLegacyUploadDashboard() {
 
       const voiceFiles = uploads.filter(u => u.type === 'voice').map(u => u.file)
       const videoFiles = uploads.filter(u => u.type === 'video')
+      const photoFiles = uploads.filter(u => u.type === 'photo')
 
       if (voiceFiles.length < 3) {
         alert('Please upload at least 3 voice recordings for better quality voice cloning')
@@ -134,13 +208,15 @@ export default function LivingLegacyUploadDashboard() {
         return
       }
 
-      if (videoFiles.length === 0) {
+      if (videoFiles.length === 0 && photoFiles.length === 0) {
         alert('Please upload at least 1 video or photo for avatar creation')
         setIsCreatingAvatar(false)
         return
       }
 
-      const presenterImage = videoFiles[0].file
+      // Use favorite photo if available, otherwise first video or photo
+      const favoritePhoto = uploads.find(u => u.type === 'photo' && u.isFavorite)
+      const presenterImage = favoritePhoto?.file || videoFiles[0]?.file || photoFiles[0]?.file
 
       setCreationProgress('Uploading voice samples...')
       await new Promise(resolve => setTimeout(resolve, 500))
@@ -162,6 +238,10 @@ export default function LivingLegacyUploadDashboard() {
       setAvatarId(avatar.id)
       setAvatarCreated(true)
 
+      // Save avatar state
+      localStorage.setItem('living_legacy_avatar_id', avatar.id)
+      localStorage.setItem('living_legacy_avatar_created', 'true')
+
       setTimeout(() => {
         setIsCreatingAvatar(false)
         setCreationProgress('')
@@ -177,9 +257,11 @@ export default function LivingLegacyUploadDashboard() {
 
   const canCreateAvatar =
     uploads.filter(u => u.type === 'voice').length >= 3 &&
-    uploads.filter(u => u.type === 'video').length >= 1 &&
+    (uploads.filter(u => u.type === 'video').length >= 1 || uploads.filter(u => u.type === 'photo').length >= 1) &&
     !avatarCreated &&
     !isCreatingAvatar
+
+  const favoritePhoto = uploads.find(u => u.type === 'photo' && u.isFavorite)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-purple-50">
@@ -196,7 +278,7 @@ export default function LivingLegacyUploadDashboard() {
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg"
             >
               <Camera className="w-5 h-5" />
-              <span className="hidden sm:inline">Quick Record (10s)</span>
+              <span className="hidden sm:inline">Quick Record</span>
               <span className="sm:hidden">Record</span>
             </button>
           </div>
@@ -204,8 +286,8 @@ export default function LivingLegacyUploadDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Upload Sections */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Upload Sections - 4 columns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Text Upload */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -213,8 +295,8 @@ export default function LivingLegacyUploadDashboard() {
                 <FileText className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Text Content</h3>
-                <p className="text-xs text-gray-600">Stories & Messages</p>
+                <h3 className="font-semibold text-gray-900">Text</h3>
+                <p className="text-xs text-gray-600">Stories</p>
               </div>
             </div>
 
@@ -232,29 +314,26 @@ export default function LivingLegacyUploadDashboard() {
               className="w-full py-4 border-2 border-dashed border-blue-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
             >
               <Upload className="w-8 h-8 text-blue-400 group-hover:text-blue-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-700">Click to upload</p>
-              <p className="text-xs text-gray-500 mt-1">TXT, PDF, DOC</p>
+              <p className="text-sm font-medium text-gray-700">Upload</p>
             </button>
 
-            {/* Text Files List */}
-            <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
+            <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
               {uploads.filter(u => u.type === 'text').map(upload => (
                 <div key={upload.id} className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg group">
                   <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 truncate">{upload.name}</p>
-                    <p className="text-xs text-gray-500">{formatFileSize(upload.size)}</p>
+                    <p className="text-xs text-gray-900 truncate">{upload.name}</p>
                   </div>
                   <button
                     onClick={() => deleteUpload(upload.id)}
-                    className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded transition-all"
+                    className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded"
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-3 h-3 text-red-600" />
                   </button>
                 </div>
               ))}
               {uploads.filter(u => u.type === 'text').length === 0 && (
-                <p className="text-sm text-gray-400 text-center py-4">No text files uploaded yet</p>
+                <p className="text-xs text-gray-400 text-center py-4">No files</p>
               )}
             </div>
           </div>
@@ -266,8 +345,8 @@ export default function LivingLegacyUploadDashboard() {
                 <Mic className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Voice Recordings</h3>
-                <p className="text-xs text-gray-600">Audio Messages</p>
+                <h3 className="font-semibold text-gray-900">Voice</h3>
+                <p className="text-xs text-gray-600">Audio</p>
               </div>
             </div>
 
@@ -285,29 +364,26 @@ export default function LivingLegacyUploadDashboard() {
               className="w-full py-4 border-2 border-dashed border-purple-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all group"
             >
               <Upload className="w-8 h-8 text-purple-400 group-hover:text-purple-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-700">Click to upload</p>
-              <p className="text-xs text-gray-500 mt-1">MP3, WAV, M4A</p>
+              <p className="text-sm font-medium text-gray-700">Upload</p>
             </button>
 
-            {/* Voice Files List */}
-            <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
+            <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
               {uploads.filter(u => u.type === 'voice').map(upload => (
                 <div key={upload.id} className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg group">
                   <Mic className="w-4 h-4 text-purple-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 truncate">{upload.name}</p>
-                    <p className="text-xs text-gray-500">{formatFileSize(upload.size)}</p>
+                    <p className="text-xs text-gray-900 truncate">{upload.name}</p>
                   </div>
                   <button
                     onClick={() => deleteUpload(upload.id)}
-                    className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded transition-all"
+                    className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded"
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-3 h-3 text-red-600" />
                   </button>
                 </div>
               ))}
               {uploads.filter(u => u.type === 'voice').length === 0 && (
-                <p className="text-sm text-gray-400 text-center py-4">No voice recordings uploaded yet</p>
+                <p className="text-xs text-gray-400 text-center py-4">No files</p>
               )}
             </div>
           </div>
@@ -319,8 +395,8 @@ export default function LivingLegacyUploadDashboard() {
                 <Video className="w-6 h-6 text-orange-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Video Content</h3>
-                <p className="text-xs text-gray-600">Visual Messages</p>
+                <h3 className="font-semibold text-gray-900">Video</h3>
+                <p className="text-xs text-gray-600">Clips</p>
               </div>
             </div>
 
@@ -338,47 +414,120 @@ export default function LivingLegacyUploadDashboard() {
               className="w-full py-4 border-2 border-dashed border-orange-300 rounded-xl hover:border-orange-500 hover:bg-orange-50 transition-all group"
             >
               <Upload className="w-8 h-8 text-orange-400 group-hover:text-orange-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-700">Click to upload</p>
-              <p className="text-xs text-gray-500 mt-1">MP4, MOV, AVI</p>
+              <p className="text-sm font-medium text-gray-700">Upload</p>
             </button>
 
-            {/* Video Files List */}
-            <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
+            <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
               {uploads.filter(u => u.type === 'video').map(upload => (
                 <div key={upload.id} className="flex items-center gap-2 p-2 bg-orange-50 rounded-lg group">
                   <Video className="w-4 h-4 text-orange-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 truncate">{upload.name}</p>
-                    <p className="text-xs text-gray-500">{formatFileSize(upload.size)}</p>
+                    <p className="text-xs text-gray-900 truncate">{upload.name}</p>
                   </div>
                   <button
                     onClick={() => setSelectedPreview(upload)}
-                    className="p-1 hover:bg-orange-200 rounded transition-all"
+                    className="p-1 hover:bg-orange-200 rounded"
                   >
-                    <Eye className="w-4 h-4 text-orange-600" />
+                    <Eye className="w-3 h-3 text-orange-600" />
                   </button>
                   <button
                     onClick={() => deleteUpload(upload.id)}
-                    className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded transition-all"
+                    className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded"
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-3 h-3 text-red-600" />
                   </button>
                 </div>
               ))}
               {uploads.filter(u => u.type === 'video').length === 0 && (
-                <p className="text-sm text-gray-400 text-center py-4">No videos uploaded yet</p>
+                <p className="text-xs text-gray-400 text-center py-4">No files</p>
+              )}
+            </div>
+          </div>
+
+          {/* Photo Upload - NEW */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-pink-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Photos</h3>
+                <p className="text-xs text-gray-600">Images</p>
+              </div>
+            </div>
+
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.heic,.webp"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileUpload('photo', e.target.files)}
+            />
+
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              className="w-full py-4 border-2 border-dashed border-pink-300 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-all group"
+            >
+              <Upload className="w-8 h-8 text-pink-400 group-hover:text-pink-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-700">Upload</p>
+            </button>
+
+            {/* Photo Grid with Favorite Selection */}
+            <div className="mt-4 space-y-3 max-h-48 overflow-y-auto">
+              {uploads.filter(u => u.type === 'photo').length > 0 && (
+                <div className="text-xs text-pink-600 font-medium flex items-center gap-1">
+                  <Star className="w-3 h-3" />
+                  <span>Click to set favorite</span>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                {uploads.filter(u => u.type === 'photo').map(upload => (
+                  <div key={upload.id} className="relative group">
+                    <button
+                      onClick={() => toggleFavoritePhoto(upload.id)}
+                      className={`relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                        upload.isFavorite
+                          ? 'border-pink-500 ring-2 ring-pink-300'
+                          : 'border-gray-200 hover:border-pink-300'
+                      }`}
+                    >
+                      {upload.preview && (
+                        <img
+                          src={upload.preview}
+                          alt={upload.name}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      {upload.isFavorite && (
+                        <div className="absolute top-1 right-1 bg-pink-500 rounded-full p-1">
+                          <Star className="w-3 h-3 text-white fill-white" />
+                        </div>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => deleteUpload(upload.id)}
+                      className="absolute -top-1 -right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {uploads.filter(u => u.type === 'photo').length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-4">No photos</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Avatar Preview Section */}
+        {/* Avatar Preview Section with Blur Effect */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-orange-500 via-rose-500 to-purple-500 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">Your Digital Avatar Preview</h2>
-                <p className="text-white/80">Real-time visualization of your avatar quality</p>
+                <h2 className="text-2xl font-bold text-white mb-1">Your Digital Avatar</h2>
+                <p className="text-white/80">More content = clearer avatar preview</p>
               </div>
               <div className={`px-6 py-3 rounded-full ${getQualityColor(avatarQuality.overall)} font-bold text-lg`}>
                 {avatarQuality.overall}%
@@ -388,47 +537,50 @@ export default function LivingLegacyUploadDashboard() {
 
           <div className="p-6 lg:p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Avatar Visual */}
+              {/* Avatar Visual with Blur */}
               <div className="space-y-4">
-                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center relative overflow-hidden">
-                  {avatarQuality.overall === 0 ? (
-                    <div className="text-center p-8">
-                      <User className="w-24 h-24 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500 font-medium">Upload content to see your avatar come to life</p>
-                      <p className="text-sm text-gray-400 mt-2">Start by recording a 10-second video or uploading files</p>
-                    </div>
-                  ) : avatarQuality.overall < 30 ? (
-                    <div className="text-center p-8">
-                      <div className="relative">
-                        <User className="w-24 h-24 text-gray-400 mx-auto mb-4" />
-                        <Sparkles className="w-8 h-8 text-orange-500 absolute top-0 right-1/3 animate-pulse" />
+                <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-700 rounded-xl flex items-center justify-center relative overflow-hidden">
+                  {/* Background Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-rose-500/20 to-purple-500/20" />
+
+                  {/* Avatar Icon with Progressive Blur */}
+                  <div
+                    className="relative transition-all duration-1000"
+                    style={{
+                      filter: `blur(${getBlurAmount(avatarQuality.overall)}px)`,
+                      opacity: Math.max(0.3, avatarQuality.overall / 100)
+                    }}
+                  >
+                    {favoritePhoto && favoritePhoto.preview ? (
+                      <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white/50 shadow-2xl">
+                        <img
+                          src={favoritePhoto.preview}
+                          alt="Avatar preview"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <p className="text-gray-600 font-medium">Your avatar is forming...</p>
-                      <p className="text-sm text-gray-500 mt-2">Keep uploading to improve quality</p>
-                    </div>
-                  ) : avatarQuality.overall < 60 ? (
-                    <div className="text-center p-8">
-                      <div className="relative">
-                        <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-                          <User className="w-16 h-16 text-white" />
-                        </div>
-                        <TrendingUp className="w-8 h-8 text-green-500 absolute top-0 right-1/3" />
+                    ) : (
+                      <div className="w-48 h-48 bg-gradient-to-br from-orange-500 to-purple-500 rounded-full flex items-center justify-center border-4 border-white/50 shadow-2xl">
+                        <User className="w-24 h-24 text-white" />
                       </div>
-                      <p className="text-gray-700 font-medium">Good progress!</p>
-                      <p className="text-sm text-gray-500 mt-2">Avatar quality is improving</p>
-                    </div>
-                  ) : (
-                    <div className="text-center p-8">
-                      <div className="relative">
-                        <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center shadow-2xl">
-                          <User className="w-16 h-16 text-white" />
-                        </div>
-                        <Check className="w-10 h-10 text-green-500 absolute top-0 right-1/3 bg-white rounded-full p-1" />
-                      </div>
-                      <p className="text-gray-800 font-bold text-lg">Excellent Quality!</p>
-                      <p className="text-sm text-gray-600 mt-2">Your avatar is ready for interactions</p>
-                    </div>
-                  )}
+                    )}
+                  </div>
+
+                  {/* Quality Overlay Text */}
+                  <div className="absolute bottom-6 left-6 right-6 text-center">
+                    <p className="text-white font-bold text-lg mb-1">
+                      {avatarQuality.overall < 30 ? 'Keep uploading content...' :
+                       avatarQuality.overall < 60 ? 'Avatar is forming...' :
+                       avatarQuality.overall < 80 ? 'Almost there!' :
+                       'Avatar is ready!'}
+                    </p>
+                    <p className="text-white/70 text-sm">
+                      {avatarQuality.overall < 30 ? 'Upload more files to see your avatar' :
+                       avatarQuality.overall < 60 ? 'Sharpening avatar image' :
+                       avatarQuality.overall < 80 ? 'High quality achieved' :
+                       'Excellent quality - ready for conversations'}
+                    </p>
+                  </div>
 
                   {/* Quality Badge */}
                   <div className="absolute top-4 right-4">
@@ -439,21 +591,22 @@ export default function LivingLegacyUploadDashboard() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <FileText className="w-6 h-6 text-blue-600 mx-auto mb-1" />
-                    <p className="text-xl font-bold text-gray-900">{uploads.filter(u => u.type === 'text').length}</p>
-                    <p className="text-xs text-gray-600">Text Files</p>
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="text-center p-2 bg-blue-50 rounded-lg">
+                    <FileText className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-gray-900">{uploads.filter(u => u.type === 'text').length}</p>
                   </div>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <Mic className="w-6 h-6 text-purple-600 mx-auto mb-1" />
-                    <p className="text-xl font-bold text-gray-900">{uploads.filter(u => u.type === 'voice').length}</p>
-                    <p className="text-xs text-gray-600">Voice Clips</p>
+                  <div className="text-center p-2 bg-purple-50 rounded-lg">
+                    <Mic className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-gray-900">{uploads.filter(u => u.type === 'voice').length}</p>
                   </div>
-                  <div className="text-center p-3 bg-orange-50 rounded-lg">
-                    <Video className="w-6 h-6 text-orange-600 mx-auto mb-1" />
-                    <p className="text-xl font-bold text-gray-900">{uploads.filter(u => u.type === 'video').length}</p>
-                    <p className="text-xs text-gray-600">Videos</p>
+                  <div className="text-center p-2 bg-orange-50 rounded-lg">
+                    <Video className="w-5 h-5 text-orange-600 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-gray-900">{uploads.filter(u => u.type === 'video').length}</p>
+                  </div>
+                  <div className="text-center p-2 bg-pink-50 rounded-lg">
+                    <ImageIcon className="w-5 h-5 text-pink-600 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-gray-900">{uploads.filter(u => u.type === 'photo').length}</p>
                   </div>
                 </div>
               </div>
@@ -463,95 +616,66 @@ export default function LivingLegacyUploadDashboard() {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-orange-500" />
-                    Personification Quality
+                    Avatar Quality Metrics
                   </h3>
 
                   <div className="space-y-4">
                     {/* Voice Clarity */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Voice Clarity</span>
+                        <span className="text-sm font-medium text-gray-700">Voice</span>
                         <span className="text-sm font-bold text-gray-900">{avatarQuality.voiceClarity}%</span>
                       </div>
-                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
                           style={{ width: `${avatarQuality.voiceClarity}%` }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {avatarQuality.voiceClarity < 50 ? 'Upload more voice recordings' : 'Great voice quality!'}
-                      </p>
                     </div>
 
                     {/* Visual Quality */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Visual Quality</span>
+                        <span className="text-sm font-medium text-gray-700">Videos</span>
                         <span className="text-sm font-bold text-gray-900">{avatarQuality.visualQuality}%</span>
                       </div>
-                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-orange-500 to-rose-500 transition-all duration-500"
                           style={{ width: `${avatarQuality.visualQuality}%` }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {avatarQuality.visualQuality < 50 ? 'Add more video content' : 'Excellent visual data!'}
-                      </p>
+                    </div>
+
+                    {/* Photo Quality */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">Photos</span>
+                        <span className="text-sm font-bold text-gray-900">{avatarQuality.photoQuality}%</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-pink-500 to-pink-600 transition-all duration-500"
+                          style={{ width: `${avatarQuality.photoQuality}%` }}
+                        />
+                      </div>
                     </div>
 
                     {/* Text Content */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Text Content</span>
+                        <span className="text-sm font-medium text-gray-700">Text</span>
                         <span className="text-sm font-bold text-gray-900">{avatarQuality.textContent}%</span>
                       </div>
-                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500"
                           style={{ width: `${avatarQuality.textContent}%` }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {avatarQuality.textContent < 50 ? 'Share more stories and messages' : 'Rich text content!'}
-                      </p>
                     </div>
                   </div>
-                </div>
-
-                {/* Recommendations */}
-                <div className="bg-gradient-to-br from-orange-50 to-rose-50 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-orange-500" />
-                    Next Steps
-                  </h4>
-                  <ul className="space-y-2">
-                    {avatarQuality.voiceClarity < 100 && (
-                      <li className="flex items-start gap-2 text-sm text-gray-700">
-                        <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span>Record more voice samples for better voice cloning</span>
-                      </li>
-                    )}
-                    {avatarQuality.visualQuality < 100 && (
-                      <li className="flex items-start gap-2 text-sm text-gray-700">
-                        <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span>Upload additional videos for enhanced avatar quality</span>
-                      </li>
-                    )}
-                    {avatarQuality.textContent < 100 && (
-                      <li className="flex items-start gap-2 text-sm text-gray-700">
-                        <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span>Add more text content to enrich conversations</span>
-                      </li>
-                    )}
-                    {avatarQuality.overall >= 80 && (
-                      <li className="flex items-start gap-2 text-sm text-green-700">
-                        <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span>Your avatar is ready! You can now interact with it.</span>
-                      </li>
-                    )}
-                  </ul>
                 </div>
 
                 {/* Create Avatar Button */}
@@ -594,14 +718,14 @@ export default function LivingLegacyUploadDashboard() {
                         className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all shadow-lg flex items-center justify-center gap-3 font-semibold text-lg"
                       >
                         <MessageCircle className="w-6 h-6" />
-                        <span>Start Conversation (WebRTC)</span>
+                        <span>Start Conversation</span>
                       </button>
                     </div>
                   )}
 
                   {!canCreateAvatar && !avatarCreated && !isCreatingAvatar && (
                     <p className="text-xs text-gray-500 text-center mt-2">
-                      Upload at least 3 voice recordings and 1 video to create your avatar
+                      Upload at least 3 voice clips and 1 video/photo to create your avatar
                     </p>
                   )}
                 </div>
@@ -638,7 +762,6 @@ export default function LivingLegacyUploadDashboard() {
       {/* Direct Recording Modal */}
       {showDirectRecording && (
         <DirectRecordingModal onClose={() => setShowDirectRecording(false)} onComplete={(file) => {
-          // Create a proper FileList-like object
           const dataTransfer = new DataTransfer()
           dataTransfer.items.add(file)
           handleFileUpload('video', dataTransfer.files)

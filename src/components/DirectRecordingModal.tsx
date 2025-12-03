@@ -131,15 +131,11 @@ export default function DirectRecordingModal({ onClose, onComplete }: DirectReco
     mediaRecorderRef.current = mediaRecorder
     mediaRecorder.start(100)
 
-    // Auto-stop after 10 seconds
+    // Timer for display only (no auto-stop)
     let time = 0
     timerRef.current = setInterval(() => {
       time += 100
       setRecordingTime(time)
-
-      if (time >= 10000) {
-        stopRecording()
-      }
     }, 100)
   }
 
@@ -178,14 +174,14 @@ export default function DirectRecordingModal({ onClose, onComplete }: DirectReco
   }
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-6">
+        <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-6 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">Quick 10-Second Recording</h2>
-              <p className="text-white/90">Record yourself reading the text for voice & avatar creation</p>
+              <h2 className="text-2xl font-bold text-white mb-1">Quick Recording</h2>
+              <p className="text-white/90">Record yourself for voice & avatar creation - you control when to stop</p>
             </div>
             <button
               onClick={onClose}
@@ -216,7 +212,7 @@ export default function DirectRecordingModal({ onClose, onComplete }: DirectReco
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-blue-600 font-bold">3.</span>
-                        <span>Recording will automatically stop after 10 seconds</span>
+                        <span>Click "Stop Recording" when you're finished (no time limit)</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-blue-600 font-bold">4.</span>
@@ -326,21 +322,13 @@ export default function DirectRecordingModal({ onClose, onComplete }: DirectReco
                   </div>
                   <div className="bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg">
                     <span className="text-white font-bold text-xl">
-                      {formatTime(recordingTime)} / 10.0s
+                      {formatTime(recordingTime)}
                     </span>
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="absolute bottom-0 left-0 right-0 h-2 bg-black/50">
-                  <div
-                    className="h-full bg-gradient-to-r from-orange-500 to-rose-500 transition-all"
-                    style={{ width: `${(recordingTime / 10000) * 100}%` }}
-                  />
-                </div>
-
                 {/* Audio Level */}
-                <div className="absolute bottom-8 left-4 right-4">
+                <div className="absolute bottom-4 left-4 right-4">
                   <div className="flex items-center gap-3 bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2">
                     <Mic className="w-5 h-5 text-white flex-shrink-0" />
                     <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
@@ -365,7 +353,7 @@ export default function DirectRecordingModal({ onClose, onComplete }: DirectReco
                 className="w-full py-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all shadow-lg flex items-center justify-center gap-3"
               >
                 <Square className="w-6 h-6" />
-                Stop Recording Early
+                Stop Recording
               </button>
             </div>
           )}
