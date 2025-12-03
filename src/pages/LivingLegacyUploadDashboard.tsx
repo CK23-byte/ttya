@@ -590,11 +590,11 @@ export default function LivingLegacyUploadDashboard() {
                         </p>
                       </div>
                       <button
-                        onClick={() => navigate(`/living-legacy/conversation?avatarId=${avatarId}`)}
+                        onClick={() => navigate(`/living-legacy/conversation-webrtc?avatarId=${avatarId}`)}
                         className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all shadow-lg flex items-center justify-center gap-3 font-semibold text-lg"
                       >
                         <MessageCircle className="w-6 h-6" />
-                        <span>Start Conversation</span>
+                        <span>Start Conversation (WebRTC)</span>
                       </button>
                     </div>
                   )}

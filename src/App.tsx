@@ -31,6 +31,7 @@ import LivingLegacyProgressDashboardPage from './pages/LivingLegacyProgressDashb
 import LivingLegacyAuthPage from './pages/LivingLegacyAuthPage'
 import LivingLegacyUploadDashboard from './pages/LivingLegacyUploadDashboard'
 import LivingLegacyConversationPage from './pages/LivingLegacyConversationPage'
+import LivingLegacyConversationPageWebRTC from './pages/LivingLegacyConversationPageWebRTC'
 import VoiceCallPage from './pages/VoiceCallPage'
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
               <Route path="/living-legacy/auth" element={<LivingLegacyAuthPage />} />
               <Route path="/living-legacy/upload-dashboard" element={<LivingLegacyUploadDashboard />} />
               <Route path="/living-legacy/conversation" element={<LivingLegacyConversationPage />} />
+              <Route path="/living-legacy/conversation-webrtc" element={<LivingLegacyConversationPageWebRTC />} />
               <Route path="/pricing/living-legacy" element={<LivingLegacyPricingPage />} />
               <Route path="/living-legacy/onboarding" element={<LivingLegacyOnboardingPage />} />
               <Route path="/living-legacy/create/:profileId" element={<LivingLegacyCreationDashboard />} />
