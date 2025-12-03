@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Upload,
   FileText,
@@ -12,9 +13,13 @@ import {
   User,
   TrendingUp,
   AlertCircle,
-  Camera
+  Camera,
+  Loader2,
+  CheckCircle2,
+  MessageCircle
 } from 'lucide-react'
 import DirectRecordingModal from '../components/DirectRecordingModal'
+import * as AvatarService from '../services/avatar.service'
 
 interface UploadedFile {
   id: string
@@ -35,6 +40,7 @@ interface AvatarQuality {
 }
 
 export default function LivingLegacyUploadDashboard() {
+  const navigate = useNavigate()
   const textInputRef = useRef<HTMLInputElement>(null)
   const voiceInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
@@ -42,6 +48,12 @@ export default function LivingLegacyUploadDashboard() {
   const [uploads, setUploads] = useState<UploadedFile[]>([])
   const [showDirectRecording, setShowDirectRecording] = useState(false)
   const [selectedPreview, setSelectedPreview] = useState<UploadedFile | null>(null)
+
+  // Avatar creation state
+  const [isCreatingAvatar, setIsCreatingAvatar] = useState(false)
+  const [avatarCreated, setAvatarCreated] = useState(false)
+  const [creationProgress, setCreationProgress] = useState('')
+  const [avatarId, setAvatarId] = useState<string | null>(null)
 
   // Calculate avatar quality based on uploads
   const avatarQuality: AvatarQuality = {
@@ -101,6 +113,73 @@ export default function LivingLegacyUploadDashboard() {
     if (quality >= 25) return 'Fair'
     return 'Getting Started'
   }
+
+  const handleCreateAvatar = async () => {
+    try {
+      setIsCreatingAvatar(true)
+      setCreationProgress('Preparing files...')
+
+      const userStr = localStorage.getItem('living_legacy_user')
+      if (!userStr) {
+        throw new Error('Please log in first')
+      }
+      const user = JSON.parse(userStr)
+
+      const voiceFiles = uploads.filter(u => u.type === 'voice').map(u => u.file)
+      const videoFiles = uploads.filter(u => u.type === 'video')
+
+      if (voiceFiles.length < 3) {
+        alert('Please upload at least 3 voice recordings for better quality voice cloning')
+        setIsCreatingAvatar(false)
+        return
+      }
+
+      if (videoFiles.length === 0) {
+        alert('Please upload at least 1 video or photo for avatar creation')
+        setIsCreatingAvatar(false)
+        return
+      }
+
+      const presenterImage = videoFiles[0].file
+
+      setCreationProgress('Uploading voice samples...')
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      setCreationProgress('Cloning your voice with AI...')
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      setCreationProgress('Creating digital avatar...')
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      const avatar = await AvatarService.createAvatar({
+        userId: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        voiceFiles,
+        presenterImage,
+      })
+
+      setCreationProgress('Avatar created successfully!')
+      setAvatarId(avatar.id)
+      setAvatarCreated(true)
+
+      setTimeout(() => {
+        setIsCreatingAvatar(false)
+        setCreationProgress('')
+      }, 2000)
+
+    } catch (error) {
+      console.error('Error creating avatar:', error)
+      alert(`Failed to create avatar: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setIsCreatingAvatar(false)
+      setCreationProgress('')
+    }
+  }
+
+  const canCreateAvatar =
+    uploads.filter(u => u.type === 'voice').length >= 3 &&
+    uploads.filter(u => u.type === 'video').length >= 1 &&
+    !avatarCreated &&
+    !isCreatingAvatar
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-purple-50">
@@ -473,6 +552,58 @@ export default function LivingLegacyUploadDashboard() {
                       </li>
                     )}
                   </ul>
+                </div>
+
+                {/* Create Avatar Button */}
+                <div className="pt-4">
+                  {!avatarCreated ? (
+                    <button
+                      onClick={handleCreateAvatar}
+                      disabled={!canCreateAvatar || isCreatingAvatar}
+                      className={`w-full py-4 rounded-xl font-semibold text-lg transition-all shadow-lg flex items-center justify-center gap-3 ${
+                        canCreateAvatar && !isCreatingAvatar
+                          ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white hover:from-orange-600 hover:to-rose-600 hover:shadow-xl'
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {isCreatingAvatar ? (
+                        <>
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                          <span>{creationProgress}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-6 h-6" />
+                          <span>Create My Avatar</span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-4 rounded-xl shadow-lg">
+                        <div className="flex items-center justify-center gap-3 mb-2">
+                          <CheckCircle2 className="w-6 h-6" />
+                          <span className="font-semibold text-lg">Avatar Created!</span>
+                        </div>
+                        <p className="text-center text-white/90 text-sm">
+                          Your digital avatar is ready. You can now have conversations!
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => navigate(`/living-legacy/conversation-webrtc?avatarId=${avatarId}`)}
+                        className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl hover:from-purple-600 hover:to-indigo-600 transition-all shadow-lg flex items-center justify-center gap-3 font-semibold text-lg"
+                      >
+                        <MessageCircle className="w-6 h-6" />
+                        <span>Start Conversation (WebRTC)</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {!canCreateAvatar && !avatarCreated && !isCreatingAvatar && (
+                    <p className="text-xs text-gray-500 text-center mt-2">
+                      Upload at least 3 voice recordings and 1 video to create your avatar
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
