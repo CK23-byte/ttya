@@ -51,12 +51,12 @@ export interface AvatarMessageResponse {
  */
 export async function createAvatar(request: CreateAvatarRequest): Promise<AvatarProfile> {
   try {
-    // 1. Upload voice files to storage
+    // 1. Upload voice files to storage (for backup)
     console.log('Uploading voice files...')
     const voiceUploadPromises = request.voiceFiles.map(file =>
       Storage.uploadVoiceRecording(file, request.userId)
     )
-    const voiceUrls = await Promise.all(voiceUploadPromises)
+    await Promise.all(voiceUploadPromises)
 
     // 2. Clone voice with ElevenLabs
     console.log('Cloning voice with ElevenLabs...')

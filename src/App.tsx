@@ -30,6 +30,7 @@ import LivingLegacyRecipientManagementPage from './pages/LivingLegacyRecipientMa
 import LivingLegacyProgressDashboardPage from './pages/LivingLegacyProgressDashboardPage'
 import LivingLegacyAuthPage from './pages/LivingLegacyAuthPage'
 import LivingLegacyUploadDashboard from './pages/LivingLegacyUploadDashboard'
+import LivingLegacyConversationPage from './pages/LivingLegacyConversationPage'
 import VoiceCallPage from './pages/VoiceCallPage'
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
               <Route path="/living-legacy" element={<LivingLegacyPage />} />
               <Route path="/living-legacy/auth" element={<LivingLegacyAuthPage />} />
               <Route path="/living-legacy/upload-dashboard" element={<LivingLegacyUploadDashboard />} />
+              <Route path="/living-legacy/conversation" element={<LivingLegacyConversationPage />} />
               <Route path="/pricing/living-legacy" element={<LivingLegacyPricingPage />} />
               <Route path="/living-legacy/onboarding" element={<LivingLegacyOnboardingPage />} />
               <Route path="/living-legacy/create/:profileId" element={<LivingLegacyCreationDashboard />} />
