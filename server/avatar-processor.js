@@ -9,7 +9,7 @@ const fs = require('fs')
 
 // API Keys from environment
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
-const DID_API_KEY = process.env.DID_API_KEY
+const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 /**
@@ -131,45 +131,60 @@ async function textToSpeech(text, voiceId) {
 }
 
 /**
- * Generate avatar video using D-ID
+ * Generate avatar video using Heygen
  */
-async function generateAvatarVideo(audioPath, presenterImageUrl) {
+async function generateAvatarVideo(audioPath, avatarId = null) {
   try {
-    console.log('[Processor] Generating avatar video')
+    console.log('[Processor] Generating avatar video with Heygen')
 
-    // Upload audio to public URL (in production, use cloud storage)
-    // For now, we'll use D-ID with direct audio file
+    // Read audio file and convert to base64
     const audioBuffer = await fs.promises.readFile(audioPath)
     const audioBase64 = audioBuffer.toString('base64')
 
-    // Create talk with D-ID
+    // Use default Heygen avatar if none specified
+    const selectedAvatarId = avatarId || 'Daisy-inskirt-20220818'
+
+    // Create video generation request
     const response = await axios.post(
-      'https://api.d-id.com/talks',
+      'https://api.heygen.com/v2/video/generate',
       {
-        source_url: presenterImageUrl,
-        script: {
-          type: 'audio',
-          audio_url: `data:audio/mp3;base64,${audioBase64}`
+        video_inputs: [
+          {
+            character: {
+              type: 'avatar',
+              avatar_id: selectedAvatarId,
+              avatar_style: 'normal'
+            },
+            voice: {
+              type: 'audio',
+              audio_data: audioBase64,
+              audio_format: 'mp3'
+            },
+            background: {
+              type: 'color',
+              value: '#FFFFFF'
+            }
+          }
+        ],
+        dimension: {
+          width: 1280,
+          height: 720
         },
-        config: {
-          fluent: true,
-          pad_audio: 0,
-          stitch: true
-        }
+        aspect_ratio: '16:9'
       },
       {
         headers: {
-          'Authorization': `Basic ${Buffer.from(DID_API_KEY).toString('base64')}`,
+          'X-Api-Key': HEYGEN_API_KEY,
           'Content-Type': 'application/json'
         }
       }
     )
 
-    const talkId = response.data.id
-    console.log('[Processor] Talk created:', talkId)
+    const videoId = response.data.data.video_id
+    console.log('[Processor] Heygen video creation started:', videoId)
 
     // Poll for completion
-    const videoUrl = await pollForCompletion(talkId)
+    const videoUrl = await pollForHeygenCompletion(videoId)
 
     console.log('[Processor] Video ready:', videoUrl)
     return videoUrl
@@ -181,32 +196,34 @@ async function generateAvatarVideo(audioPath, presenterImageUrl) {
 }
 
 /**
- * Poll D-ID for video completion
+ * Poll Heygen for video completion
  */
-async function pollForCompletion(talkId, maxAttempts = 20) {
+async function pollForHeygenCompletion(videoId, maxAttempts = 40) {
   for (let i = 0; i < maxAttempts; i++) {
     try {
       const response = await axios.get(
-        `https://api.d-id.com/talks/${talkId}`,
+        `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
         {
           headers: {
-            'Authorization': `Basic ${Buffer.from(DID_API_KEY).toString('base64')}`
+            'X-Api-Key': HEYGEN_API_KEY
           }
         }
       )
 
-      const status = response.data.status
+      const status = response.data.data.status
 
-      if (status === 'done') {
-        return response.data.result_url
+      console.log(`[Processor] Heygen status (${i + 1}/${maxAttempts}):`, status)
+
+      if (status === 'completed') {
+        return response.data.data.video_url
       }
 
-      if (status === 'error') {
+      if (status === 'failed') {
         throw new Error('Video generation failed')
       }
 
-      // Wait 3 seconds before next attempt
-      await new Promise(resolve => setTimeout(resolve, 3000))
+      // Wait 5 seconds before next attempt (Heygen can take longer)
+      await new Promise(resolve => setTimeout(resolve, 5000))
 
     } catch (error) {
       if (i === maxAttempts - 1) {
@@ -223,10 +240,10 @@ async function pollForCompletion(talkId, maxAttempts = 20) {
  */
 async function getAvatarConfig(avatarId) {
   // In production, fetch from Supabase
-  // For now, return mock config
+  // For now, return mock config for testing
   return {
-    voiceId: process.env.TEST_VOICE_ID || 'default_voice_id',
-    presenterImageUrl: process.env.TEST_PRESENTER_URL || 'https://example.com/presenter.jpg'
+    voiceId: process.env.TEST_VOICE_ID || '21m00Tcm4TlvDq8ikWAM', // Default ElevenLabs voice
+    heygenAvatarId: process.env.TEST_HEYGEN_AVATAR_ID || 'Daisy-inskirt-20220818' // Default Heygen avatar
   }
 }
 
@@ -252,8 +269,8 @@ async function processAvatarResponse(input, avatarId, inputType = 'text') {
     // Step 3: Convert response to speech
     const audioPath = await textToSpeech(responseText, config.voiceId)
 
-    // Step 4: Generate avatar video
-    const videoUrl = await generateAvatarVideo(audioPath, config.presenterImageUrl)
+    // Step 4: Generate avatar video with Heygen
+    const videoUrl = await generateAvatarVideo(audioPath, config.heygenAvatarId)
 
     // Cleanup temporary audio
     await fs.promises.unlink(audioPath)
