@@ -6,13 +6,11 @@ import {
   Mic,
   Video,
   X,
-  Check,
   Trash2,
   Eye,
   Sparkles,
   User,
   TrendingUp,
-  AlertCircle,
   Camera,
   Loader2,
   CheckCircle2,
@@ -159,12 +157,6 @@ export default function LivingLegacyUploadDashboard() {
       ...u,
       isFavorite: u.id === id ? true : (u.type === 'photo' ? false : u.isFavorite)
     })))
-  }
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
   const getQualityColor = (quality: number) => {
