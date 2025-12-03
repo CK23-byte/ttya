@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
 
@@ -13,6 +13,15 @@ export default function LivingLegacyAuthPage() {
     firstName: '',
     lastName: ''
   })
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('living_legacy_authenticated')
+    if (isAuthenticated === 'true') {
+      // Already logged in, redirect to dashboard
+      navigate('/living-legacy/upload-dashboard', { replace: true })
+    }
+  }, [navigate])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
