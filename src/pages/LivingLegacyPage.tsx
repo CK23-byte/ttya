@@ -110,15 +110,35 @@ export default function LivingLegacyPage() {
           </div>
 
           {/* Visual Example Preview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-2xl p-6 border-2 border-orange-200 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
                 <Video className="w-6 h-6 text-white" />
               </div>
               <h3 className="font-bold text-lg mb-2">Video Messages</h3>
-              <p className="text-gray-600 text-sm">Record personal videos for your loved ones</p>
-              <div className="mt-4 bg-gray-100 rounded-lg h-32 flex items-center justify-center">
-                <Play className="w-12 h-12 text-gray-400" />
+              <p className="text-gray-600 text-sm mb-4">Record personal videos for your loved ones</p>
+              <div className="mt-4 bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg h-32 flex items-center justify-center relative overflow-hidden">
+                {/* Animated recording preview */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                      <div className="w-4 h-4 bg-white rounded-full"></div>
+                    </div>
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1 bg-red-400 rounded-full animate-pulse"
+                          style={{
+                            height: `${Math.random() * 16 + 8}px`,
+                            animationDelay: `${i * 100}ms`
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute bottom-2 right-2 text-xs text-white/60">Recording...</div>
               </div>
             </div>
 
@@ -127,7 +147,7 @@ export default function LivingLegacyPage() {
                 <Mic className="w-6 h-6 text-white" />
               </div>
               <h3 className="font-bold text-lg mb-2">Your Own Voice</h3>
-              <p className="text-gray-600 text-sm">AI learns your voice, face, and personality</p>
+              <p className="text-gray-600 text-sm mb-4">AI learns your voice, face, and personality</p>
               <div className="mt-4 bg-gray-100 rounded-lg h-32 flex items-center justify-center">
                 <div className="flex gap-1">
                   {[...Array(20)].map((_, i) => (
@@ -139,19 +159,36 @@ export default function LivingLegacyPage() {
 
             <div className="bg-white rounded-2xl p-6 border-2 border-orange-200 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
+                <Camera className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Pictures</h3>
+              <p className="text-gray-600 text-sm mb-4">Upload photos for visual representation</p>
+              <div className="mt-4 bg-gradient-to-br from-orange-50 to-rose-50 rounded-lg h-32 flex items-center justify-center">
+                <div className="grid grid-cols-2 gap-2 p-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="w-12 h-12 bg-gradient-to-br from-orange-200 to-rose-200 rounded-lg flex items-center justify-center">
+                      <Camera className="w-6 h-6 text-orange-600 opacity-50" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-orange-200 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
                 <Gift className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-lg mb-2">Time Capsules</h3>
-              <p className="text-gray-600 text-sm">Messages for future moments</p>
+              <h3 className="font-bold text-lg mb-2">Text & Conversations</h3>
+              <p className="text-gray-600 text-sm mb-4">Upload chat exports to capture personality</p>
               <div className="mt-4 space-y-2">
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  📅 Emma's 18th Birthday
+                  💬 WhatsApp chats
                 </div>
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  💍 Tim's Wedding
+                  📝 Written stories
                 </div>
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  👶 First Grandchild
+                  ✉️ Letters & emails
                 </div>
               </div>
             </div>
