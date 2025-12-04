@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Mail, Lock, User, Heart, Gift, ArrowLeft } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { CREDIT_PRICING } from '../types/database'
+import { validatePassword, getPasswordStrength } from '../utils/validation'
 
 type AuthMode = 'signin' | 'signup' | 'reset'
 
@@ -28,6 +29,8 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([])
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null)
 
   if (!isConfigured) {
     return (
@@ -57,6 +60,22 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
     )
   }
 
+  const handlePasswordChange = (value: string) => {
+    setPassword(value)
+
+    if (mode === 'signup' && value) {
+      const { isValid, errors } = validatePassword(value)
+      setPasswordErrors(errors)
+
+      if (isValid) {
+        const strength = getPasswordStrength(value)
+        setPasswordStrength(strength)
+      } else {
+        setPasswordStrength(null)
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -67,8 +86,12 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
         setError('Wachtwoorden komen niet overeen')
         return
       }
-      if (password.length < 8) {
-        setError('Wachtwoord moet minimaal 8 tekens bevatten')
+
+      // Enhanced password validation
+      const { isValid, errors } = validatePassword(password)
+      if (!isValid) {
+        setError(errors[0]) // Show first error
+        setPasswordErrors(errors)
         return
       }
     }
@@ -118,6 +141,8 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
     setDisplayName('')
     setError('')
     setMessage('')
+    setPasswordErrors([])
+    setPasswordStrength(null)
   }
 
   return (
@@ -238,9 +263,9 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                    placeholder={mode === 'signup' ? 'Minimaal 8 tekens' : 'Je wachtwoord'}
+                    placeholder={mode === 'signup' ? 'Minimaal 12 tekens' : 'Je wachtwoord'}
                     required
                     disabled={isLoading}
                   />
@@ -252,6 +277,46 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+
+                {/* Password Strength Indicator (signup only) */}
+                {mode === 'signup' && password && (
+                  <div className="mt-2">
+                    {passwordStrength && (
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              passwordStrength === 'weak' ? 'w-1/3 bg-red-500' :
+                              passwordStrength === 'medium' ? 'w-2/3 bg-yellow-500' :
+                              'w-full bg-green-500'
+                            }`}
+                          />
+                        </div>
+                        <span className={`text-xs font-medium ${
+                          passwordStrength === 'weak' ? 'text-red-600' :
+                          passwordStrength === 'medium' ? 'text-yellow-600' :
+                          'text-green-600'
+                        }`}>
+                          {passwordStrength === 'weak' ? 'Zwak' :
+                           passwordStrength === 'medium' ? 'Gemiddeld' :
+                           'Sterk'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Password Requirements */}
+                    {passwordErrors.length > 0 && (
+                      <div className="text-xs text-gray-600 space-y-1">
+                        {passwordErrors.map((err, idx) => (
+                          <div key={idx} className="flex items-start gap-1.5">
+                            <span className="text-red-500 mt-0.5">•</span>
+                            <span>{err}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
