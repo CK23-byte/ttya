@@ -16,7 +16,8 @@ import {
   Video,
   Mic,
   Gift,
-  CheckCircle
+  CheckCircle,
+  Brain
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
@@ -62,6 +63,25 @@ interface OnboardingData {
   wantsVoiceClone: boolean
   contentTypes: string[]
   estimatedTime: string
+
+  // Step 6: Personality Questionnaire
+  personalityData: {
+    humor: string
+    adviceStyle: string
+    communicationStyle: string
+    coreValues: string[]
+    conflictHandling: string
+    commonPhrases: string
+    affectionExpression: string
+    decisionMaking: string
+    lifeOutlook: string
+    traditionImportance: string
+    difficultTopicsApproach: string
+    politicalViews: string
+    spiritualOrientation: string
+    culturalBackground: string
+    personalityWords: string
+  }
 }
 
 const STEPS = [
@@ -72,7 +92,8 @@ const STEPS = [
   { id: 4, title: 'Who Is This For?', icon: Users },
   { id: 5, title: 'Executor Information', icon: Shield },
   { id: 6, title: 'Content Preferences', icon: Settings },
-  { id: 7, title: 'Review & Confirm', icon: FileText }
+  { id: 7, title: 'Your Personality', icon: Brain },
+  { id: 8, title: 'Review & Confirm', icon: FileText }
 ]
 
 export default function LivingLegacyOnboardingPage() {
@@ -127,7 +148,24 @@ export default function LivingLegacyOnboardingPage() {
     wantsVideoAvatar: tier === 'complete' || tier === 'premium',
     wantsVoiceClone: tier === 'complete' || tier === 'premium',
     contentTypes: [],
-    estimatedTime: ''
+    estimatedTime: '',
+    personalityData: {
+      humor: '',
+      adviceStyle: '',
+      communicationStyle: '',
+      coreValues: [],
+      conflictHandling: '',
+      commonPhrases: '',
+      affectionExpression: '',
+      decisionMaking: '',
+      lifeOutlook: '',
+      traditionImportance: '',
+      difficultTopicsApproach: '',
+      politicalViews: '',
+      spiritualOrientation: '',
+      culturalBackground: '',
+      personalityWords: ''
+    }
   })
 
   const updateFormData = (updates: Partial<OnboardingData>) => {
@@ -170,6 +208,27 @@ export default function LivingLegacyOnboardingPage() {
     })
   }
 
+  const toggleCoreValue = (value: string) => {
+    const current = formData.personalityData.coreValues
+    updateFormData({
+      personalityData: {
+        ...formData.personalityData,
+        coreValues: current.includes(value)
+          ? current.filter(v => v !== value)
+          : [...current, value]
+      }
+    })
+  }
+
+  const updatePersonalityData = (updates: Partial<OnboardingData['personalityData']>) => {
+    updateFormData({
+      personalityData: {
+        ...formData.personalityData,
+        ...updates
+      }
+    })
+  }
+
   const canProceed = () => {
     switch (currentStep) {
       case 0:
@@ -186,6 +245,11 @@ export default function LivingLegacyOnboardingPage() {
         return formData.executorName && formData.executorEmail
       case 6:
         return formData.contentTypes.length > 0 && formData.estimatedTime
+      case 7:
+        // Personality questionnaire - at least basic fields required
+        return formData.personalityData.communicationStyle &&
+               formData.personalityData.coreValues.length > 0 &&
+               formData.personalityData.lifeOutlook
       default:
         return true
     }
@@ -852,8 +916,315 @@ export default function LivingLegacyOnboardingPage() {
             </div>
           )}
 
-          {/* Step 7: Review */}
+          {/* Step 7: Personality Questionnaire */}
           {currentStep === 7 && (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <Brain className="w-12 h-12 text-indigo-500 mx-auto mb-4" />
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Capture your personality</h2>
+                <p className="text-gray-600">
+                  Help us understand what makes you uniquely you. This helps create more authentic responses.
+                </p>
+              </div>
+
+              {/* Humor Style */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  How would you describe your sense of humor?
+                </label>
+                <select
+                  value={formData.personalityData.humor}
+                  onChange={(e) => updatePersonalityData({ humor: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="dry_witty">Dry / Witty</option>
+                  <option value="slapstick">Slapstick / Physical</option>
+                  <option value="sarcastic">Sarcastic</option>
+                  <option value="gentle">Gentle / Wholesome</option>
+                  <option value="serious">I'm more serious</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Advice Style */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  When giving advice, you tend to be:
+                </label>
+                <select
+                  value={formData.personalityData.adviceStyle}
+                  onChange={(e) => updatePersonalityData({ adviceStyle: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="direct">Direct and straightforward</option>
+                  <option value="thoughtful">Thoughtful and measured</option>
+                  <option value="storytelling">Use stories / analogies</option>
+                  <option value="supportive">Supportive and encouraging</option>
+                  <option value="socratic">Ask questions to guide thinking</option>
+                </select>
+              </div>
+
+              {/* Communication Style */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your communication style is usually: *
+                </label>
+                <select
+                  value={formData.personalityData.communicationStyle}
+                  onChange={(e) => updatePersonalityData({ communicationStyle: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="formal">Formal and professional</option>
+                  <option value="casual">Casual and relaxed</option>
+                  <option value="warm">Warm and affectionate</option>
+                  <option value="playful">Playful and lighthearted</option>
+                  <option value="thoughtful">Serious and thoughtful</option>
+                </select>
+              </div>
+
+              {/* Core Values */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  What matters most to you in life? * (Select all that apply)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'family', label: 'Family' },
+                    { value: 'achievement', label: 'Personal achievement' },
+                    { value: 'helping', label: 'Helping others' },
+                    { value: 'learning', label: 'Learning / Growth' },
+                    { value: 'independence', label: 'Independence' },
+                    { value: 'tradition', label: 'Tradition' },
+                    { value: 'adventure', label: 'Adventure' },
+                    { value: 'security', label: 'Security' }
+                  ].map((val) => (
+                    <label key={val.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition">
+                      <input
+                        type="checkbox"
+                        checked={formData.personalityData.coreValues.includes(val.value)}
+                        onChange={() => toggleCoreValue(val.value)}
+                        className="w-5 h-5 text-orange-500 rounded focus:ring-orange-500"
+                      />
+                      <span className="ml-3 text-sm text-gray-700">{val.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Conflict Handling */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  How do you typically handle difficult situations?
+                </label>
+                <select
+                  value={formData.personalityData.conflictHandling}
+                  onChange={(e) => updatePersonalityData({ conflictHandling: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="head_on">Face them head-on</option>
+                  <option value="thoughtful">Think carefully before acting</option>
+                  <option value="seek_advice">Seek advice from others</option>
+                  <option value="gut_instinct">Trust my gut instinct</option>
+                  <option value="creative">Look for creative solutions</option>
+                </select>
+              </div>
+
+              {/* Common Phrases */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Words or phrases you often use (optional)
+                </label>
+                <textarea
+                  value={formData.personalityData.commonPhrases}
+                  onChange={(e) => updatePersonalityData({ commonPhrases: e.target.value })}
+                  placeholder='e.g., "At the end of the day...", "Listen here...", "My dear..."'
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              {/* Affection Expression */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  How do you express affection?
+                </label>
+                <select
+                  value={formData.personalityData.affectionExpression}
+                  onChange={(e) => updatePersonalityData({ affectionExpression: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="words">Words of affirmation</option>
+                  <option value="time">Quality time</option>
+                  <option value="service">Acts of service</option>
+                  <option value="touch">Physical touch</option>
+                  <option value="gifts">Gifts</option>
+                  <option value="reserved">I'm more reserved</option>
+                </select>
+              </div>
+
+              {/* Decision Making */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your approach to decision-making:
+                </label>
+                <select
+                  value={formData.personalityData.decisionMaking}
+                  onChange={(e) => updatePersonalityData({ decisionMaking: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="logical">Logical and analytical</option>
+                  <option value="heart">Follow my heart</option>
+                  <option value="others">Consider impact on others</option>
+                  <option value="weigh">Weigh pros and cons carefully</option>
+                  <option value="decisive">Quick and decisive</option>
+                </select>
+              </div>
+
+              {/* Life Outlook */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  What's your outlook on life? *
+                </label>
+                <select
+                  value={formData.personalityData.lifeOutlook}
+                  onChange={(e) => updatePersonalityData({ lifeOutlook: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="optimistic">Optimistic</option>
+                  <option value="realistic">Realistic / Pragmatic</option>
+                  <option value="philosophical">Philosophical</option>
+                  <option value="cautious">Cautious</option>
+                  <option value="adventurous">Adventurous</option>
+                </select>
+              </div>
+
+              {/* Tradition Importance */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  How important is tradition to you?
+                </label>
+                <div className="flex gap-4 items-center">
+                  {['Not important', 'Somewhat', 'Very important'].map((level) => (
+                    <label key={level} className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="tradition"
+                        value={level.toLowerCase().replace(' ', '_')}
+                        checked={formData.personalityData.traditionImportance === level.toLowerCase().replace(' ', '_')}
+                        onChange={(e) => updatePersonalityData({ traditionImportance: e.target.value })}
+                        className="w-4 h-4 text-orange-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">{level}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Difficult Topics */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  When talking about difficult topics, you:
+                </label>
+                <select
+                  value={formData.personalityData.difficultTopicsApproach}
+                  onChange={(e) => updatePersonalityData({ difficultTopicsApproach: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="direct">Address them directly</option>
+                  <option value="gentle">Use gentle language</option>
+                  <option value="humor">Use humor to lighten mood</option>
+                  <option value="avoid">Avoid if possible</option>
+                  <option value="empathetic">Ask others how they feel</option>
+                </select>
+              </div>
+
+              {/* Political Views (Optional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your political/social views are (optional):
+                </label>
+                <select
+                  value={formData.personalityData.politicalViews}
+                  onChange={(e) => updatePersonalityData({ politicalViews: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="progressive">Progressive</option>
+                  <option value="conservative">Conservative</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="independent">Independent / varies by issue</option>
+                  <option value="prefer_not">Prefer not to discuss</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Spiritual Orientation (Optional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your spiritual/religious orientation (optional):
+                </label>
+                <select
+                  value={formData.personalityData.spiritualOrientation}
+                  onChange={(e) => updatePersonalityData({ spiritualOrientation: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="">Select...</option>
+                  <option value="deeply_spiritual">Deeply spiritual / religious</option>
+                  <option value="somewhat_spiritual">Somewhat spiritual</option>
+                  <option value="agnostic">Agnostic</option>
+                  <option value="atheist">Atheist</option>
+                  <option value="prefer_not">Prefer not to say</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Cultural Background */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Any specific cultural background or traditions important to you? (optional)
+                </label>
+                <textarea
+                  value={formData.personalityData.culturalBackground}
+                  onChange={(e) => updatePersonalityData({ culturalBackground: e.target.value })}
+                  placeholder="e.g., Irish-American, celebrate Diwali, Sunday family dinners..."
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              {/* Personality Words */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Describe your personality in 3-5 words (optional):
+                </label>
+                <input
+                  type="text"
+                  value={formData.personalityData.personalityWords}
+                  onChange={(e) => updatePersonalityData({ personalityWords: e.target.value })}
+                  placeholder="e.g., Caring, practical, funny, direct, optimistic"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-gray-700">
+                  💡 <strong>Why we ask:</strong> These details help us create an AI that sounds and responds like you.
+                  Your answers are private and only used to personalize your legacy.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 8: Review */}
+          {currentStep === 8 && (
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <Check className="w-12 h-12 text-green-500 mx-auto mb-4" />
@@ -933,7 +1304,7 @@ export default function LivingLegacyOnboardingPage() {
           )}
 
           {/* Navigation Buttons */}
-          {currentStep > 0 && currentStep < 7 && (
+          {currentStep > 0 && currentStep < 8 && (
             <div className="flex gap-4 mt-8 pt-8 border-t border-gray-200">
               <button
                 onClick={() => setCurrentStep(currentStep - 1)}
