@@ -33,6 +33,9 @@ import LivingLegacyUploadDashboard from './pages/LivingLegacyUploadDashboard'
 import LivingLegacyConversationPage from './pages/LivingLegacyConversationPage'
 import LivingLegacyConversationPageWebRTC from './pages/LivingLegacyConversationPageWebRTC'
 import VoiceCallPage from './pages/VoiceCallPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
+import ContactPage from './pages/ContactPage'
 
 function App() {
   return (
@@ -72,6 +75,9 @@ function App() {
               <Route path="/living-legacy/time-capsule" element={<LivingLegacyTimeCapsulePage />} />
               <Route path="/living-legacy/recipients" element={<LivingLegacyRecipientManagementPage />} />
               <Route path="/living-legacy/progress" element={<LivingLegacyProgressDashboardPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/contact" element={<ContactPage />} />
             </Routes>
           </PaymentProvider>
         </AuthProvider>
