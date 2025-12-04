@@ -36,8 +36,8 @@ export default function ContactPage() {
       return
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    // Email validation (RFC 5322 compliant)
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
     if (!emailRegex.test(formData.email)) {
       setStatus('error')
       setErrorMessage('Please enter a valid email address')
@@ -46,9 +46,6 @@ export default function ContactPage() {
 
     try {
       // In a real app, this would send to your backend
-      // For now, we'll simulate a successful submission
-      console.log('Contact form submitted:', formData)
-
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500))
 

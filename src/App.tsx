@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { PaymentProvider } from './contexts/PaymentContext'
@@ -38,6 +39,17 @@ import TermsPage from './pages/TermsPage'
 import ContactPage from './pages/ContactPage'
 
 function App() {
+  // Security: Enforce HTTPS in production
+  useEffect(() => {
+    if (
+      import.meta.env.PROD &&
+      window.location.protocol === 'http:' &&
+      !window.location.hostname.includes('localhost')
+    ) {
+      window.location.href = window.location.href.replace('http:', 'https:')
+    }
+  }, [])
+
   return (
     <Router>
       <SupabaseAuthProvider>

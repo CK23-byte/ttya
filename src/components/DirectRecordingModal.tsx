@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, Video, Square, Check, RotateCcw, AlertCircle, Mic } from 'lucide-react'
+import { logger } from '../utils/logger'
 
 interface DirectRecordingModalProps {
   onClose: () => void
@@ -73,7 +74,7 @@ export default function DirectRecordingModal({ onClose, onComplete }: DirectReco
       }
       checkAudioLevel()
     } catch (error) {
-      console.error('Error accessing camera:', error)
+      logger.error('Error accessing camera', error)
       alert('Could not access camera. Please allow camera permissions.')
     }
   }
