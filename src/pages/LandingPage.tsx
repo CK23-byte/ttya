@@ -59,33 +59,6 @@ RULES:
 - This is a demo - show how personal and warm the AI can be`
 }
 
-const USE_CASES = [
-  {
-    avatar: '👵',
-    name: 'Grandma',
-    preview: "Oh sweetie, I made your favorite cookies! 🍪",
-    relationship: 'Grandmother'
-  },
-  {
-    avatar: '👴',
-    name: 'Grandpa',
-    preview: "Remember when we went fishing? Those were the days!",
-    relationship: 'Grandfather'
-  },
-  {
-    avatar: '🐕',
-    name: 'Max',
-    preview: "*wags tail excitedly* Woof! I miss our walks! 🐾",
-    relationship: 'Beloved Pet'
-  },
-  {
-    avatar: '👨',
-    name: 'Dad',
-    preview: "I'm so proud of you, kiddo. Keep going! 💪",
-    relationship: 'Father'
-  },
-]
-
 export default function LandingPage() {
   const navigate = useNavigate()
   const { user } = useSupabaseAuth()
@@ -175,28 +148,29 @@ export default function LandingPage() {
       </div>
 
       {/* Top Navigation */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
+      <div className="fixed top-4 right-4 z-50 flex flex-wrap gap-2 justify-end max-w-[calc(100vw-8rem)]">
         <button
           onClick={handleChatClick}
-          className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold text-gray-700 hover:text-orange-600"
+          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600"
         >
           Chat
         </button>
         <button
           onClick={() => navigate('/pricing')}
-          className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold text-gray-700 hover:text-orange-600"
+          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600"
         >
           Pricing
         </button>
         <button
           onClick={() => navigate('/living-legacy')}
-          className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold text-gray-700 hover:text-orange-600"
+          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600 whitespace-nowrap"
         >
-          Living Legacy
+          <span className="hidden sm:inline">Living Legacy</span>
+          <span className="sm:hidden">Legacy</span>
         </button>
         <button
           onClick={() => navigate('/auth')}
-          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-sm font-semibold"
+          className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
         >
           Sign In
         </button>
@@ -225,7 +199,7 @@ export default function LandingPage() {
             </h2>
 
             <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              Upload your WhatsApp conversations and let AI recreate the personality of loved ones.
+              Upload conversations from WhatsApp, Messenger, Telegram, or any messaging app to recreate the personality of loved ones.
               Secure, private, and deeply personal.
             </p>
 
@@ -332,37 +306,6 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Use Cases - Visual Examples */}
-      <div className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center text-gray-900 mb-4">
-            Who Would You Like to Talk To?
-          </h3>
-          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            Recreate meaningful conversations with anyone you miss. Upload their messages and let AI capture their unique personality.
-          </p>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {USE_CASES.map((useCase, i) => (
-              <div key={i} className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border border-gray-100 hover:shadow-lg transition cursor-pointer group">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-rose-100 rounded-full flex items-center justify-center text-2xl">
-                    {useCase.avatar}
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{useCase.name}</h4>
-                    <p className="text-xs text-gray-500">{useCase.relationship}</p>
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl p-3 border border-gray-100 group-hover:border-orange-200 transition">
-                  <p className="text-sm text-gray-700 italic">"{useCase.preview}"</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Real Stories Section */}
       <div className="py-16 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4">
@@ -382,91 +325,113 @@ export default function LandingPage() {
             {/* Story 1: Het gesprek dat je nooit kon voeren */}
             <div className="group">
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                {/* Chat Interface Mockup */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-gray-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                {/* WhatsApp Interface Mockup */}
+                <div className="bg-[#075E54] p-3 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white font-bold">
                       P
                     </div>
-                    <span className="font-semibold text-gray-800">Dad</span>
+                    <div className="flex-1">
+                      <span className="font-semibold text-white block">Dad</span>
+                      <span className="text-xs text-green-100">online</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-white space-y-3 min-h-[280px]">
-                  {/* User message */}
+                <div className="p-4 space-y-2 min-h-[280px]" style={{backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"100\" height=\"100\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M0 0h100v100H0z\" fill=\"%23E5DDD5\"/%3E%3C/svg%3E')"}}>
+                  {/* User message - WhatsApp style */}
                   <div className="flex justify-end">
-                    <div className="bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[85%] text-sm">
-                      Dad, I got a job offer in New York. Great career move, but I'd have to relocate. What would you do? 💭
+                    <div className="bg-[#DCF8C6] text-gray-800 rounded-lg rounded-tr-none px-3 py-2 max-w-[85%] text-sm shadow-sm">
+                      <p className="mb-1">Dad, I got a job offer in New York. Great career move, but I'd have to relocate. What would you do? 💭</p>
+                      <span className="text-xs text-gray-600 float-right ml-2">14:23</span>
                     </div>
                   </div>
 
-                  {/* AI response */}
+                  {/* AI response - WhatsApp style */}
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[85%] text-sm">
+                    <div className="bg-white text-gray-800 rounded-lg rounded-tl-none px-3 py-2 max-w-[85%] text-sm shadow-sm">
                       <p className="mb-1">Sweetheart, what a wonderful dilemma to have! Remember when I got that offer from the tech firm? You were only 8.</p>
                       <p className="mb-1">Mom and I debated for weeks... But sometimes you have to take the leap.</p>
-                      <p>If your heart says "yes," then go. You can always come home, kiddo 😊</p>
+                      <p className="mb-1">If your heart says "yes," then go. You can always come home, kiddo 😊</p>
+                      <span className="text-xs text-gray-600 float-right ml-2">14:25</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="px-4 py-3 bg-gradient-to-r from-orange-50 to-rose-50 border-t border-gray-100">
+                <div className="px-4 py-3 bg-[#075E54] border-t border-gray-700">
                   <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-orange-600" />
-                    <span className="text-xs text-gray-600 font-medium">Chat Interface</span>
+                    <MessageCircle className="w-4 h-4 text-green-200" />
+                    <span className="text-xs text-green-100 font-medium">WhatsApp Style</span>
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 px-2">
-                <h4 className="font-bold text-gray-900 mb-2 text-lg">The conversation you never got to have</h4>
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">Relive that valuable advice and genuine compliments</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Lisa's father always gave the best advice. Now that he's gone, she can still ask for his wisdom - about career choices, relationships, or just an encouraging word.
+                  Lisa's father always knew the right words. His wisdom, his encouragement, his unique way of seeing things - now she can experience his personality whenever she needs guidance or just a kind word.
                 </p>
                 <p className="text-xs text-gray-500 italic">
-                  "Ask the questions you never got to ask."
+                  "Experience their personality one more time"
                 </p>
               </div>
             </div>
 
             {/* Story 2: Oma's verhalen voor de volgende generatie */}
             <div className="group">
-              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                {/* Video Interface Mockup */}
-                <div className="bg-gradient-to-r from-purple-900 to-indigo-900 p-4 text-white">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">Grandma Rose</span>
-                    <div className="flex gap-2">
-                      <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                        <Video className="w-3 h-3" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 min-h-[280px] flex flex-col justify-center">
-                  {/* Video "frame" */}
-                  <div className="bg-gradient-to-br from-rose-100 to-orange-100 rounded-xl p-6 border-4 border-white shadow-lg mb-3">
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl">
+              <div className="bg-black rounded-2xl shadow-lg overflow-hidden border-2 border-gray-800 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Video Call Interface - Messenger Style */}
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-xl">
                         👵
                       </div>
-                      <div className="text-sm text-gray-700 italic">
-                        "...and then I would walk to the bakery every morning for fresh bread and pastries..."
+                      <span className="font-semibold">Grandma Rose</span>
+                    </div>
+                    <div className="flex gap-1 items-center">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-xs">02:34</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-gray-900 to-slate-900 min-h-[280px] flex flex-col relative overflow-hidden">
+                  {/* Main video frame - Grandma */}
+                  <div className="flex-1 flex items-center justify-center p-6 relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-blue-900/20"></div>
+                    <div className="relative">
+                      {/* Video frame with subtle animation */}
+                      <div className="bg-gradient-to-br from-amber-100 to-rose-100 rounded-2xl p-8 shadow-2xl border-4 border-white/10 animate-pulse" style={{animationDuration: '3s'}}>
+                        <div className="text-center">
+                          <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full mx-auto mb-3 flex items-center justify-center text-4xl shadow-xl">
+                            👵
+                          </div>
+                          <div className="bg-white/90 rounded-lg px-4 py-2 text-sm text-gray-800 italic mt-3 max-w-[200px]">
+                            "...and then I would walk to the bakery every morning for fresh bread..."
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Child's question */}
-                  <div className="bg-white rounded-xl px-3 py-2 text-sm text-gray-700 shadow-sm border border-gray-200">
-                    "Grandma, tell me about when you were little! 🏠"
+                  {/* Small self-view in corner */}
+                  <div className="absolute top-4 right-4 w-20 h-28 bg-gray-800 rounded-lg border-2 border-gray-600 flex items-center justify-center shadow-xl">
+                    <div className="text-2xl">👧</div>
+                  </div>
+
+                  {/* Subtitles bar */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-4 py-2 text-center">
+                    <p className="text-white text-xs">
+                      "Grandma, tell me about when you were little! 🏠"
+                    </p>
                   </div>
                 </div>
 
-                <div className="px-4 py-3 bg-gradient-to-r from-orange-50 to-rose-50 border-t border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <Video className="w-4 h-4 text-orange-600" />
-                    <span className="text-xs text-gray-600 font-medium">Video Call</span>
+                <div className="px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 border-t border-blue-700">
+                  <div className="flex items-center justify-center gap-2">
+                    <Video className="w-4 h-4 text-white" />
+                    <span className="text-xs text-white font-medium">Video Call - Messenger Style</span>
                   </div>
                 </div>
               </div>
@@ -922,6 +887,83 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Living Legacy CTA Section */}
+      <div className="py-20 bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-900">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-semibold mb-6">
+              <Sparkles className="w-4 h-4" />
+              Living Legacy - Create Your Digital Avatar
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Leave Your Personality Behind
+            </h2>
+            <p className="text-xl text-purple-100 max-w-4xl mx-auto leading-relaxed mb-8">
+              Want loved ones to always have access to your wisdom, encouragement, and personality?
+              Create your own digital avatar so those meaningful conversations can continue -
+              that valuable advice, those genuine compliments, that unique perspective only you can offer.
+            </p>
+          </div>
+
+          {/* USPs Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center mb-4">
+                <Mic className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-bold text-white mb-2 text-lg">Voice Cloning</h4>
+              <p className="text-sm text-purple-200">
+                Upload voice recordings and create an AI that speaks in your actual voice
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center mb-4">
+                <Video className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-bold text-white mb-2 text-lg">Video Avatar</h4>
+              <p className="text-sm text-purple-200">
+                Create a talking avatar from photos and videos that moves and speaks like you
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center mb-4">
+                <MessageCircle className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-bold text-white mb-2 text-lg">Personality Capture</h4>
+              <p className="text-sm text-purple-200">
+                AI learns your writing style, humor, values, and unique way of expressing thoughts
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center mb-4">
+                <Camera className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-bold text-white mb-2 text-lg">Photo Integration</h4>
+              <p className="text-sm text-purple-200">
+                Add photos to create a visual representation that captures your appearance
+              </p>
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <div className="text-center">
+            <button
+              onClick={() => navigate('/living-legacy')}
+              className="group px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-2xl hover:shadow-orange-500/50 transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-3"
+            >
+              Create Your Avatar Now
+              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <p className="text-sm text-purple-200 mt-4">
+              Fine-tune your digital personality • Available for loved ones forever
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* How It Works */}
       <div className="py-16">
         <div className="max-w-5xl mx-auto px-4">
@@ -942,8 +984,8 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-orange-600 font-bold text-xl">1</span>
               </div>
-              <h4 className="font-bold text-gray-900 mb-2 text-lg">Upload Your Chat</h4>
-              <p className="text-gray-600">Export and upload any WhatsApp conversation. AI learns their personality instantly.</p>
+              <h4 className="font-bold text-gray-900 mb-2 text-lg">Upload Your Conversations</h4>
+              <p className="text-gray-600">Export from WhatsApp, Messenger, Telegram, or any messaging app. AI learns their personality instantly.</p>
             </div>
 
             <div className="text-center">

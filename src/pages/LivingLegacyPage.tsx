@@ -21,7 +21,6 @@ import {
   BookOpen,
   Camera,
   Play,
-  Star,
   ChevronRight,
   Baby
 } from 'lucide-react'
@@ -53,34 +52,34 @@ export default function LivingLegacyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-      {/* Navigation */}
+      {/* Navigation - Mobile Responsive */}
       <nav className="bg-white/80 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => navigate('/')}
           >
-            <Heart className="w-8 h-8 text-orange-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+            <Heart className="w-6 sm:w-8 h-6 sm:h-8 text-orange-600" />
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
               TalkToYouAI
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-end">
             <button
               onClick={() => navigate('/')}
-              className="text-gray-600 hover:text-orange-600 font-medium transition-colors"
+              className="text-sm sm:text-base text-gray-600 hover:text-orange-600 font-medium transition-colors px-2"
             >
               Home
             </button>
             <button
               onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-              className="text-gray-600 hover:text-orange-600 font-medium transition-colors"
+              className="text-sm sm:text-base text-gray-600 hover:text-orange-600 font-medium transition-colors px-2"
             >
               Pricing
             </button>
             <button
               onClick={handleStartOnboarding}
-              className="px-6 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-rose-600 transition-all shadow-md"
+              className="px-3 sm:px-6 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg text-sm sm:text-base font-semibold hover:from-orange-600 hover:to-rose-600 transition-all shadow-md whitespace-nowrap"
             >
               Get Started
             </button>
@@ -111,15 +110,35 @@ export default function LivingLegacyPage() {
           </div>
 
           {/* Visual Example Preview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-2xl p-6 border-2 border-orange-200 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
                 <Video className="w-6 h-6 text-white" />
               </div>
               <h3 className="font-bold text-lg mb-2">Video Messages</h3>
-              <p className="text-gray-600 text-sm">Record personal videos for your loved ones</p>
-              <div className="mt-4 bg-gray-100 rounded-lg h-32 flex items-center justify-center">
-                <Play className="w-12 h-12 text-gray-400" />
+              <p className="text-gray-600 text-sm mb-4">Record personal videos for your loved ones</p>
+              <div className="mt-4 bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg h-32 flex items-center justify-center relative overflow-hidden">
+                {/* Animated recording preview */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                      <div className="w-4 h-4 bg-white rounded-full"></div>
+                    </div>
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1 bg-red-400 rounded-full animate-pulse"
+                          style={{
+                            height: `${Math.random() * 16 + 8}px`,
+                            animationDelay: `${i * 100}ms`
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute bottom-2 right-2 text-xs text-white/60">Recording...</div>
               </div>
             </div>
 
@@ -128,7 +147,7 @@ export default function LivingLegacyPage() {
                 <Mic className="w-6 h-6 text-white" />
               </div>
               <h3 className="font-bold text-lg mb-2">Your Own Voice</h3>
-              <p className="text-gray-600 text-sm">AI learns your voice, face, and personality</p>
+              <p className="text-gray-600 text-sm mb-4">AI learns your voice, face, and personality</p>
               <div className="mt-4 bg-gray-100 rounded-lg h-32 flex items-center justify-center">
                 <div className="flex gap-1">
                   {[...Array(20)].map((_, i) => (
@@ -140,19 +159,36 @@ export default function LivingLegacyPage() {
 
             <div className="bg-white rounded-2xl p-6 border-2 border-orange-200 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
+                <Camera className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Pictures</h3>
+              <p className="text-gray-600 text-sm mb-4">Upload photos for visual representation</p>
+              <div className="mt-4 bg-gradient-to-br from-orange-50 to-rose-50 rounded-lg h-32 flex items-center justify-center">
+                <div className="grid grid-cols-2 gap-2 p-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="w-12 h-12 bg-gradient-to-br from-orange-200 to-rose-200 rounded-lg flex items-center justify-center">
+                      <Camera className="w-6 h-6 text-orange-600 opacity-50" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-orange-200 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full flex items-center justify-center mb-4">
                 <Gift className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-lg mb-2">Time Capsules</h3>
-              <p className="text-gray-600 text-sm">Messages for future moments</p>
+              <h3 className="font-bold text-lg mb-2">Text & Conversations</h3>
+              <p className="text-gray-600 text-sm mb-4">Upload chat exports to capture personality</p>
               <div className="mt-4 space-y-2">
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  📅 Emma's 18th Birthday
+                  💬 WhatsApp chats
                 </div>
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  💍 Tim's Wedding
+                  📝 Written stories
                 </div>
                 <div className="bg-orange-50 rounded-lg p-2 text-xs">
-                  👶 First Grandchild
+                  ✉️ Letters & emails
                 </div>
               </div>
             </div>
@@ -457,70 +493,41 @@ export default function LivingLegacyPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
-            Trusted by Hundreds of Families
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-orange-600 mb-2">500+</div>
-              <p className="text-gray-600">Living Legacies Created</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-orange-600 mb-2">10,000+</div>
-              <p className="text-gray-600">Messages Recorded</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-orange-600 mb-2">4.9/5</div>
-              <div className="flex justify-center gap-1 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-orange-400 text-orange-400" />
-                ))}
-              </div>
-              <p className="text-gray-600">Average Rating</p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleStartOnboarding}
-            className="px-10 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold text-lg hover:from-orange-600 hover:to-rose-600 transition-all shadow-lg inline-flex items-center gap-2"
-          >
-            Be the Next
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      </section>
-
-      {/* Pricing Section - Compact */}
+      {/* Pricing Section - Credit Based System */}
       <section id="pricing" className="py-16 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">
             Choose Your Plan
           </h2>
           <p className="text-xl text-gray-600 mb-12 text-center">
-            One-time investment, preserved forever
+            One-time avatar creation • Share via link with family
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Essential */}
-            <div className="bg-white rounded-xl p-6 border-2 border-orange-200">
-              <h3 className="text-2xl font-bold mb-2">Essential</h3>
-              <div className="text-4xl font-bold text-orange-600 mb-4">€499</div>
-              <ul className="space-y-2 mb-6 text-sm">
+            {/* Starter - $499 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-orange-200 hover:shadow-lg transition-shadow">
+              <h3 className="text-2xl font-bold mb-2">Starter</h3>
+              <div className="text-4xl font-bold text-orange-600 mb-4">$499</div>
+              <ul className="space-y-3 mb-6 text-sm">
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>Text-based AI</span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span><strong>Complete Avatar Creation</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>50+ messages</span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Text, Voice & Video</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>5 family members</span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>100 conversation credits</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Share link with family</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Credits can be added anytime</span>
                 </li>
               </ul>
               <button
@@ -531,29 +538,37 @@ export default function LivingLegacyPage() {
               </button>
             </div>
 
-            {/* Complete - Popular */}
+            {/* Complete - $999 - Popular */}
             <div className="bg-gradient-to-br from-orange-100 to-rose-100 rounded-xl p-6 border-4 border-orange-500 relative transform scale-105 shadow-xl">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-rose-500 text-white px-4 py-1 rounded-full text-sm font-bold">
                 MOST POPULAR
               </div>
               <h3 className="text-2xl font-bold mb-2">Complete</h3>
-              <div className="text-4xl font-bold text-orange-600 mb-4">€999</div>
-              <ul className="space-y-2 mb-6 text-sm">
+              <div className="text-4xl font-bold text-orange-600 mb-4">$999</div>
+              <ul className="space-y-3 mb-6 text-sm">
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span><strong>Voice cloning</strong></span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span><strong>Complete Avatar Creation</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span><strong>Video avatar</strong></span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Text, Voice & Video</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>Unlimited messages</span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span><strong>500 conversation credits</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>15 family members</span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Share link with family</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Credits can be added anytime</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Priority support</span>
                 </li>
               </ul>
               <button
@@ -564,26 +579,38 @@ export default function LivingLegacyPage() {
               </button>
             </div>
 
-            {/* Premium */}
-            <div className="bg-white rounded-xl p-6 border-2 border-orange-200">
-              <h3 className="text-2xl font-bold mb-2">Premium</h3>
-              <div className="text-4xl font-bold text-orange-600 mb-4">€1,999</div>
-              <ul className="space-y-2 mb-6 text-sm">
+            {/* Lifetime - $1499 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-orange-200 hover:shadow-lg transition-shadow">
+              <h3 className="text-2xl font-bold mb-2">Lifetime</h3>
+              <div className="text-4xl font-bold text-orange-600 mb-4">$1,499</div>
+              <ul className="space-y-3 mb-6 text-sm">
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span><strong>Professional recording</strong></span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span><strong>Complete Avatar Creation</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>Ultra-realistic avatar</span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Text, Voice & Video</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>Unlimited family</span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>500 conversation credits</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                  <span>Concierge service</span>
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Share link with family</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Credits can be added anytime</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span><strong>10 Years Annual AI Updates</strong></span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <span>Latest technology guarantee</span>
                 </li>
               </ul>
               <button
@@ -595,8 +622,8 @@ export default function LivingLegacyPage() {
             </div>
           </div>
 
-          <p className="text-center text-gray-600 mt-8">
-            ✓ 50+ year hosting guarantee • ✓ AES-256 encryption • ✓ Always editable
+          <p className="text-center text-gray-600 mt-8 text-sm md:text-base">
+            ✓ All plans include text, voice & video • ✓ Credits available for purchase anytime • ✓ AES-256 encryption
           </p>
         </div>
       </section>
@@ -640,9 +667,15 @@ export default function LivingLegacyPage() {
             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-orange-400 transition-colors">
               Pricing
             </button>
-            <span className="hover:text-orange-400 transition-colors cursor-pointer">Privacy</span>
-            <span className="hover:text-orange-400 transition-colors cursor-pointer">Terms</span>
-            <span className="hover:text-orange-400 transition-colors cursor-pointer">Contact</span>
+            <button onClick={() => navigate('/privacy')} className="hover:text-orange-400 transition-colors">
+              Privacy
+            </button>
+            <button onClick={() => navigate('/terms')} className="hover:text-orange-400 transition-colors">
+              Terms
+            </button>
+            <button onClick={() => navigate('/contact')} className="hover:text-orange-400 transition-colors">
+              Contact
+            </button>
           </div>
           <p className="text-xs text-gray-500 mt-6">
             © 2024 TalkToYouAI. All rights reserved.
