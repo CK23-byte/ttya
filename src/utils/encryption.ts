@@ -127,42 +127,6 @@ export async function decrypt(
 }
 
 /**
- * Validate password strength
- * Minimum 12 characters, must include letters, numbers, and special characters
- */
-export function validatePassword(password: string): {
-  valid: boolean
-  errors: string[]
-} {
-  const errors: string[] = []
-
-  if (password.length < 12) {
-    errors.push('Wachtwoord moet minimaal 12 tekens bevatten')
-  }
-
-  if (!/[a-z]/.test(password)) {
-    errors.push('Wachtwoord moet kleine letters bevatten')
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Wachtwoord moet hoofdletters bevatten')
-  }
-
-  if (!/[0-9]/.test(password)) {
-    errors.push('Wachtwoord moet cijfers bevatten')
-  }
-
-  if (!/[^a-zA-Z0-9]/.test(password)) {
-    errors.push('Wachtwoord moet speciale tekens bevatten')
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  }
-}
-
-/**
  * Convert ArrayBuffer to base64 string
  */
 function arrayBufferToBase64(buffer: Uint8Array): string {

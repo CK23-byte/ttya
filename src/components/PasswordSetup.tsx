@@ -8,7 +8,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Lock, Shield, AlertCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { validatePassword } from '../utils/encryption'
+import { validatePassword } from '../utils/validation'
 
 export default function PasswordSetup() {
   const { setupMasterPassword } = useAuth()
@@ -25,7 +25,7 @@ export default function PasswordSetup() {
 
     // Validate password
     const validation = validatePassword(password)
-    if (!validation.valid) {
+    if (!validation.isValid) {
       setErrors(validation.errors)
       return
     }

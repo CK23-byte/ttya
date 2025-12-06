@@ -7,6 +7,7 @@ import { Upload, FileText, Check, X } from 'lucide-react'
 import JSZip from 'jszip'
 import { parseWhatsAppExport, isValidWhatsAppExport, getUniqueSenders } from '../utils/whatsappParser'
 import { WhatsAppMessage } from '../types'
+import { logger } from '../utils/logger'
 
 interface WhatsAppUploaderProps {
   onMessagesLoaded: (messages: WhatsAppMessage[], sender: string) => void
@@ -21,6 +22,13 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
   const handleFile = async (file: File) => {
     setError('')
 
+    // Security: File size validation (max 50MB)
+    const MAX_FILE_SIZE = 50 * 1024 * 1024
+    if (file.size > MAX_FILE_SIZE) {
+      setError('Bestand is te groot. Maximale grootte is 50MB')
+      return
+    }
+
     if (!file.name.endsWith('.txt') && !file.name.endsWith('.zip')) {
       setError('Alleen .txt of .zip bestanden worden ondersteund')
       return
@@ -34,9 +42,27 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
         const zip = new JSZip()
         const zipContent = await zip.loadAsync(file)
 
-        // Find the .txt file in the ZIP
+        // Security: Check total uncompressed size (max 200MB)
+        const MAX_UNCOMPRESSED_SIZE = 200 * 1024 * 1024
+        let totalSize = 0
+        Object.values(zipContent.files).forEach(f => {
+          totalSize += (f as any)._data?.uncompressedSize || 0
+        })
+
+        if (totalSize > MAX_UNCOMPRESSED_SIZE) {
+          setError('Uitgepakte bestandsgrootte is te groot (max 200MB)')
+          return
+        }
+
+        // Find the .txt file in the ZIP (with path traversal protection)
         const txtFile = Object.keys(zipContent.files).find(
-          filename => filename.endsWith('.txt') && !filename.startsWith('__MACOSX')
+          filename => {
+            const normalized = filename.replace(/\\/g, '/')
+            return normalized.endsWith('.txt') &&
+                   !normalized.startsWith('__MACOSX') &&
+                   !normalized.includes('../') &&
+                   !normalized.startsWith('/')
+          }
         )
 
         if (!txtFile) {
@@ -66,7 +92,7 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
       }
     } catch (err) {
       setError('Fout bij het lezen van het bestand')
-      console.error(err)
+      logger.error('WhatsApp file upload error', err)
     }
   }
 
