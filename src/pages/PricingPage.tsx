@@ -42,6 +42,7 @@ import {
   VideoCreditPackType,
   BillingPeriod
 } from '../lib/stripe'
+import Header from '../components/Header'
 
 export default function PricingPage() {
   const navigate = useNavigate()
@@ -140,44 +141,8 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-      {/* Version Badge */}
-      <div className="fixed top-4 left-4 z-50">
-        <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
-          <span className="text-xs font-semibold text-gray-600">v2.4.0</span>
-        </div>
-      </div>
-
-      {/* Top Navigation - Same as LandingPage */}
-      <div className="fixed top-4 right-4 z-50 flex flex-wrap gap-2 justify-end max-w-[calc(100vw-8rem)]">
-        <button
-          onClick={() => navigate('/')}
-          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600"
-        >
-          Home
-        </button>
-        <button
-          onClick={() => navigate('/living-legacy')}
-          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600 whitespace-nowrap"
-        >
-          <span className="hidden sm:inline">Living Legacy</span>
-          <span className="sm:hidden">Legacy</span>
-        </button>
-        {user ? (
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
-          >
-            Dashboard
-          </button>
-        ) : (
-          <button
-            onClick={() => navigate('/auth')}
-            className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
-          >
-            Sign In
-          </button>
-        )}
-      </div>
+      {/* Header */}
+      <Header variant="transparent" />
 
       {/* Hero Section */}
       <section className="py-20 px-4">
