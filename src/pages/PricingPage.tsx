@@ -442,10 +442,10 @@ export default function PricingPage() {
       </section>
 
       {/* Voice Credits */}
-      <section className="py-12 px-4 bg-white">
+      <section className="py-12 px-4 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-4">
               <Phone className="w-4 h-4" />
               Voice Add-on
             </div>
@@ -460,7 +460,7 @@ export default function PricingPage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* Voice Small Pack */}
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 p-6 flex flex-col hover:shadow-lg transition">
+            <div className="bg-white rounded-2xl border border-orange-200 p-6 flex flex-col hover:shadow-lg transition">
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-gray-900">{VOICE_CREDIT_PACKS.small.name}</h3>
                 <p className="text-gray-500 text-sm">Perfect to try it out</p>
@@ -477,7 +477,7 @@ export default function PricingPage() {
 
               <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-blue-500" />
+                  <Clock className="w-4 h-4 text-orange-500" />
                   <span>{VOICE_CREDIT_PACKS.small.credits} minutes</span>
                 </div>
               </div>
@@ -485,15 +485,16 @@ export default function PricingPage() {
               <button
                 onClick={() => handleBuyVoiceCredits('small')}
                 disabled={isLoading === 'voice_small'}
-                className="w-full py-3 border-2 border-blue-200 text-blue-700 rounded-xl font-medium hover:bg-blue-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 border-2 border-orange-200 text-orange-700 rounded-xl font-medium hover:bg-orange-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading === 'voice_small' ? 'Processing...' : 'Buy Voice Credits'}
               </button>
             </div>
 
             {/* Voice Medium Pack - Popular */}
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl shadow-xl p-6 flex flex-col relative">
-              <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full">
+            <div className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl shadow-xl p-6 flex flex-col relative">
+              <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full flex items-center gap-1">
+                <Crown className="w-3 h-3" />
                 Most Popular
               </div>
 
@@ -521,14 +522,14 @@ export default function PricingPage() {
               <button
                 onClick={() => handleBuyVoiceCredits('medium')}
                 disabled={isLoading === 'voice_medium'}
-                className="w-full py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-gray-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-white text-orange-600 rounded-xl font-semibold hover:bg-gray-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading === 'voice_medium' ? 'Processing...' : 'Buy Voice Credits'}
               </button>
             </div>
 
             {/* Voice Large Pack - Best Value */}
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-blue-200 p-6 flex flex-col relative hover:shadow-lg transition">
+            <div className="bg-white rounded-2xl border-2 border-orange-200 p-6 flex flex-col relative hover:shadow-lg transition">
               <div className="absolute top-3 right-3 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
                 Best Value
               </div>
@@ -549,7 +550,7 @@ export default function PricingPage() {
 
               <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-blue-500" />
+                  <Clock className="w-4 h-4 text-orange-500" />
                   <span>{VOICE_CREDIT_PACKS.large.credits} minutes</span>
                 </div>
               </div>
@@ -557,7 +558,7 @@ export default function PricingPage() {
               <button
                 onClick={() => handleBuyVoiceCredits('large')}
                 disabled={isLoading === 'voice_large'}
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-rose-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading === 'voice_large' ? 'Processing...' : 'Buy Voice Credits'}
               </button>
@@ -567,10 +568,10 @@ export default function PricingPage() {
       </section>
 
       {/* Video Credits */}
-      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-12 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-4">
               <Video className="w-4 h-4" />
               Video Add-on
             </div>
@@ -585,7 +586,7 @@ export default function PricingPage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* Video Small Pack */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col hover:shadow-lg transition">
+            <div className="bg-white rounded-2xl border border-orange-200 p-6 flex flex-col hover:shadow-lg transition">
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-gray-900">{VIDEO_CREDIT_PACKS.small.name}</h3>
                 <p className="text-gray-500 text-sm">Perfect to try it out</p>
@@ -602,7 +603,7 @@ export default function PricingPage() {
 
               <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-purple-500" />
+                  <Clock className="w-4 h-4 text-orange-500" />
                   <span>{VIDEO_CREDIT_PACKS.small.credits} minutes</span>
                 </div>
               </div>
@@ -610,15 +611,16 @@ export default function PricingPage() {
               <button
                 onClick={() => handleBuyVideoCredits('small')}
                 disabled={isLoading === 'video_small'}
-                className="w-full py-3 border-2 border-purple-200 text-purple-700 rounded-xl font-medium hover:bg-purple-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 border-2 border-orange-200 text-orange-700 rounded-xl font-medium hover:bg-orange-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading === 'video_small' ? 'Processing...' : 'Buy Video Credits'}
               </button>
             </div>
 
             {/* Video Medium Pack - Popular */}
-            <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-xl p-6 flex flex-col relative">
-              <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full">
+            <div className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl shadow-xl p-6 flex flex-col relative">
+              <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full flex items-center gap-1">
+                <Crown className="w-3 h-3" />
                 Most Popular
               </div>
 
@@ -646,14 +648,14 @@ export default function PricingPage() {
               <button
                 onClick={() => handleBuyVideoCredits('medium')}
                 disabled={isLoading === 'video_medium'}
-                className="w-full py-3 bg-white text-purple-600 rounded-xl font-semibold hover:bg-gray-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-white text-orange-600 rounded-xl font-semibold hover:bg-gray-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading === 'video_medium' ? 'Processing...' : 'Buy Video Credits'}
               </button>
             </div>
 
             {/* Video Large Pack - Best Value */}
-            <div className="bg-white rounded-2xl border-2 border-purple-200 p-6 flex flex-col relative hover:shadow-lg transition">
+            <div className="bg-white rounded-2xl border-2 border-orange-200 p-6 flex flex-col relative hover:shadow-lg transition">
               <div className="absolute top-3 right-3 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
                 Best Value
               </div>
@@ -674,7 +676,7 @@ export default function PricingPage() {
 
               <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-purple-500" />
+                  <Clock className="w-4 h-4 text-orange-500" />
                   <span>{VIDEO_CREDIT_PACKS.large.credits} minutes</span>
                 </div>
               </div>
@@ -682,7 +684,7 @@ export default function PricingPage() {
               <button
                 onClick={() => handleBuyVideoCredits('large')}
                 disabled={isLoading === 'video_large'}
-                className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-rose-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading === 'video_large' ? 'Processing...' : 'Buy Video Credits'}
               </button>
