@@ -148,7 +148,7 @@ export default function DashboardPage() {
                 <span className="font-bold text-xl text-gray-800 hidden sm:inline">TalkToYouAI</span>
               </button>
               <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                v2.3.1
+                v2.4.0
               </span>
             </div>
 

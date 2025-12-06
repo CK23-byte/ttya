@@ -387,7 +387,7 @@ export default function ChatPage() {
               </button>
               <h2 className={`text-xl font-semibold ${currentTheme.text}`}>Chats</h2>
               <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded">
-                v2.3.1
+                v2.4.0
               </span>
             </div>
             <div className="flex items-center gap-2">
