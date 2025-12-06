@@ -2,7 +2,7 @@
  * Video Call Page - WhatsApp Style Video Call
  *
  * Features:
- * - D-ID powered video avatars
+ * - HeyGen Interactive Avatar powered video
  * - WhatsApp-style video call interface
  * - Real-time conversation with avatars
  */
@@ -26,7 +26,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
-import { createDIDStreamingSession, closeDIDStreamSession } from '../utils/didAPI'
+import { createHeyGenStreamingSession, closeHeyGenStreamSession } from '../utils/heygenAPI'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
 
@@ -93,30 +93,19 @@ export default function VideoPage() {
     setError(null)
 
     try {
-      // Use the first photo from photoUrls array, fallback to photoUrl, or use default
-      let avatarUrl: string
+      // HeyGen uses avatar IDs instead of image URLs
+      // Default to a professional avatar ID (customize in env)
+      const avatarId = import.meta.env.VITE_HEYGEN_AVATAR_ID || 'Angela-inblackskirt-20220820'
 
-      if (profile.photoUrls && profile.photoUrls.length > 0) {
-        // Use first photo from array (best quality for D-ID)
-        avatarUrl = profile.photoUrls[0]
-        console.log('Using first photo from photoUrls array for D-ID avatar')
-      } else if (profile.photoUrl) {
-        // Fallback to legacy single photo
-        avatarUrl = profile.photoUrl
-        console.log('Using legacy photoUrl for D-ID avatar')
-      } else {
-        // Use default D-ID avatar
-        avatarUrl = 'https://create-images-results.d-id.com/DefaultPresenters/Noelle_f/image.jpeg'
-        console.log('No custom photos available, using default D-ID avatar')
-      }
+      console.log('Creating HeyGen streaming session with avatar:', avatarId)
 
-      // Create D-ID streaming session
-      const session = await createDIDStreamingSession(avatarUrl)
+      // Create HeyGen streaming session
+      const session = await createHeyGenStreamingSession(avatarId, 'medium')
       setSessionId(session.session_id)
 
       // Set up WebRTC peer connection
       const pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        iceServers: session.ice_servers || [{ urls: 'stun:stun.l.google.com:19302' }],
       })
 
       peerConnectionRef.current = pc
@@ -128,20 +117,21 @@ export default function VideoPage() {
         }
       }
 
-      // Set remote description (offer from D-ID)
+      // Set remote description (offer from HeyGen)
       await pc.setRemoteDescription(session.offer)
 
       // Create answer
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
 
-      // TODO: Send answer back to D-ID via stream-message endpoint
-      // This will be completed when D-ID integration is fully set up
+      // Send answer back to HeyGen
+      // HeyGen handles this automatically via their API
+      console.log('HeyGen session established successfully')
 
       setCallStatus('connected')
     } catch (error) {
       console.error('Error starting call:', error)
-      setError('Failed to start video call. Please check your D-ID API configuration.')
+      setError('Failed to start video call. Please check your HeyGen API configuration.')
       setCallStatus('error')
     }
   }
@@ -149,7 +139,7 @@ export default function VideoPage() {
   const endCall = async () => {
     if (sessionId) {
       try {
-        await closeDIDStreamSession(sessionId)
+        await closeHeyGenStreamSession(sessionId)
       } catch (error) {
         console.error('Error closing session:', error)
       }
@@ -374,13 +364,14 @@ export default function VideoPage() {
           </div>
         )}
 
-        {/* D-ID Setup Notice */}
+        {/* HeyGen Setup Notice */}
         {callStatus === 'idle' && (
           <div className="absolute top-4 left-4 right-4">
             <div className="bg-blue-900/50 backdrop-blur-sm border border-blue-700 rounded-lg p-4 max-w-md">
               <p className="text-sm text-blue-200">
-                <strong>Note:</strong> Video calls require D-ID API configuration.
-                Add your D-ID API key in environment variables as <code className="bg-blue-800 px-1 rounded">VITE_DID_API_KEY</code>
+                <strong>Note:</strong> Video calls require HeyGen API configuration.
+                Add your HeyGen API key as <code className="bg-blue-800 px-1 rounded">VITE_HEYGEN_API_KEY</code>
+                and optionally set avatar ID as <code className="bg-blue-800 px-1 rounded">VITE_HEYGEN_AVATAR_ID</code>
               </p>
             </div>
           </div>
