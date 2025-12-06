@@ -33,57 +33,18 @@ VITE_SUPABASE_ANON_KEY - Supabase anonymous key
 - **Client-side variables** (Supabase) require the `VITE_` prefix to be accessible in the frontend
 - All keys should be set to "All Environments" in Vercel
 
-## Testing Methods
+## Testing Method
 
-### Method 1: Vercel Endpoint (Recommended for Production)
+> **Note:** Due to Vercel's Hobby plan limit of 12 serverless functions, API testing is done locally. The project already uses all 12 available function slots for production features.
 
-Once deployed to Vercel, access the test endpoint:
+### Local Testing (Recommended)
 
-```
-https://your-domain.vercel.app/api/test-apis
-```
-
-This will return a JSON response with:
-- ✅ Success status for working APIs
-- ❌ Failure status with error details
-- ⏭️ Skipped status for unconfigured APIs
-
-**Example Response:**
-
-```json
-{
-  "summary": {
-    "total": 6,
-    "passed": 5,
-    "failed": 0,
-    "skipped": 1
-  },
-  "results": [
-    {
-      "service": "Anthropic API",
-      "status": "success",
-      "message": "Connection successful",
-      "details": {
-        "model": "claude-sonnet-4-20250514",
-        "usage": { "input_tokens": 10, "output_tokens": 5 }
-      },
-      "duration": 1234
-    },
-    // ... more results
-  ],
-  "timestamp": "2025-12-06T10:30:00.000Z",
-  "environment": "Vercel"
-}
-```
-
-### Method 2: Local Testing
-
-For local development testing:
+For testing API connections:
 
 1. **Add API keys to `.env` file:**
 
 ```bash
-# Copy from .env.example and add your keys
+# Copy from .env.example and add your keys (for local testing only)
 ANTHROPIC_API_KEY=your_key_here
 DID_API_KEY=your_key_here
 ELEVENLABS_API_KEY=your_key_here
@@ -93,6 +54,8 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key_here
 ```
 
+> ⚠️ **Security:** Never commit these keys to git. The `.env` file is in `.gitignore`.
+
 2. **Run the test script:**
 
 ```bash
@@ -100,6 +63,50 @@ npm run test:api
 ```
 
 This will display a formatted table showing the status of each API connection.
+
+**Example Output:**
+
+```
+================================================================================
+API CONNECTION TEST RESULTS
+================================================================================
+
+✅ SUCCESS    Anthropic API
+   Message: Connection successful
+   Duration: 1234ms
+   Details: {
+     "model": "claude-sonnet-4-20250514",
+     "usage": { "input_tokens": 10, "output_tokens": 5 }
+   }
+
+✅ SUCCESS    D-ID API
+   Message: Connection successful
+   Duration: 845ms
+   Details: { "remaining_credits": 100 }
+
+✅ SUCCESS    ElevenLabs API
+   Message: Connection successful
+   Duration: 567ms
+   Details: { "voicesCount": 5 }
+
+✅ SUCCESS    OpenAI API
+   Message: Connection successful
+   Duration: 923ms
+   Details: { "hasRealtimeModel": true }
+
+✅ SUCCESS    HeyGen API
+   Message: Connection successful
+   Duration: 1012ms
+   Details: { "avatarsCount": 3 }
+
+✅ SUCCESS    Supabase
+   Message: Connection successful
+   Duration: 234ms
+
+================================================================================
+SUMMARY: 6 passed, 0 failed, 0 skipped
+================================================================================
+```
 
 ## Interpreting Results
 
@@ -237,33 +244,26 @@ Be aware of rate limits and costs:
 5. **Set up billing alerts** on each API provider
 6. **Use separate keys** for development and production
 
-## Automated Testing
+## Production Testing
 
-To automate API testing:
+To test APIs in production (since we can't add a test endpoint):
 
-1. **Add to CI/CD pipeline:**
+1. **Monitor Vercel Function Logs:**
+   - Check Vercel dashboard logs for API errors
+   - Look for authentication failures or rate limits
+   - Review function execution times
 
-```yaml
-# .github/workflows/test-apis.yml
-name: Test API Connections
-on:
-  schedule:
-    - cron: '0 0 * * *'  # Daily
-  workflow_dispatch:      # Manual trigger
+2. **Test Through App Features:**
+   - Chat feature → Tests Anthropic API
+   - Voice call → Tests OpenAI API
+   - Avatar video → Tests D-ID and HeyGen APIs
+   - Voice cloning → Tests ElevenLabs API
+   - Login/signup → Tests Supabase
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Test APIs
-        run: curl https://your-domain.vercel.app/api/test-apis
-```
-
-2. **Set up monitoring:**
-   - Use Vercel Analytics to track endpoint health
+3. **Set up monitoring:**
+   - Use Vercel Analytics to track function health
+   - Monitor error rates in production
    - Set up alerts for API failures
-   - Monitor response times
 
 ## Getting Help
 
@@ -297,6 +297,28 @@ If you continue to experience issues:
 | HeyGen | `HEYGEN_API_KEY` | `api.heygen.com/v1/avatar.list` | https://docs.heygen.com |
 | Supabase | `VITE_SUPABASE_URL`<br>`VITE_SUPABASE_ANON_KEY` | `{url}/rest/v1/` | https://supabase.com/docs |
 
+## Vercel Function Limit
+
+The project is currently at Vercel's Hobby plan limit of **12 serverless functions**:
+
+1. `api/chat.ts` - Claude AI chat
+2. `api/did/create-stream.ts` - D-ID streaming
+3. `api/did/close-stream.ts` - D-ID cleanup
+4. `api/did/stream-message.ts` - D-ID messaging
+5. `api/voice/session.ts` - OpenAI voice session
+6. `api/voice/function-call.ts` - Voice function handling
+7. `api/voice/end-session.ts` - Voice cleanup
+8. `api/legacy/create-profile.ts` - Profile creation
+9. `api/legacy/get-profile.ts` - Profile retrieval
+10. `api/legacy/messages.ts` - Message management
+11. `api/legacy/finalize.ts` - Finalization
+12. *(One more available slot)*
+
+To add more functions, consider:
+- **Upgrading to Pro plan** ($20/month, unlimited functions)
+- **Combining endpoints** (e.g., merge legacy endpoints into one)
+- **Removing unused endpoints** to free up slots
+
 ## Next Steps
 
 After verifying all APIs are connected:
@@ -304,11 +326,11 @@ After verifying all APIs are connected:
 1. ✅ Test each feature individually (chat, voice, video)
 2. ✅ Monitor API usage and costs
 3. ✅ Set up error handling for API failures
-4. ✅ Implement rate limiting on your endpoints
-5. ✅ Add user-facing error messages
-6. ✅ Set up logging and monitoring
+4. ✅ Add user-facing error messages
+5. ✅ Set up logging and monitoring
+6. ✅ Review and optimize serverless function usage
 
 ---
 
 **Last Updated:** 2025-12-06
-**Version:** 1.0.0
+**Version:** 1.1.0
