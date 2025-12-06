@@ -14,7 +14,8 @@ import {
   Clock,
   Heart,
   Phone,
-  Video
+  Video,
+  Upload
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePayment } from '../contexts/PaymentContext'
@@ -290,6 +291,16 @@ export default function DashboardPage() {
                         Video
                       </button>
                     </div>
+
+                    {/* Tertiary: Improve Profile */}
+                    <button
+                      onClick={() => navigate(`/living-legacy/upload-dashboard?profileId=${profile.id}`)}
+                      className="w-full px-3 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition flex items-center justify-center gap-2 border border-blue-200 text-sm"
+                      title="Add chats, photos, videos or voice messages to improve this profile"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Improve Profile
+                    </button>
                   </div>
                 </div>
               ))}

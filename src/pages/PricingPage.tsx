@@ -21,7 +21,6 @@ import {
   Shield,
   Zap,
   Crown,
-  ArrowLeft,
   Phone,
   Video,
   Upload,
@@ -141,48 +140,47 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 hover:opacity-80 transition"
-          >
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center">
-              <Heart className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-xl text-gray-800">TalkToYouAI</span>
-          </button>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </button>
-            {user ? (
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-rose-600 transition"
-              >
-                Dashboard
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate('/auth')}
-                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-rose-600 transition"
-              >
-                Get Started
-              </button>
-            )}
-          </div>
+      {/* Version Badge */}
+      <div className="fixed top-4 left-4 z-50">
+        <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
+          <span className="text-xs font-semibold text-gray-600">v2.3.1</span>
         </div>
-      </header>
+      </div>
+
+      {/* Top Navigation - Same as LandingPage */}
+      <div className="fixed top-4 right-4 z-50 flex flex-wrap gap-2 justify-end max-w-[calc(100vw-8rem)]">
+        <button
+          onClick={() => navigate('/')}
+          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600"
+        >
+          Home
+        </button>
+        <button
+          onClick={() => navigate('/living-legacy')}
+          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600 whitespace-nowrap"
+        >
+          <span className="hidden sm:inline">Living Legacy</span>
+          <span className="sm:hidden">Legacy</span>
+        </button>
+        {user ? (
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
+          >
+            Dashboard
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/auth')}
+            className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
+          >
+            Sign In
+          </button>
+        )}
+      </div>
 
       {/* Hero Section */}
-      <section className="py-12 px-4">
+      <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
