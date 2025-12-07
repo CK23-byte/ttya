@@ -71,6 +71,7 @@ export default function ProfileImprovementPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const chatFileInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const voiceSectionRef = useRef<HTMLDivElement>(null)
@@ -287,6 +288,92 @@ export default function ProfileImprovementPage() {
       ...prev,
       textNotes: prev.textNotes.filter((_, i) => i !== index)
     }))
+  }
+
+  const parseChatFile = (text: string): string[] => {
+    const messages: string[] = []
+
+    // WhatsApp chat format patterns
+    // Pattern 1: [DD/MM/YYYY, HH:MM:SS] Name: Message
+    // Pattern 2: DD/MM/YYYY, HH:MM - Name: Message
+    // Pattern 3: M/D/YY, H:MM AM/PM - Name: Message
+
+    const lines = text.split('\n')
+    let currentMessage = ''
+
+    for (const line of lines) {
+      // Skip empty lines
+      if (!line.trim()) continue
+
+      // Check if line starts with a timestamp (various formats)
+      const timestampPatterns = [
+        /^\[?\d{1,2}\/\d{1,2}\/\d{2,4},?\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?\]?\s*[-:]\s*/,
+        /^\d{1,2}\/\d{1,2}\/\d{2,4},?\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?\s*[-:]\s*/
+      ]
+
+      const isNewMessage = timestampPatterns.some(pattern => pattern.test(line))
+
+      if (isNewMessage) {
+        // Save previous message if exists
+        if (currentMessage.trim()) {
+          messages.push(currentMessage.trim())
+        }
+
+        // Remove timestamp and start new message
+        let messageContent = line
+        for (const pattern of timestampPatterns) {
+          messageContent = messageContent.replace(pattern, '')
+        }
+
+        currentMessage = messageContent
+      } else {
+        // Continuation of previous message
+        currentMessage += '\n' + line
+      }
+    }
+
+    // Add last message
+    if (currentMessage.trim()) {
+      messages.push(currentMessage.trim())
+    }
+
+    return messages
+  }
+
+  const handleChatFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      if (file.name.endsWith('.txt')) {
+        // Read text file
+        const text = await file.text()
+        const messages = parseChatFile(text)
+
+        if (messages.length > 0) {
+          setProfileData(prev => ({
+            ...prev,
+            textNotes: [...prev.textNotes, ...messages]
+          }))
+          alert(`Successfully imported ${messages.length} messages from chat export!`)
+        } else {
+          alert('No messages found in the file. Please check the file format.')
+        }
+      } else if (file.name.endsWith('.zip')) {
+        // For ZIP files, we'll need to use a library like jszip
+        alert('ZIP file support coming soon! For now, please extract the ZIP file and upload the .txt file inside.')
+      } else {
+        alert('Please upload a .txt or .zip file')
+      }
+    } catch (error) {
+      console.error('Error reading chat file:', error)
+      alert('Failed to read chat file. Please try again.')
+    }
+
+    // Reset file input
+    if (chatFileInputRef.current) {
+      chatFileInputRef.current.value = ''
+    }
   }
 
   const startRecording = async () => {
@@ -595,6 +682,34 @@ export default function ProfileImprovementPage() {
                 >
                   <Check className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-sm text-gray-500">OR</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              {/* Chat File Upload */}
+              <div className="space-y-2">
+                <input
+                  ref={chatFileInputRef}
+                  type="file"
+                  accept=".txt,.zip"
+                  onChange={handleChatFileUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => chatFileInputRef.current?.click()}
+                  className="w-full px-4 py-3 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition flex items-center justify-center gap-2 font-medium"
+                >
+                  <Upload className="w-5 h-5" />
+                  Upload Chat Export (TXT or ZIP)
+                </button>
+                <p className="text-xs text-gray-500 text-center">
+                  Import WhatsApp, Telegram, or other chat exports to add conversation history
+                </p>
               </div>
 
               {/* Notes List */}
