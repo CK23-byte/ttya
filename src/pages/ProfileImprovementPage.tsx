@@ -390,49 +390,34 @@ export default function ProfileImprovementPage() {
   }
 
   const startRecording = async () => {
+    console.log('🎤 Starting recording...')
+
     try {
-      // Request microphone permission and get stream
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      })
+      // Simple audio request - no fancy options
+      console.log('🎤 Requesting microphone access...')
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      console.log('✅ Microphone access granted!')
 
       streamRef.current = stream
 
-      // Create media recorder
-      let options = { mimeType: 'audio/webm' }
-
-      // Try webm first, fallback to other formats if needed
-      if (!MediaRecorder.isTypeSupported('audio/webm')) {
-        if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          options = { mimeType: 'audio/mp4' }
-        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-          options = { mimeType: 'audio/ogg' }
-        } else {
-          options = { mimeType: '' } as any
-        }
-      }
-
-      const recorder = new MediaRecorder(stream, options)
+      // Create recorder with simple webm format
+      console.log('🎤 Creating MediaRecorder...')
+      const recorder = new MediaRecorder(stream)
       mediaRecorderRef.current = recorder
       audioChunksRef.current = []
 
-      // Collect audio data
       recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
+        console.log('📦 Data available:', e.data.size, 'bytes')
+        if (e.data.size > 0) {
           audioChunksRef.current.push(e.data)
         }
       }
 
-      // When recording stops, create the audio blob
       recorder.onstop = () => {
-        const mimeType = recorder.mimeType || 'audio/webm'
-        const blob = new Blob(audioChunksRef.current, { type: mimeType })
+        console.log('⏹️ Recording stopped')
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        console.log('✅ Created audio blob:', blob.size, 'bytes')
 
-        // Add to voice samples
         const newSample = {
           id: `voice_${Date.now()}`,
           blob: blob,
@@ -445,17 +430,23 @@ export default function ProfileImprovementPage() {
           voiceSamples: [...prev.voiceSamples, newSample]
         }))
 
-        // Clean up
         setRecordingTime(0)
+
+        // Stop stream tracks
         if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop())
+          streamRef.current.getTracks().forEach(track => {
+            console.log('🛑 Stopping track:', track.kind)
+            track.stop()
+          })
           streamRef.current = null
         }
       }
 
       // Start recording
-      recorder.start(1000) // Collect data every second
+      console.log('▶️ Starting MediaRecorder...')
+      recorder.start()
       setIsRecording(true)
+      console.log('✅ Recording started!')
 
       // Start timer
       const interval = setInterval(() => {
@@ -463,30 +454,33 @@ export default function ProfileImprovementPage() {
       }, 1000)
       recordingIntervalRef.current = interval
 
-    } catch (err) {
-      console.error('Microphone error:', err)
+    } catch (err: any) {
+      console.error('❌ Microphone error:', err)
+      console.error('Error name:', err.name)
+      console.error('Error message:', err.message)
 
-      // Show user-friendly error
-      if (err instanceof DOMException) {
-        if (err.name === 'NotAllowedError') {
-          alert('Microphone toegang geweigerd. Klik op het slot-icoon in de adresbalk en sta microfoon toe.')
-        } else if (err.name === 'NotFoundError') {
-          alert('Geen microfoon gevonden. Controleer of uw microfoon is aangesloten.')
-        } else if (err.name === 'NotReadableError') {
-          alert('Microfoon is in gebruik door een andere applicatie. Sluit andere apps en probeer opnieuw.')
-        } else {
-          alert('Kan microfoon niet gebruiken: ' + err.message)
-        }
+      let errorMsg = 'Could not access microphone.'
+
+      if (err.name === 'NotAllowedError') {
+        errorMsg = 'Microphone permission denied. Click the lock icon in your browser address bar and allow microphone access.'
+      } else if (err.name === 'NotFoundError') {
+        errorMsg = 'No microphone found. Please check that your microphone is connected.'
+      } else if (err.name === 'NotReadableError') {
+        errorMsg = 'Microphone is in use by another application. Please close other apps and try again.'
       } else {
-        alert('Fout bij opnemen: ' + (err as Error).message)
+        errorMsg = 'Microphone error: ' + err.message
       }
 
+      alert(errorMsg)
       setIsRecording(false)
     }
   }
 
   const stopRecording = () => {
+    console.log('⏹️ Stop recording requested')
+
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      console.log('⏹️ Stopping MediaRecorder...')
       mediaRecorderRef.current.stop()
     }
 
@@ -752,7 +746,7 @@ export default function ProfileImprovementPage() {
               {/* Instructions */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Tip:</strong> Als de microfoon niet werkt, klik op het <strong>slot-icoon</strong> in de adresbalk en zorg dat microfoon is toegestaan. Ververs daarna de pagina.
+                  <strong>Tip:</strong> If the microphone doesn't work, click the <strong>lock icon</strong> in your browser address bar and ensure microphone access is allowed. Then refresh the page.
                 </p>
               </div>
 
@@ -768,7 +762,7 @@ export default function ProfileImprovementPage() {
                   }`}
                 >
                   <Mic className="w-5 h-5" />
-                  {isRecording ? `Opnemen... ${formatTime(recordingTime)}` : 'Neem Op'}
+                  {isRecording ? `Recording... ${formatTime(recordingTime)}` : 'Record Voice'}
                 </button>
 
                 <button
@@ -776,7 +770,7 @@ export default function ProfileImprovementPage() {
                   className="px-4 py-3 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition border border-blue-200 flex items-center gap-2"
                 >
                   <Upload className="w-5 h-5" />
-                  Upload Bestand
+                  Upload File
                 </button>
                 <input
                   ref={fileInputRef}
