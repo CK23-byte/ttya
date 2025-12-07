@@ -32,6 +32,13 @@ interface ProfileWithStats extends PersonalityProfile {
   unreadCount: number
 }
 
+interface ProfileData {
+  textNotes: string[]
+  voiceSamples: { id: string; blob: Blob; duration: number; name: string }[]
+  photos: { id: string; url: string; name: string }[]
+  videos: { id: string; url: string; name: string }[]
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { isAuthenticated, encryptionKey } = useAuth()
@@ -121,6 +128,39 @@ export default function DashboardPage() {
     if (diffHours < 24) return `${diffHours}h ago`
     if (diffDays < 7) return `${diffDays}d ago`
     return messageDate.toLocaleDateString()
+  }
+
+  const handleStartCall = async (profile: ProfileWithStats) => {
+    if (!encryptionKey) return
+
+    try {
+      // Check if voice samples exist for this profile
+      const profileData = await getSecure<ProfileData>(
+        `profile_data_${profile.id}`,
+        encryptionKey
+      )
+
+      if (!profileData || !profileData.voiceSamples || profileData.voiceSamples.length === 0) {
+        // No voice samples - redirect to improvement page
+        alert('Please add a voice sample first to enable voice calls!')
+        navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+        return
+      }
+
+      // Voice samples exist - proceed to call
+      const params = new URLSearchParams({
+        personalityId: profile.id,
+        name: profile.name,
+        relationship: profile.relationship || '',
+        description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
+      })
+      navigate(`/voice-call?${params.toString()}`)
+    } catch (error) {
+      console.error('Error checking voice samples:', error)
+      // On error, show improvement page to be safe
+      alert('Please add a voice sample to enable voice calls!')
+      navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+    }
   }
 
   if (isLoading) {
@@ -268,17 +308,9 @@ export default function DashboardPage() {
                     {/* Secondary: Voice & Video */}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          const params = new URLSearchParams({
-                            personalityId: profile.id,
-                            name: profile.name,
-                            relationship: profile.relationship || '',
-                            description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
-                          })
-                          navigate(`/voice-call?${params.toString()}`)
-                        }}
+                        onClick={() => handleStartCall(profile)}
                         className="flex-1 px-3 py-2 bg-green-50 text-green-700 rounded-lg font-medium hover:bg-green-100 transition flex items-center justify-center gap-2 border border-green-200"
-                        title="Start Voice Call"
+                        title="Start Voice Call (requires voice sample)"
                       >
                         <Phone className="w-4 h-4" />
                         Call
@@ -295,9 +327,9 @@ export default function DashboardPage() {
 
                     {/* Tertiary: Improve Profile */}
                     <button
-                      onClick={() => navigate(`/living-legacy/upload-dashboard?profileId=${profile.id}`)}
+                      onClick={() => navigate(`/profile-improvement?profileId=${profile.id}`)}
                       className="w-full px-3 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition flex items-center justify-center gap-2 border border-blue-200 text-sm"
-                      title="Add chats, photos, videos or voice messages to improve this profile"
+                      title="Add text, photos, videos or voice samples to improve this profile"
                     >
                       <Upload className="w-4 h-4" />
                       Improve Profile
