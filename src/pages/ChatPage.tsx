@@ -121,6 +121,7 @@ export default function ChatPage() {
   const [showVideoCallModal, setShowVideoCallModal] = useState(false)
   const [theme, setTheme] = useState<ChatTheme>('whatsapp')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const hasLoadedRef = useRef(false)
 
   // Load saved theme
   useEffect(() => {
@@ -138,17 +139,25 @@ export default function ChatPage() {
 
   const currentTheme = THEMES[theme]
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (but wait for initial auth check)
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login')
-    }
-  }, [isAuthenticated, navigate])
+    // Give auth context time to initialize before redirecting
+    const timeoutId = setTimeout(() => {
+      if (!isAuthenticated && !encryptionKey) {
+        navigate('/login')
+      }
+    }, 100)
+
+    return () => clearTimeout(timeoutId)
+  }, [isAuthenticated, encryptionKey, navigate])
 
   // Load all personality profiles and their conversations
   useEffect(() => {
     const loadConversations = async () => {
-      if (!encryptionKey) return
+      if (!encryptionKey) {
+        setIsLoading(false)
+        return
+      }
 
       try {
         // Load all profiles
@@ -177,19 +186,23 @@ export default function ChatPage() {
 
         setConversations(convos)
 
-        // Check if there's a profile ID in URL
+        // Only set active profile on first load or if URL has specific profile
         const profileIdFromUrl = searchParams.get('profile')
+
         if (profileIdFromUrl && convos.find(c => c.profileId === profileIdFromUrl)) {
+          // URL has specific profile - use it
           setActiveProfileId(profileIdFromUrl)
           const activeConvo = convos.find(c => c.profileId === profileIdFromUrl)
           if (activeConvo) {
             setCurrentMessages(activeConvo.messages)
           }
-        } else if (convos.length > 0) {
-          // Select first conversation
+          hasLoadedRef.current = true
+        } else if (!hasLoadedRef.current && convos.length > 0) {
+          // First load and no URL profile - select first conversation
           setActiveProfileId(convos[0].profileId)
           setCurrentMessages(convos[0].messages)
-          setSearchParams({ profile: convos[0].profileId })
+          setSearchParams({ profile: convos[0].profileId }, { replace: true })
+          hasLoadedRef.current = true
         }
       } catch (error) {
         console.error('Error loading conversations:', error)
@@ -199,7 +212,7 @@ export default function ChatPage() {
     }
 
     loadConversations()
-  }, [encryptionKey, searchParams])
+  }, [encryptionKey])
 
   // Auto-scroll to bottom
   useEffect(() => {

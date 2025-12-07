@@ -76,6 +76,7 @@ export default function ProfileImprovementPage() {
   const videoInputRef = useRef<HTMLInputElement>(null)
   const voiceSectionRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const audioElementRef = useRef<HTMLAudioElement | null>(null)
@@ -100,6 +101,18 @@ export default function ProfileImprovementPage() {
       }, 500)
     }
   }, [focusParam])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current)
+      }
+    }
+  }, [])
 
   const loadProfile = async () => {
     if (!encryptionKey) return
@@ -378,52 +391,21 @@ export default function ProfileImprovementPage() {
 
   const startRecording = async () => {
     try {
-      console.log('Starting recording...')
-
-      // Check if getUserMedia is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Your browser does not support audio recording. Please use a modern browser like Chrome, Firefox, or Edge.')
-        return
-      }
-
-      console.log('Requesting microphone access...')
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      console.log('Microphone access granted')
+      streamRef.current = stream
 
-      // Try different MIME types for better browser compatibility
-      let mimeType = 'audio/webm'
-      const supportedTypes = [
-        'audio/webm',
-        'audio/webm;codecs=opus',
-        'audio/ogg;codecs=opus',
-        'audio/mp4',
-        'audio/mpeg'
-      ]
-
-      for (const type of supportedTypes) {
-        if (MediaRecorder.isTypeSupported(type)) {
-          mimeType = type
-          console.log('Using MIME type:', mimeType)
-          break
-        }
-      }
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType })
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
       mediaRecorderRef.current = mediaRecorder
       audioChunksRef.current = []
 
-      console.log('MediaRecorder created with type:', mimeType)
-
       mediaRecorder.ondataavailable = (event) => {
-        console.log('Data available:', event.data.size, 'bytes')
-        audioChunksRef.current.push(event.data)
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
       }
 
       mediaRecorder.onstop = () => {
-        console.log('Recording stopped, total chunks:', audioChunksRef.current.length)
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
-        console.log('Created blob:', audioBlob.size, 'bytes')
-
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
         const id = `voice_${Date.now()}`
         const duration = recordingTime
 
@@ -440,44 +422,19 @@ export default function ProfileImprovementPage() {
           ]
         }))
 
-        console.log('Voice sample added to profile data')
-        stream.getTracks().forEach(track => track.stop())
         setRecordingTime(0)
-      }
-
-      mediaRecorder.onerror = (event: any) => {
-        console.error('MediaRecorder error:', event.error)
-        alert('Recording error: ' + event.error?.message || 'Unknown error')
       }
 
       mediaRecorder.start()
       setIsRecording(true)
-      console.log('Recording started')
 
       // Start timer
       recordingIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1)
       }, 1000)
     } catch (error: any) {
-      console.error('Error starting recording:', error)
-      console.error('Error name:', error.name)
-      console.error('Error message:', error.message)
-
-      let errorMessage = 'Could not access microphone.'
-
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        errorMessage = 'Microphone access denied. Please:\n\n1. Click the lock/camera icon in your browser address bar\n2. Allow microphone access for this site\n3. Refresh the page (F5) and try again\n\nCurrent error: ' + error.message
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        errorMessage = 'No microphone found. Please check that:\n\n1. Your microphone is connected\n2. Your microphone is not being used by another application\n3. Your browser has permission to access the microphone\n\nCurrent error: ' + error.message
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        errorMessage = 'Microphone is already in use. Please:\n\n1. Close other apps using your microphone (Zoom, Teams, etc.)\n2. Close other browser tabs that might be using the microphone\n3. Try again\n\nCurrent error: ' + error.message
-      } else if (error.name === 'NotSupportedError') {
-        errorMessage = 'Your browser does not support audio recording. Please:\n\n1. Update your browser to the latest version\n2. Try using Chrome, Firefox, or Edge\n\nCurrent error: ' + error.message
-      } else {
-        errorMessage = 'Recording failed: ' + error.message + '\n\nPlease try:\n1. Refreshing the page\n2. Using a different browser\n3. Checking your microphone settings'
-      }
-
-      alert(errorMessage)
+      console.error('Error accessing microphone:', error)
+      alert('Could not access microphone. Please check permissions and try again.')
     }
   }
 
@@ -488,6 +445,10 @@ export default function ProfileImprovementPage() {
 
       if (recordingIntervalRef.current) {
         clearInterval(recordingIntervalRef.current)
+      }
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
       }
     }
   }
