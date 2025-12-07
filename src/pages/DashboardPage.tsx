@@ -32,9 +32,10 @@ interface ProfileWithStats extends PersonalityProfile {
   unreadCount: number
 }
 
-interface ProfileData {
+// Storage interface for checking voice samples (matches StoredProfileData in ProfileImprovementPage)
+interface StoredProfileData {
   textNotes: string[]
-  voiceSamples: { id: string; blob: Blob; duration: number; name: string }[]
+  voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
   photos: { id: string; url: string; name: string }[]
   videos: { id: string; url: string; name: string }[]
 }
@@ -135,7 +136,7 @@ export default function DashboardPage() {
 
     try {
       // Check if voice samples exist for this profile
-      const profileData = await getSecure<ProfileData>(
+      const profileData = await getSecure<StoredProfileData>(
         `profile_data_${profile.id}`,
         encryptionKey
       )

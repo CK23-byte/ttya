@@ -33,6 +33,15 @@ import Header from '../components/Header'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
 
+// Storage interface (what gets saved - with base64)
+interface StoredProfileData {
+  textNotes: string[]
+  voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
+  photos: { id: string; url: string; name: string }[]
+  videos: { id: string; url: string; name: string }[]
+}
+
+// Runtime interface (what we work with - with Blobs)
 interface ProfileData {
   textNotes: string[]
   voiceSamples: { id: string; blob: Blob; duration: number; name: string }[]
@@ -59,6 +68,7 @@ export default function ProfileImprovementPage() {
   const [recordingTime, setRecordingTime] = useState(0)
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
@@ -114,13 +124,32 @@ export default function ProfileImprovementPage() {
     if (!encryptionKey || !profileId) return
 
     try {
-      const data = await getSecure<ProfileData>(
+      const data = await getSecure<StoredProfileData>(
         `profile_data_${profileId}`,
         encryptionKey
       )
 
       if (data) {
-        setProfileData(data)
+        // Convert base64 voice samples back to Blobs for runtime use
+        const voiceSamples = await Promise.all(
+          data.voiceSamples.map(async (sample) => {
+            const response = await fetch(sample.base64Data)
+            const blob = await response.blob()
+            return {
+              id: sample.id,
+              blob,
+              duration: sample.duration,
+              name: sample.name
+            }
+          })
+        )
+
+        setProfileData({
+          textNotes: data.textNotes,
+          voiceSamples,
+          photos: data.photos,
+          videos: data.videos
+        })
       }
     } catch (error) {
       console.error('Error loading profile data:', error)
@@ -131,15 +160,46 @@ export default function ProfileImprovementPage() {
     if (!encryptionKey || !profileId) return
 
     setIsSaving(true)
+    setSaveSuccess(false)
+
     try {
+      // Convert Blobs to base64 for storage
+      const voiceSamplesForStorage = await Promise.all(
+        profileData.voiceSamples.map(async (sample) => {
+          return new Promise<{ id: string; base64Data: string; duration: number; name: string; mimeType: string }>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              resolve({
+                id: sample.id,
+                base64Data: reader.result as string,
+                duration: sample.duration,
+                name: sample.name,
+                mimeType: sample.blob.type
+              })
+            }
+            reader.readAsDataURL(sample.blob)
+          })
+        })
+      )
+
+      const dataToStore: StoredProfileData = {
+        textNotes: profileData.textNotes,
+        voiceSamples: voiceSamplesForStorage,
+        photos: profileData.photos,
+        videos: profileData.videos
+      }
+
       await setSecure(
         `profile_data_${profileId}`,
-        profileData,
+        dataToStore,
         encryptionKey
       )
+
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
     } catch (error) {
       console.error('Error saving profile data:', error)
-      alert('Failed to save changes')
+      alert('Failed to save changes. Please try again.')
     } finally {
       setIsSaving(false)
     }
@@ -201,6 +261,12 @@ export default function ProfileImprovementPage() {
 
   const startRecording = async () => {
     try {
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Your browser does not support audio recording. Please use a modern browser like Chrome, Firefox, or Edge.')
+        return
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mediaRecorder = new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
@@ -239,9 +305,20 @@ export default function ProfileImprovementPage() {
       recordingIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1)
       }, 1000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting recording:', error)
-      alert('Could not access microphone. Please check permissions.')
+
+      let errorMessage = 'Could not access microphone.'
+
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = 'Microphone access denied. Please:\n\n1. Click the camera/microphone icon in your browser address bar\n2. Allow microphone access\n3. Refresh the page and try again'
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage = 'No microphone found. Please check that:\n\n1. Your microphone is connected\n2. Your microphone is not being used by another application'
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage = 'Microphone is already in use by another application. Please close other apps using your microphone and try again.'
+      }
+
+      alert(errorMessage)
     }
   }
 
@@ -639,14 +716,33 @@ export default function ProfileImprovementPage() {
         </div>
 
         {/* Save Button */}
-        <div className="mt-8 sticky bottom-4">
+        <div className="mt-8 sticky bottom-4 space-y-3">
+          {saveSuccess && (
+            <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-xl flex items-center gap-2">
+              <Check className="w-5 h-5" />
+              <span className="font-medium">Changes saved successfully!</span>
+            </div>
+          )}
           <button
             onClick={saveProfileData}
             disabled={isSaving}
-            className="w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-rose-600 transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+            className={`w-full px-6 py-4 rounded-xl font-semibold transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 ${
+              saveSuccess
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white'
+            }`}
           >
-            <Save className="w-5 h-5" />
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {saveSuccess ? (
+              <>
+                <Check className="w-5 h-5" />
+                Saved!
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </>
+            )}
           </button>
         </div>
       </div>
