@@ -19,9 +19,14 @@ export default function AuthChoicePage() {
   // If already authenticated, redirect to dashboard
   useEffect(() => {
     if (supabaseUser || isAuthenticated) {
-      navigate('/dashboard')
+      navigate('/dashboard', { replace: true })
     }
   }, [supabaseUser, isAuthenticated, navigate])
+
+  // Show nothing while redirecting (prevents flash of content)
+  if (supabaseUser || isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">

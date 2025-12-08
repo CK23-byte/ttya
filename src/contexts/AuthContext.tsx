@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Only redirect if user is trying to access protected routes
     const currentPath = window.location.pathname
-    const publicPaths = ['/', '/setup', '/login', '/pricing']
+    const publicPaths = ['/', '/auth', '/setup', '/login', '/pricing', '/email-auth']
     const isPublicPath = publicPaths.includes(currentPath)
 
     // Don't redirect if on public pages
