@@ -46,7 +46,7 @@ export default function VoiceCallPage() {
     personalityName,
     personalityRelationship,
     personalityDescription,
-    userId: user?.id || '',
+    userId: user?.id || 'local-user',
     onError: (error) => {
       console.error('WebRTC error:', error)
     }
@@ -54,7 +54,7 @@ export default function VoiceCallPage() {
 
   // Auto-start call on mount
   useEffect(() => {
-    if (!user || !personalityId) {
+    if (!personalityId) {
       navigate('/dashboard')
       return
     }
