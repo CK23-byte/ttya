@@ -46,7 +46,8 @@ export default function VoiceCallPage() {
     personalityName,
     personalityRelationship,
     personalityDescription,
-    userId: user?.id || 'local-user',
+    // Use local-user UUID for local authentication (matches database setup)
+    userId: user?.id || '00000000-0000-0000-0000-000000000001',
     onError: (error) => {
       console.error('WebRTC error:', error)
     }

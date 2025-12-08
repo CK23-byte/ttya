@@ -148,17 +148,14 @@ export default function DashboardPage() {
         return
       }
 
-      // Voice samples exist - show coming soon message
-      alert(`Great! You've added a voice sample for ${profile.name}.\n\nThe voice call feature requires backend API setup with OpenAI Realtime API.\n\nTo enable voice calls:\n1. Set up OpenAI API key\n2. Configure backend endpoint\n3. Deploy backend infrastructure\n\nSee CALL_FUNCTIE_IMPLEMENTATIE.md for setup instructions.`)
-
-      // For now, don't navigate to call page until backend is ready
-      // const params = new URLSearchParams({
-      //   personalityId: profile.id,
-      //   name: profile.name,
-      //   relationship: profile.relationship || '',
-      //   description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
-      // })
-      // navigate(`/voice-call?${params.toString()}`)
+      // Voice samples exist - navigate to call page
+      const params = new URLSearchParams({
+        personalityId: profile.id,
+        name: profile.name,
+        relationship: profile.relationship || '',
+        description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
+      })
+      navigate(`/voice-call?${params.toString()}`)
     } catch (error) {
       console.error('Error checking voice samples:', error)
       // On error, show improvement page to be safe
