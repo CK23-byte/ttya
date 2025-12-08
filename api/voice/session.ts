@@ -44,14 +44,28 @@ export default async function handler(
     console.error('OpenAI API key not configured')
     return res.status(500).json({
       error: 'OpenAI API key not configured',
-      hint: 'Set OPENAI_API_KEY in Vercel environment variables'
+      hint: 'Set OPENAI_API_KEY in Vercel environment variables',
+      debug: {
+        hasOpenAI: !!OPENAI_API_KEY,
+        hasSupabaseUrl: !!SUPABASE_URL,
+        hasSupabaseKey: !!SUPABASE_SERVICE_KEY
+      }
     })
   }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-    console.error('Supabase not configured')
+    console.error('Supabase not configured', {
+      hasUrl: !!SUPABASE_URL,
+      hasKey: !!SUPABASE_SERVICE_KEY
+    })
     return res.status(500).json({
-      error: 'Database not configured'
+      error: 'Database not configured',
+      hint: 'Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables',
+      debug: {
+        hasOpenAI: !!OPENAI_API_KEY,
+        hasSupabaseUrl: !!SUPABASE_URL,
+        hasSupabaseKey: !!SUPABASE_SERVICE_KEY
+      }
     })
   }
 
@@ -187,7 +201,13 @@ export default async function handler(
     console.error('Session creation error:', error)
     return res.status(500).json({
       error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      debug: {
+        hasOpenAI: !!OPENAI_API_KEY,
+        hasSupabaseUrl: !!SUPABASE_URL,
+        hasSupabaseKey: !!SUPABASE_SERVICE_KEY
+      }
     })
   }
 }
