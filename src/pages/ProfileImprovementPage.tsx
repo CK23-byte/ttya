@@ -188,14 +188,16 @@ export default function ProfileImprovementPage() {
           textNotes: data.textNotes || [],
           voiceSamples: validVoiceSamples,
           photos: data.photos || [],
-          videos: data.videos || []
+          videos: data.videos || [],
+          voiceConfig: data.voiceConfig // ✅ Load voice config
         })
 
         console.log('Profile data loaded successfully:', {
           textNotes: data.textNotes?.length || 0,
           voiceSamples: validVoiceSamples.length,
           photos: data.photos?.length || 0,
-          videos: data.videos?.length || 0
+          videos: data.videos?.length || 0,
+          voiceConfig: data.voiceConfig ? `${data.voiceConfig.type}` : 'none'
         })
       }
     } catch (error) {
@@ -233,14 +235,16 @@ export default function ProfileImprovementPage() {
         textNotes: profileData.textNotes,
         voiceSamples: voiceSamplesForStorage,
         photos: profileData.photos,
-        videos: profileData.videos
+        videos: profileData.videos,
+        voiceConfig: profileData.voiceConfig // ✅ Save voice config
       }
 
       console.log('Saving profile data:', {
         textNotes: dataToStore.textNotes.length,
         voiceSamples: dataToStore.voiceSamples.length,
         photos: dataToStore.photos.length,
-        videos: dataToStore.videos.length
+        videos: dataToStore.videos.length,
+        voiceConfig: dataToStore.voiceConfig ? `${dataToStore.voiceConfig.type}` : 'none'
       })
 
       await setSecure(
@@ -639,6 +643,30 @@ export default function ProfileImprovementPage() {
       // Use the first voice sample for cloning
       const sample = profileData.voiceSamples[0]
 
+      console.log('📋 Sample info:', {
+        id: sample.id,
+        blobSize: sample.blob.size,
+        blobType: sample.blob.type,
+        duration: sample.duration,
+        name: sample.name
+      })
+
+      // Get MIME type from blob
+      const mimeType = sample.blob.type || 'audio/mp4'
+
+      console.log('Cloning voice to ElevenLabs...', {
+        audioSize: sample.blob.size,
+        mimeType,
+        duration: sample.duration
+      })
+
+      // Validate audio duration (ElevenLabs requires at least 30 seconds, recommends 1+ minute)
+      if (!sample.duration || sample.duration < 30) {
+        alert(`Voice sample is too short! Duration: ${sample.duration || 0} seconds. ElevenLabs requires at least 30 seconds of audio. Please record a longer sample.`)
+        setIsCloningVoice(false)
+        return
+      }
+
       // Convert blob to base64
       const reader = new FileReader()
       const base64Promise = new Promise<string>((resolve) => {
@@ -652,22 +680,6 @@ export default function ProfileImprovementPage() {
       })
 
       const audioBase64 = await base64Promise
-
-      // Get MIME type from blob
-      const mimeType = sample.blob.type || 'audio/mp4'
-
-      console.log('Cloning voice to ElevenLabs...', {
-        audioSize: sample.blob.size,
-        mimeType,
-        duration: sample.duration
-      })
-
-      // Validate audio duration (ElevenLabs requires at least 30 seconds, recommends 1+ minute)
-      if (sample.duration < 30) {
-        alert('Voice sample is too short! ElevenLabs requires at least 30 seconds of audio. Please record a longer sample.')
-        setIsCloningVoice(false)
-        return
-      }
 
       // Call our API to clone the voice
       const response = await fetch('/api/voice/clone-voice', {
