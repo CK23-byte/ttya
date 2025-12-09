@@ -418,7 +418,20 @@ export default function ProfileImprovementPage() {
 
       // Create recorder with simple webm format
       console.log('🎤 Creating MediaRecorder...')
-      const recorder = new MediaRecorder(stream)
+
+      // Choose audio format that ElevenLabs supports
+      // ElevenLabs supports: MP3, WAV, FLAC, OGG, M4A (but NOT WEBM!)
+      let mimeType = 'audio/webm' // fallback
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4'
+      } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+        mimeType = 'audio/mpeg'
+      } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+        mimeType = 'audio/ogg'
+      }
+
+      console.log('🎵 Using audio format:', mimeType)
+      const recorder = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = recorder
       audioChunksRef.current = []
 
@@ -431,8 +444,8 @@ export default function ProfileImprovementPage() {
 
       recorder.onstop = () => {
         console.log('⏹️ Recording stopped')
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        console.log('✅ Created audio blob:', blob.size, 'bytes')
+        const blob = new Blob(audioChunksRef.current, { type: mimeType })
+        console.log('✅ Created audio blob:', blob.size, 'bytes, type:', mimeType)
 
         const newSample = {
           id: `voice_${Date.now()}`,
@@ -631,7 +644,7 @@ export default function ProfileImprovementPage() {
       const base64Promise = new Promise<string>((resolve) => {
         reader.onloadend = () => {
           const base64 = reader.result as string
-          // Remove data:audio/webm;base64, prefix
+          // Remove data:audio/xxx;base64, prefix
           const base64Data = base64.split(',')[1]
           resolve(base64Data)
         }
@@ -640,7 +653,21 @@ export default function ProfileImprovementPage() {
 
       const audioBase64 = await base64Promise
 
-      console.log('Cloning voice to ElevenLabs...')
+      // Get MIME type from blob
+      const mimeType = sample.blob.type || 'audio/mp4'
+
+      console.log('Cloning voice to ElevenLabs...', {
+        audioSize: sample.blob.size,
+        mimeType,
+        duration: sample.duration
+      })
+
+      // Validate audio duration (ElevenLabs requires at least 30 seconds, recommends 1+ minute)
+      if (sample.duration < 30) {
+        alert('Voice sample is too short! ElevenLabs requires at least 30 seconds of audio. Please record a longer sample.')
+        setIsCloningVoice(false)
+        return
+      }
 
       // Call our API to clone the voice
       const response = await fetch('/api/voice/clone-voice', {
@@ -652,6 +679,7 @@ export default function ProfileImprovementPage() {
           voiceName: `${profile.name} Voice`,
           voiceDescription: `Cloned voice for ${profile.name}`,
           audioBase64,
+          mimeType, // ✅ Send MIME type to backend
           userId: '00000000-0000-0000-0000-000000000001',
           profileId: profile.id
         })

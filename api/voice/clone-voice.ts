@@ -16,6 +16,7 @@ interface RequestBody {
   voiceName: string
   voiceDescription?: string
   audioBase64: string // Base64 encoded audio file
+  mimeType?: string // MIME type of audio file (e.g., 'audio/mp4', 'audio/mpeg')
   userId: string
   profileId: string
 }
@@ -40,7 +41,7 @@ export default async function handler(
 
   try {
     const body = req.body as RequestBody
-    const { voiceName, voiceDescription, audioBase64, userId, profileId } = body
+    const { voiceName, voiceDescription, audioBase64, mimeType = 'audio/mp4', userId, profileId } = body
 
     // Validate input
     if (!voiceName || !audioBase64 || !userId || !profileId) {
@@ -53,20 +54,45 @@ export default async function handler(
     // Convert base64 to buffer
     const audioBuffer = Buffer.from(audioBase64, 'base64')
 
+    // Determine file extension from mimeType
+    const extensionMap: Record<string, string> = {
+      'audio/mp4': 'mp4',
+      'audio/mpeg': 'mp3',
+      'audio/mp3': 'mp3',
+      'audio/ogg': 'ogg',
+      'audio/wav': 'wav',
+      'audio/flac': 'flac',
+      'audio/webm': 'webm'
+    }
+    const extension = extensionMap[mimeType] || 'mp3'
+
     console.log('Cloning voice:', {
       voiceName,
       audioSize: audioBuffer.length,
+      mimeType,
+      extension,
       userId,
       profileId
     })
+
+    // Validate that ElevenLabs supports this format
+    const supportedFormats = ['audio/mp4', 'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/wav', 'audio/flac']
+    if (!supportedFormats.includes(mimeType)) {
+      console.warn(`Unsupported format: ${mimeType}. ElevenLabs may reject this.`)
+      return res.status(400).json({
+        error: 'Unsupported audio format',
+        message: `Format ${mimeType} is not supported by ElevenLabs. Please use MP3, MP4, WAV, FLAC, or OGG.`,
+        supportedFormats
+      })
+    }
 
     // Create FormData for ElevenLabs API
     const formData = new FormData()
 
     // Add the audio file (Node.js FormData accepts Buffer directly)
     formData.append('files', audioBuffer, {
-      filename: 'voice_sample.webm',
-      contentType: 'audio/webm'
+      filename: `voice_sample.${extension}`,
+      contentType: mimeType
     })
 
     // Add voice metadata
