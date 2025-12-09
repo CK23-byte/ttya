@@ -745,6 +745,13 @@ export default function ProfileImprovementPage() {
 
       if (!response.ok) {
         const error = await response.json()
+        console.error('❌ ElevenLabs API Error:', {
+          status: response.status,
+          error: error.error,
+          details: error.details,
+          message: error.message,
+          fullError: error
+        })
         throw new Error(error.error || 'Failed to clone voice')
       }
 
