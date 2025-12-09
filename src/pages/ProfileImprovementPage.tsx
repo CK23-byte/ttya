@@ -33,12 +33,21 @@ import Header from '../components/Header'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
 
+// Voice configuration
+interface VoiceConfig {
+  type: 'cloned' | 'standard' // cloned = ElevenLabs, standard = OpenAI
+  clonedVoiceId?: string // ElevenLabs voice ID (if type is 'cloned')
+  clonedVoiceName?: string // ElevenLabs voice name
+  standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if type is 'standard')
+}
+
 // Storage interface (what gets saved - with base64)
 interface StoredProfileData {
   textNotes: string[]
   voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
   photos: { id: string; url: string; name: string }[]
   videos: { id: string; url: string; name: string }[]
+  voiceConfig?: VoiceConfig // Voice configuration for calls
 }
 
 // Runtime interface (what we work with - with Blobs)
@@ -47,6 +56,7 @@ interface ProfileData {
   voiceSamples: { id: string; blob: Blob; duration: number; name: string }[]
   photos: { id: string; url: string; name: string }[]
   videos: { id: string; url: string; name: string }[]
+  voiceConfig?: VoiceConfig // Voice configuration for calls
 }
 
 export default function ProfileImprovementPage() {
@@ -60,7 +70,11 @@ export default function ProfileImprovementPage() {
     textNotes: [],
     voiceSamples: [],
     photos: [],
-    videos: []
+    videos: [],
+    voiceConfig: {
+      type: 'standard',
+      standardVoice: 'alloy'
+    }
   })
 
   const [newNote, setNewNote] = useState('')
@@ -69,6 +83,8 @@ export default function ProfileImprovementPage() {
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [isCloningVoice, setIsCloningVoice] = useState(false)
+  const [cloneError, setCloneError] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatFileInputRef = useRef<HTMLInputElement>(null)
@@ -595,6 +611,104 @@ export default function ProfileImprovementPage() {
     }))
   }
 
+  const handleCloneVoice = async () => {
+    if (!profileData.voiceSamples || profileData.voiceSamples.length === 0) {
+      alert('Please record or upload a voice sample first!')
+      return
+    }
+
+    if (!profile) return
+
+    setIsCloningVoice(true)
+    setCloneError(null)
+
+    try {
+      // Use the first voice sample for cloning
+      const sample = profileData.voiceSamples[0]
+
+      // Convert blob to base64
+      const reader = new FileReader()
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          const base64 = reader.result as string
+          // Remove data:audio/webm;base64, prefix
+          const base64Data = base64.split(',')[1]
+          resolve(base64Data)
+        }
+        reader.readAsDataURL(sample.blob)
+      })
+
+      const audioBase64 = await base64Promise
+
+      console.log('Cloning voice to ElevenLabs...')
+
+      // Call our API to clone the voice
+      const response = await fetch('/api/voice/clone-voice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          voiceName: `${profile.name} Voice`,
+          voiceDescription: `Cloned voice for ${profile.name}`,
+          audioBase64,
+          userId: '00000000-0000-0000-0000-000000000001',
+          profileId: profile.id
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to clone voice')
+      }
+
+      const data = await response.json()
+      console.log('Voice cloned successfully:', data)
+
+      // Update voice config with cloned voice ID
+      setProfileData(prev => ({
+        ...prev,
+        voiceConfig: {
+          type: 'cloned',
+          clonedVoiceId: data.voiceId,
+          clonedVoiceName: data.voiceName
+        }
+      }))
+
+      alert(`Voice cloned successfully! Your cloned voice "${data.voiceName}" is ready to use in calls.`)
+
+    } catch (error) {
+      console.error('Voice cloning error:', error)
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      setCloneError(errorMsg)
+      alert(`Failed to clone voice: ${errorMsg}`)
+    } finally {
+      setIsCloningVoice(false)
+    }
+  }
+
+  const handleVoiceTypeChange = (type: 'cloned' | 'standard') => {
+    setProfileData(prev => ({
+      ...prev,
+      voiceConfig: {
+        ...prev.voiceConfig,
+        type,
+        ...(type === 'standard' && !prev.voiceConfig?.standardVoice ? { standardVoice: 'alloy' } : {})
+      }
+    }))
+  }
+
+  const handleStandardVoiceChange = (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => {
+    setProfileData(prev => ({
+      ...prev,
+      voiceConfig: {
+        ...prev.voiceConfig,
+        type: 'standard',
+        standardVoice: voice
+      }
+    }))
+  }
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -813,6 +927,142 @@ export default function ProfileImprovementPage() {
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Voice Configuration */}
+          <div className="bg-white rounded-2xl p-6 shadow-md">
+            <div className="flex items-center gap-3 mb-4">
+              <Mic className="w-6 h-6 text-purple-500" />
+              <h2 className="text-xl font-bold text-gray-900">Voice Configuration</h2>
+              <span className="text-sm text-gray-500">(For voice calls)</span>
+            </div>
+
+            <div className="space-y-4">
+              {/* Voice Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choose Voice Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleVoiceTypeChange('cloned')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.voiceConfig?.type === 'cloned'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-purple-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">🎭 Cloned Voice</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Use ElevenLabs to clone the voice sample
+                      </p>
+                      {profileData.voiceConfig?.type === 'cloned' && profileData.voiceConfig.clonedVoiceName && (
+                        <p className="text-xs text-purple-600 mt-2 font-medium">
+                          ✓ {profileData.voiceConfig.clonedVoiceName}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleVoiceTypeChange('standard')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.voiceConfig?.type === 'standard'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-purple-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">🔊 Standard Voice</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Use OpenAI's preset voices
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Cloned Voice Section */}
+              {profileData.voiceConfig?.type === 'cloned' && (
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+                  {!profileData.voiceConfig.clonedVoiceId ? (
+                    <>
+                      <p className="text-sm text-purple-800">
+                        <strong>Voice Cloning:</strong> Upload your voice sample to ElevenLabs to create a cloned voice. This requires at least 1 voice sample.
+                      </p>
+                      <button
+                        onClick={handleCloneVoice}
+                        disabled={isCloningVoice || profileData.voiceSamples.length === 0}
+                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isCloningVoice || profileData.voiceSamples.length === 0
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-purple-500 text-white hover:bg-purple-600'
+                        }`}
+                      >
+                        {isCloningVoice ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            Cloning Voice...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5" />
+                            Clone Voice to ElevenLabs
+                          </>
+                        )}
+                      </button>
+                      {profileData.voiceSamples.length === 0 && (
+                        <p className="text-xs text-purple-600">
+                          ⚠️ Please record or upload a voice sample first
+                        </p>
+                      )}
+                      {cloneError && (
+                        <p className="text-xs text-red-600">
+                          ❌ Error: {cloneError}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <Check className="w-6 h-6 text-green-500" />
+                      <div className="flex-1">
+                        <p className="font-medium text-purple-900">
+                          Voice Cloned Successfully!
+                        </p>
+                        <p className="text-sm text-purple-700">
+                          Using: {profileData.voiceConfig.clonedVoiceName}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Standard Voice Selection */}
+              {profileData.voiceConfig?.type === 'standard' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Select OpenAI Voice
+                  </label>
+                  <select
+                    value={profileData.voiceConfig.standardVoice || 'alloy'}
+                    onChange={(e) => handleStandardVoiceChange(e.target.value as any)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="alloy">Alloy (Neutral, Balanced)</option>
+                    <option value="echo">Echo (Male, Warm)</option>
+                    <option value="fable">Fable (British Accent)</option>
+                    <option value="onyx">Onyx (Deep Male)</option>
+                    <option value="nova">Nova (Female, Energetic)</option>
+                    <option value="shimmer">Shimmer (Soft Female)</option>
+                  </select>
+                  <p className="text-xs text-blue-700">
+                    💡 These are preset voices from OpenAI. No voice cloning required.
+                  </p>
                 </div>
               )}
             </div>

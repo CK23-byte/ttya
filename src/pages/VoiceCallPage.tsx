@@ -27,6 +27,11 @@ export default function VoiceCallPage() {
   const personalityRelationship = searchParams.get('relationship') || 'loved one'
   const personalityDescription = searchParams.get('description') || ''
 
+  // Get voice config from URL params
+  const voiceType = searchParams.get('voiceType') as 'cloned' | 'standard' | null
+  const voiceId = searchParams.get('voiceId') // ElevenLabs voice ID (if cloned)
+  const voice = searchParams.get('voice') as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' | null // OpenAI voice (if standard)
+
   const [isMuted, setIsMuted] = useState(false)
   const [showTranscript, setShowTranscript] = useState(true)
 
@@ -48,6 +53,9 @@ export default function VoiceCallPage() {
     personalityDescription,
     // Use local-user UUID for local authentication (matches database setup)
     userId: user?.id || '00000000-0000-0000-0000-000000000001',
+    voiceType: voiceType || 'standard',
+    voiceId: voiceId || undefined,
+    voice: voice || 'alloy',
     onError: (error) => {
       console.error('WebRTC error:', error)
     }

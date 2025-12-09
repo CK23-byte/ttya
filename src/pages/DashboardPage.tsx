@@ -155,6 +155,17 @@ export default function DashboardPage() {
         relationship: profile.relationship || '',
         description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
       })
+
+      // Add voice config if available
+      if (profileData.voiceConfig) {
+        params.append('voiceType', profileData.voiceConfig.type)
+        if (profileData.voiceConfig.type === 'cloned' && profileData.voiceConfig.clonedVoiceId) {
+          params.append('voiceId', profileData.voiceConfig.clonedVoiceId)
+        } else if (profileData.voiceConfig.type === 'standard' && profileData.voiceConfig.standardVoice) {
+          params.append('voice', profileData.voiceConfig.standardVoice)
+        }
+      }
+
       navigate(`/voice-call?${params.toString()}`)
     } catch (error) {
       console.error('Error checking voice samples:', error)

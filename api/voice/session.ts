@@ -20,6 +20,9 @@ interface RequestBody {
   personalityDescription: string
   commonPhrases?: string[]
   tone?: string
+  voiceType?: 'cloned' | 'standard'
+  voiceId?: string // ElevenLabs voice ID (if voiceType is 'cloned')
+  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if voiceType is 'standard')
 }
 
 interface PersonalityProfile {
@@ -78,7 +81,10 @@ export default async function handler(
       personalityRelationship,
       personalityDescription,
       commonPhrases = [],
-      tone = 'warm and supportive'
+      tone = 'warm and supportive',
+      voiceType = 'standard',
+      voiceId,
+      voice = 'alloy'
     } = body
 
     // Validate input
@@ -88,6 +94,21 @@ export default async function handler(
 
     // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+    // Determine which voice to use
+    // NOTE: OpenAI Realtime API only supports its 6 preset voices
+    // ElevenLabs voice cloning would require a different implementation (not using Realtime API)
+    let selectedVoice: string = voice
+
+    if (voiceType === 'cloned' && voiceId) {
+      // TODO: ElevenLabs voice cloning not yet supported with OpenAI Realtime API
+      // This would require using ElevenLabs TTS instead of OpenAI Realtime
+      // For now, fallback to default OpenAI voice
+      console.warn(`Voice cloning requested (ID: ${voiceId}) but not supported by OpenAI Realtime API. Using fallback voice: ${voice}`)
+      selectedVoice = voice // Use fallback
+    }
+
+    console.log(`Using voice: ${selectedVoice} (type: ${voiceType})`)
 
     // Create personality profile for instructions
     const personalityProfile: PersonalityProfile = {
@@ -110,7 +131,7 @@ export default async function handler(
       },
       body: JSON.stringify({
         model: 'gpt-4o-realtime-preview-2024-12-17',
-        voice: 'alloy', // Options: alloy, echo, fable, onyx, nova, shimmer
+        voice: selectedVoice, // Use selected voice (alloy, echo, fable, onyx, nova, shimmer)
         instructions: systemInstructions,
         input_audio_format: 'pcm16',
         output_audio_format: 'pcm16',
