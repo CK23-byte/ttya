@@ -32,12 +32,21 @@ interface ProfileWithStats extends PersonalityProfile {
   unreadCount: number
 }
 
+// Voice configuration interface
+interface VoiceConfig {
+  type: 'cloned' | 'standard' // cloned = ElevenLabs, standard = OpenAI
+  clonedVoiceId?: string // ElevenLabs voice ID (if type is 'cloned')
+  clonedVoiceName?: string // ElevenLabs voice name
+  standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if type is 'standard')
+}
+
 // Storage interface for checking voice samples (matches StoredProfileData in ProfileImprovementPage)
 interface StoredProfileData {
   textNotes: string[]
   voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
   photos: { id: string; url: string; name: string }[]
   videos: { id: string; url: string; name: string }[]
+  voiceConfig?: VoiceConfig // Voice configuration for calls
 }
 
 export default function DashboardPage() {

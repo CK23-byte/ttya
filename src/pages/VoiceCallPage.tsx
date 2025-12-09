@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Phone, PhoneOff, Mic, MicOff, User, AlertCircle } from 'lucide-react'
 import { useWebRTC } from '../hooks/useWebRTC'
+import { useHybridVoice } from '../hooks/useHybridVoice'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import AudioVisualizer from '../components/AudioVisualizer'
 
@@ -35,23 +36,15 @@ export default function VoiceCallPage() {
   const [isMuted, setIsMuted] = useState(false)
   const [showTranscript, setShowTranscript] = useState(true)
 
-  // Initialize WebRTC connection
-  const {
-    status,
-    isConnected,
-    isSpeaking,
-    isUserSpeaking,
-    duration,
-    messages,
-    error,
-    startCall,
-    endCall
-  } = useWebRTC({
+  // Determine which voice mode to use
+  const useClonedVoice = voiceType === 'cloned' && voiceId
+
+  // Initialize WebRTC connection (for standard voices)
+  const webrtcState = useWebRTC({
     personalityId,
     personalityName,
     personalityRelationship,
     personalityDescription,
-    // Use local-user UUID for local authentication (matches database setup)
     userId: user?.id || '00000000-0000-0000-0000-000000000001',
     voiceType: voiceType || 'standard',
     voiceId: voiceId || undefined,
@@ -60,6 +53,34 @@ export default function VoiceCallPage() {
       console.error('WebRTC error:', error)
     }
   })
+
+  // Initialize Hybrid Voice (for cloned voices)
+  const hybridState = useHybridVoice({
+    personalityId,
+    personalityName,
+    personalityRelationship,
+    personalityDescription,
+    userId: user?.id || '00000000-0000-0000-0000-000000000001',
+    voiceId: voiceId || '',
+    onError: (error) => {
+      console.error('Hybrid voice error:', error)
+    }
+  })
+
+  // Use the appropriate state based on voice type
+  const {
+    status,
+    duration,
+    messages,
+    error,
+    startCall,
+    endCall
+  } = useClonedVoice ? hybridState : webrtcState
+
+  // Map different state properties
+  const isConnected = useClonedVoice ? hybridState.isListening : webrtcState.isConnected
+  const isSpeaking = useClonedVoice ? hybridState.isSpeaking : webrtcState.isSpeaking
+  const isUserSpeaking = useClonedVoice ? hybridState.isListening : webrtcState.isUserSpeaking
 
   // Auto-start call on mount
   useEffect(() => {
@@ -97,21 +118,28 @@ export default function VoiceCallPage() {
 
   // Get status display text
   const getStatusText = (): string => {
+    const modePrefix = useClonedVoice ? '🎭 ' : ''
     switch (status) {
       case 'requesting-mic':
-        return 'Requesting microphone...'
+        return `${modePrefix}Requesting microphone...`
       case 'connecting':
-        return 'Connecting...'
+        return `${modePrefix}Connecting...`
       case 'connected':
-        return 'Connected'
+        return `${modePrefix}Connected`
+      case 'listening':
+        return `${modePrefix}${formatDuration(duration)}`
+      case 'processing':
+        return `${modePrefix}Processing...`
+      case 'speaking':
+        return `${modePrefix}${formatDuration(duration)}`
       case 'active':
-        return formatDuration(duration)
+        return `${modePrefix}${formatDuration(duration)}`
       case 'ended':
         return 'Call ended'
       case 'error':
         return 'Error'
       default:
-        return 'Initializing...'
+        return `${modePrefix}Initializing...`
     }
   }
 
@@ -240,9 +268,23 @@ export default function VoiceCallPage() {
             Establishing secure connection...
           </p>
         )}
-        {status === 'active' && (
+        {(status === 'active' || status === 'listening') && (
           <p className="text-center text-gray-400 text-sm mt-6">
-            Speak naturally. The AI will respond in {personalityName}'s voice
+            {useClonedVoice ? (
+              <>Speak naturally. The AI will respond with the cloned voice of {personalityName}</>
+            ) : (
+              <>Speak naturally. The AI will respond in {personalityName}'s voice</>
+            )}
+          </p>
+        )}
+        {status === 'processing' && (
+          <p className="text-center text-gray-400 text-sm mt-6">
+            Processing your message...
+          </p>
+        )}
+        {status === 'speaking' && (
+          <p className="text-center text-gray-400 text-sm mt-6">
+            {personalityName} is speaking...
           </p>
         )}
       </div>
