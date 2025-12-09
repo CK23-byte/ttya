@@ -451,12 +451,22 @@ export default function ProfileImprovementPage() {
         const blob = new Blob(audioChunksRef.current, { type: mimeType })
         console.log('✅ Created audio blob:', blob.size, 'bytes, type:', mimeType)
 
+        // IMPORTANT: Capture recordingTime BEFORE resetting
+        const capturedDuration = recordingTime
+
         const newSample = {
           id: `voice_${Date.now()}`,
           blob: blob,
-          duration: recordingTime,
+          duration: capturedDuration, // ✅ Use captured value
           name: `Voice Sample ${profileData.voiceSamples.length + 1}`
         }
+
+        console.log('📝 Saving voice sample:', {
+          id: newSample.id,
+          blobSize: newSample.blob.size,
+          duration: newSample.duration,
+          name: newSample.name
+        })
 
         setProfileData(prev => ({
           ...prev,
@@ -525,23 +535,59 @@ export default function ProfileImprovementPage() {
     }
   }
 
-  const handleVoiceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      const id = `voice_${Date.now()}`
-      setProfileData(prev => ({
-        ...prev,
-        voiceSamples: [
-          ...prev.voiceSamples,
-          {
-            id,
-            blob: file,
-            duration: 0,
-            name: file.name
-          }
-        ]
-      }))
+      try {
+        // Read audio duration from file
+        const audioDuration = await getAudioDuration(file)
+
+        const id = `voice_${Date.now()}`
+        setProfileData(prev => ({
+          ...prev,
+          voiceSamples: [
+            ...prev.voiceSamples,
+            {
+              id,
+              blob: file,
+              duration: audioDuration, // ✅ Actual duration from file
+              name: file.name
+            }
+          ]
+        }))
+
+        console.log('✅ Voice file uploaded:', {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          duration: audioDuration
+        })
+      } catch (error) {
+        console.error('Error reading audio duration:', error)
+        alert('Failed to read audio file. Please try again.')
+      }
     }
+  }
+
+  // Helper function to get audio duration from file
+  const getAudioDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const audio = new Audio()
+      const objectUrl = URL.createObjectURL(file)
+
+      audio.addEventListener('loadedmetadata', () => {
+        URL.revokeObjectURL(objectUrl)
+        const duration = Math.floor(audio.duration)
+        resolve(duration)
+      })
+
+      audio.addEventListener('error', () => {
+        URL.revokeObjectURL(objectUrl)
+        reject(new Error('Failed to load audio'))
+      })
+
+      audio.src = objectUrl
+    })
   }
 
   const handleDeleteVoice = (id: string) => {
