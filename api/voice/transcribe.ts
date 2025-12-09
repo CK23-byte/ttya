@@ -64,7 +64,7 @@ export default async function handler(
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         ...formData.getHeaders()
       },
-      body: formData.getBuffer()
+      body: formData as any // FormData stream is compatible with fetch body
     })
 
     if (!response.ok) {
