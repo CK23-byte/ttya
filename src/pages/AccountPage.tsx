@@ -12,30 +12,71 @@ import {
   Coins,
   Gift,
   History,
-  LogOut,
   User,
   Mail,
   Crown,
   Sparkles,
   ExternalLink,
+  Key,
+  Lock,
+  Edit3,
+  Check,
+  X,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { CREDIT_PRICING } from '../types/database'
+import Header from '../components/Header'
 
 export default function AccountPage() {
   const navigate = useNavigate()
-  const { user, profile, credits, signOut, isConfigured } = useSupabaseAuth()
-  const [isLoading, setIsLoading] = useState(false)
+  const { user, profile, credits, isConfigured } = useSupabaseAuth()
 
-  const handleSignOut = async () => {
-    setIsLoading(true)
-    await signOut()
-    navigate('/')
-  }
+  // Profile editing
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [displayName, setDisplayName] = useState(profile?.display_name || '')
+
+  // Password change
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
 
   const handleBuyCredits = async (packageId: string) => {
     // TODO: Implement Stripe checkout
     alert(`Stripe checkout voor ${packageId} komt binnenkort!`)
+  }
+
+  const handleSaveName = async () => {
+    // TODO: Implement saving display name to Supabase profile
+    setIsEditingName(false)
+    alert('Display name opslaan komt binnenkort!')
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordSuccess(false)
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Nieuwe wachtwoorden komen niet overeen')
+      return
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('Wachtwoord moet minimaal 8 tekens zijn')
+      return
+    }
+
+    // TODO: Implement password change with Supabase
+    setPasswordSuccess(true)
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setIsChangingPassword(false)
+
+    alert('Wachtwoord wijzigen komt binnenkort!')
   }
 
   // Redirect if not logged in with Supabase
@@ -64,46 +105,207 @@ export default function AccountPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Terug</span>
-          </button>
-          <h1 className="text-xl font-bold text-gray-800">Mijn Account</h1>
-          <div className="w-20" />
-        </div>
-      </header>
+      <Header variant="transparent" />
 
       <main className="max-w-4xl mx-auto px-6 py-8">
+        {/* Page Title */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Terug naar Dashboard</span>
+          </button>
+          <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
+          <p className="text-gray-600 mt-2">Beheer je profiel, wachtwoord en abonnement</p>
+        </div>
+
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-rose-100 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-orange-600" />
-            </div>
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <User className="w-5 h-5 text-orange-500" />
+            Profiel Informatie
+          </h3>
+
+          <div className="space-y-4">
+            {/* Display Name */}
             <div>
-              <h2 className="text-xl font-bold text-gray-800">
-                {profile?.display_name || 'Gebruiker'}
-              </h2>
-              <div className="flex items-center gap-2 text-gray-600">
-                <Mail className="w-4 h-4" />
-                <span className="text-sm">{user.email}</span>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Weergavenaam</label>
+              {isEditingName ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Je naam"
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                  >
+                    <Check className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setIsEditingName(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <span className="text-gray-900">{profile?.display_name || 'Geen naam ingesteld'}</span>
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    className="flex items-center gap-2 text-orange-600 hover:text-orange-700 transition"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span className="text-sm font-medium">Bewerken</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Email (read-only) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">E-mailadres</label>
+              <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-lg">
+                <Mail className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-900">{user.email}</span>
               </div>
             </div>
           </div>
+        </div>
 
-          <button
-            onClick={handleSignOut}
-            disabled={isLoading}
-            className="flex items-center gap-2 text-red-600 hover:text-red-700 transition"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="text-sm font-medium">Uitloggen</span>
-          </button>
+        {/* Password Change Card */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Key className="w-5 h-5 text-orange-500" />
+            Wachtwoord Wijzigen
+          </h3>
+
+          {!isChangingPassword ? (
+            <button
+              onClick={() => setIsChangingPassword(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
+            >
+              <Lock className="w-4 h-4" />
+              Wachtwoord wijzigen
+            </button>
+          ) : (
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Huidig wachtwoord</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nieuw wachtwoord</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
+                  minLength={8}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bevestig nieuw wachtwoord</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
+                  minLength={8}
+                />
+              </div>
+
+              {passwordError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {passwordError}
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  Wachtwoord succesvol gewijzigd!
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  Opslaan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsChangingPassword(false)
+                    setCurrentPassword('')
+                    setNewPassword('')
+                    setConfirmPassword('')
+                    setPasswordError('')
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                >
+                  Annuleren
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* Subscription Management Card */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-orange-500" />
+            Abonnement Beheren
+          </h3>
+
+          <div className="space-y-4">
+            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-gray-900">Huidige plan</span>
+                <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-sm font-medium">
+                  Free
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">
+                Je gebruikt momenteel het gratis plan met basisfeatures.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => navigate('/pricing')}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg hover:from-orange-600 hover:to-rose-600 transition font-semibold flex items-center justify-center gap-2"
+              >
+                <Crown className="w-4 h-4" />
+                Upgrade naar Pro
+              </button>
+              <button
+                onClick={() => alert('Abonnement annuleren komt binnenkort!')}
+                className="px-4 py-3 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition font-medium"
+              >
+                Annuleren
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Credits Card */}

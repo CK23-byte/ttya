@@ -17,7 +17,6 @@ import {
   Video,
   Lock,
   Shield,
-  Upload,
   Crown,
   Zap,
   Check,
@@ -143,7 +142,7 @@ export default function LandingPage() {
       {/* Version Badge */}
       <div className="fixed top-4 left-4 z-50">
         <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
-          <span className="text-xs font-semibold text-gray-600">v2.3.1</span>
+          <span className="text-xs font-semibold text-gray-600">v2.4.0</span>
         </div>
       </div>
 
@@ -960,44 +959,6 @@ export default function LandingPage() {
             <p className="text-sm text-purple-200 mt-4">
               Fine-tune your digital personality • Available for loved ones forever
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* How It Works */}
-      <div className="py-16">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1 bg-orange-100 text-orange-600 rounded-full text-sm font-semibold mb-4">
-              Simple Setup
-            </span>
-            <h3 className="text-3xl font-bold text-gray-900">
-              Start Chatting in 2 Steps
-            </h3>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-12 max-w-3xl mx-auto">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
-                <Upload className="w-10 h-10 text-white" />
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-orange-600 font-bold text-xl">1</span>
-              </div>
-              <h4 className="font-bold text-gray-900 mb-2 text-lg">Upload Your Conversations</h4>
-              <p className="text-gray-600">Export from WhatsApp, Messenger, Telegram, or any messaging app. AI learns their personality instantly.</p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
-                <MessageCircle className="w-10 h-10 text-white" />
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-orange-600 font-bold text-xl">2</span>
-              </div>
-              <h4 className="font-bold text-gray-900 mb-2 text-lg">Start Chatting</h4>
-              <p className="text-gray-600">Have meaningful conversations whenever you want. It's that simple.</p>
-            </div>
           </div>
         </div>
       </div>

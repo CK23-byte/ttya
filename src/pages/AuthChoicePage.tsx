@@ -4,6 +4,7 @@
  * Allows users to choose between local (master password) or cloud (email) authentication
  */
 
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Shield, Mail, Smartphone, Cloud, ArrowLeft, Heart, Gift } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
@@ -16,8 +17,14 @@ export default function AuthChoicePage() {
   const { isSetupComplete, isAuthenticated } = useAuth()
 
   // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (supabaseUser || isAuthenticated) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [supabaseUser, isAuthenticated, navigate])
+
+  // Show nothing while redirecting (prevents flash of content)
   if (supabaseUser || isAuthenticated) {
-    navigate('/dashboard')
     return null
   }
 

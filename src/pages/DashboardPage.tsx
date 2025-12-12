@@ -10,17 +10,18 @@ import { useNavigate } from 'react-router-dom'
 import {
   Plus,
   MessageCircle,
-  LogOut,
   Clock,
-  Heart,
   Phone,
   Video,
-  Upload
+  Upload,
+  CreditCard,
+  Crown,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePayment } from '../contexts/PaymentContext'
 import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile, Message } from '../types'
+import Header from '../components/Header'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
 const PROFILES_STORAGE_KEY = 'personality_profiles'
@@ -31,9 +32,26 @@ interface ProfileWithStats extends PersonalityProfile {
   unreadCount: number
 }
 
+// Voice configuration interface
+interface VoiceConfig {
+  type: 'cloned' | 'standard' // cloned = ElevenLabs, standard = OpenAI
+  clonedVoiceId?: string // ElevenLabs voice ID (if type is 'cloned')
+  clonedVoiceName?: string // ElevenLabs voice name
+  standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if type is 'standard')
+}
+
+// Storage interface for checking voice samples (matches StoredProfileData in ProfileImprovementPage)
+interface StoredProfileData {
+  textNotes: string[]
+  voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
+  photos: { id: string; url: string; name: string }[]
+  videos: { id: string; url: string; name: string }[]
+  voiceConfig?: VoiceConfig // Voice configuration for calls
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const { isAuthenticated, encryptionKey, logout } = useAuth()
+  const { isAuthenticated, encryptionKey } = useAuth()
   const { subscription } = usePayment()
   const [profiles, setProfiles] = useState<ProfileWithStats[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -122,6 +140,50 @@ export default function DashboardPage() {
     return messageDate.toLocaleDateString()
   }
 
+  const handleStartCall = async (profile: ProfileWithStats) => {
+    if (!encryptionKey) return
+
+    try {
+      // Check if voice samples exist for this profile
+      const profileData = await getSecure<StoredProfileData>(
+        `profile_data_${profile.id}`,
+        encryptionKey
+      )
+
+      if (!profileData || !profileData.voiceSamples || profileData.voiceSamples.length === 0) {
+        // No voice samples - redirect to improvement page
+        alert('Please add a voice sample first to enable voice calls!')
+        navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+        return
+      }
+
+      // Voice samples exist - navigate to call page
+      const params = new URLSearchParams({
+        personalityId: profile.id,
+        name: profile.name,
+        relationship: profile.relationship || '',
+        description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
+      })
+
+      // Add voice config if available
+      if (profileData.voiceConfig) {
+        params.append('voiceType', profileData.voiceConfig.type)
+        if (profileData.voiceConfig.type === 'cloned' && profileData.voiceConfig.clonedVoiceId) {
+          params.append('voiceId', profileData.voiceConfig.clonedVoiceId)
+        } else if (profileData.voiceConfig.type === 'standard' && profileData.voiceConfig.standardVoice) {
+          params.append('voice', profileData.voiceConfig.standardVoice)
+        }
+      }
+
+      navigate(`/voice-call?${params.toString()}`)
+    } catch (error) {
+      console.error('Error checking voice samples:', error)
+      // On error, show improvement page to be safe
+      alert('Please add a voice sample to enable voice calls!')
+      navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -133,48 +195,48 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/')}
-                className="flex items-center gap-2 hover:opacity-80 transition"
-                title="Home"
-              >
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center">
-                  <Heart className="w-5 h-5 text-white" fill="currentColor" />
-                </div>
-                <span className="font-bold text-xl text-gray-800 hidden sm:inline">TalkToYouAI</span>
-              </button>
-              <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                v2.3.1
-              </span>
+      <Header variant="transparent" />
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title with Subscription Info */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">My Conversations</h1>
+              <p className="text-gray-600">
+                {profiles.length === 0
+                  ? 'Start chatting with AI personalities'
+                  : `You have ${profiles.length} active conversation${profiles.length === 1 ? '' : 's'}`
+                }
+              </p>
             </div>
 
+            {/* Subscription Badge */}
             <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-gray-800">My Chats</p>
-                <p className="text-xs text-gray-500">
-                  {subscription?.plan === 'free' && `${profiles.length}/1 profile`}
-                  {subscription?.plan === 'pro' && `Pro Plan`}
-                  {subscription?.plan === 'lifetime' && `Lifetime`}
-                </p>
-              </div>
+              {subscription && (
+                <div className="px-4 py-2 bg-white rounded-lg shadow-sm border border-orange-200">
+                  <div className="flex items-center gap-2">
+                    {subscription.plan === 'pro' && <Crown className="w-4 h-4 text-orange-500" />}
+                    {subscription.plan === 'lifetime' && <Crown className="w-4 h-4 text-purple-500" />}
+                    <span className="text-sm font-semibold text-gray-900">
+                      {subscription.plan === 'free' && `Free Plan (${profiles.length}/1)`}
+                      {subscription.plan === 'pro' && 'Pro Plan'}
+                      {subscription.plan === 'lifetime' && 'Lifetime Access'}
+                    </span>
+                  </div>
+                </div>
+              )}
               <button
-                onClick={logout}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-orange-50 rounded-lg transition"
+                onClick={() => navigate('/pricing')}
+                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg hover:from-orange-600 hover:to-rose-600 transition font-medium text-sm shadow-sm flex items-center gap-2"
               >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
+                <CreditCard className="w-4 h-4" />
+                <span className="hidden sm:inline">Upgrade</span>
               </button>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {profiles.length === 0 ? (
           /* Empty State */
           <div className="text-center py-20">
@@ -267,17 +329,9 @@ export default function DashboardPage() {
                     {/* Secondary: Voice & Video */}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          const params = new URLSearchParams({
-                            personalityId: profile.id,
-                            name: profile.name,
-                            relationship: profile.relationship || '',
-                            description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
-                          })
-                          navigate(`/voice-call?${params.toString()}`)
-                        }}
+                        onClick={() => handleStartCall(profile)}
                         className="flex-1 px-3 py-2 bg-green-50 text-green-700 rounded-lg font-medium hover:bg-green-100 transition flex items-center justify-center gap-2 border border-green-200"
-                        title="Start Voice Call"
+                        title="Start Voice Call (requires voice sample)"
                       >
                         <Phone className="w-4 h-4" />
                         Call
@@ -294,9 +348,9 @@ export default function DashboardPage() {
 
                     {/* Tertiary: Improve Profile */}
                     <button
-                      onClick={() => navigate(`/living-legacy/upload-dashboard?profileId=${profile.id}`)}
+                      onClick={() => navigate(`/profile-improvement?profileId=${profile.id}`)}
                       className="w-full px-3 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition flex items-center justify-center gap-2 border border-blue-200 text-sm"
-                      title="Add chats, photos, videos or voice messages to improve this profile"
+                      title="Add text, photos, videos or voice samples to improve this profile"
                     >
                       <Upload className="w-4 h-4" />
                       Improve Profile

@@ -4,7 +4,8 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Heart, ArrowLeft, Send, Mail, CheckCircle, AlertCircle } from 'lucide-react'
+import { Send, Mail, CheckCircle, AlertCircle } from 'lucide-react'
+import Header from '../components/Header'
 
 export default function ContactPage() {
   const navigate = useNavigate()
@@ -63,28 +64,9 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate('/')}
-          >
-            <Heart className="w-6 sm:w-8 h-6 sm:h-8 text-orange-600" />
-            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
-              TalkToYouAI
-            </span>
-          </div>
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-600 hover:text-orange-600 font-medium transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">Back</span>
-          </button>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
+      {/* Header */}
+      <Header variant="transparent" />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-12">

@@ -38,6 +38,7 @@ const LivingLegacyUploadDashboard = lazy(() => import('./pages/LivingLegacyUploa
 const LivingLegacyConversationPage = lazy(() => import('./pages/LivingLegacyConversationPage'))
 const LivingLegacyConversationPageWebRTC = lazy(() => import('./pages/LivingLegacyConversationPageWebRTC'))
 const VoiceCallPage = lazy(() => import('./pages/VoiceCallPage'))
+const ProfileImprovementPage = lazy(() => import('./pages/ProfileImprovementPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
@@ -50,6 +51,12 @@ const PageLoader = () => (
 )
 
 function App() {
+  // Log app version on load
+  useEffect(() => {
+    console.log('🚀 TalkToYouAI v2.5.0 - Voice Cloning Edition')
+    console.log('📋 New features: ElevenLabs voice cloning, hybrid voice pipeline')
+  }, [])
+
   // Security: Enforce HTTPS in production
   useEffect(() => {
     if (
@@ -81,6 +88,7 @@ function App() {
                 <Route path="/personality-builder" element={<PersonalityBuilderPage />} />
                 <Route path="/video" element={<VideoPage />} />
                 <Route path="/voice-call" element={<VoiceCallPage />} />
+                <Route path="/profile-improvement" element={<ProfileImprovementPage />} />
                 <Route path="/account" element={<AccountPage />} />
                 <Route path="/living-legacy" element={<LivingLegacyPage />} />
                 <Route path="/living-legacy/auth" element={<LivingLegacyAuthPage />} />

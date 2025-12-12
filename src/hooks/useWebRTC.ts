@@ -24,6 +24,9 @@ interface UseWebRTCOptions {
   personalityRelationship: string
   personalityDescription: string
   userId: string
+  voiceType?: 'cloned' | 'standard'
+  voiceId?: string // ElevenLabs voice ID (if voiceType is 'cloned')
+  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if voiceType is 'standard')
   onTranscript?: (message: Message) => void
   onError?: (error: Error) => void
   onStatusChange?: (status: ConnectionStatus) => void
@@ -56,6 +59,9 @@ export function useWebRTC(options: UseWebRTCOptions) {
     personalityRelationship,
     personalityDescription,
     userId,
+    voiceType = 'standard',
+    voiceId,
+    voice = 'alloy',
     onTranscript,
     onError,
     onStatusChange
@@ -109,7 +115,10 @@ export function useWebRTC(options: UseWebRTCOptions) {
           userId,
           personalityName,
           personalityRelationship,
-          personalityDescription
+          personalityDescription,
+          voiceType,
+          voiceId,
+          voice
         })
       })
 
