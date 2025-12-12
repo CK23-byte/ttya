@@ -51,6 +51,12 @@ const PageLoader = () => (
 )
 
 function App() {
+  // Log app version on load
+  useEffect(() => {
+    console.log('🚀 TalkToYouAI v2.5.0 - Voice Cloning Edition')
+    console.log('📋 New features: ElevenLabs voice cloning, hybrid voice pipeline')
+  }, [])
+
   // Security: Enforce HTTPS in production
   useEffect(() => {
     if (
