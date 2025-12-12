@@ -55,6 +55,8 @@ function App() {
   useEffect(() => {
     console.log('🚀 TalkToYouAI v2.5.0 - Voice Cloning Edition')
     console.log('📋 New features: ElevenLabs voice cloning, hybrid voice pipeline')
+    console.log('⏰ Deployed:', new Date().toISOString())
+    console.log('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
   }, [])
 
   // Security: Enforce HTTPS in production
