@@ -6,7 +6,6 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
-import FormData from 'form-data'
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
 const SUPABASE_URL = process.env.SUPABASE_URL
@@ -86,14 +85,14 @@ export default async function handler(
       })
     }
 
-    // Create FormData for ElevenLabs API
+    // Create FormData for ElevenLabs API (using native FormData with Blob)
     const formData = new FormData()
 
-    // Add the audio file (Node.js FormData accepts Buffer directly)
-    formData.append('files', audioBuffer, {
-      filename: `voice_sample.${extension}`,
-      contentType: mimeType
-    })
+    // Convert Buffer to Blob for native FormData
+    const audioBlob = new Blob([audioBuffer], { type: mimeType })
+
+    // Add the audio file (native FormData needs File or Blob)
+    formData.append('files', audioBlob, `voice_sample.${extension}`)
 
     // Add voice metadata
     formData.append('name', voiceName)
@@ -113,10 +112,10 @@ export default async function handler(
     const elevenlabsResponse = await fetch('https://api.elevenlabs.io/v1/voices/add', {
       method: 'POST',
       headers: {
-        'xi-api-key': ELEVENLABS_API_KEY,
-        ...formData.getHeaders()
+        'xi-api-key': ELEVENLABS_API_KEY
+        // Don't set Content-Type header - fetch will set it automatically with boundary
       },
-      body: formData as any // FormData stream is compatible with fetch body
+      body: formData
     })
 
     if (!elevenlabsResponse.ok) {
