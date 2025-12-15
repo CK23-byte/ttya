@@ -400,7 +400,7 @@ export default function ChatPage() {
               </button>
               <h2 className={`text-xl font-semibold ${currentTheme.text}`}>Chats</h2>
               <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded">
-                v2.4.0
+                v2.5.1
               </span>
             </div>
             <div className="flex items-center gap-2">
