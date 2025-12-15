@@ -24,13 +24,16 @@ import {
   Trash2,
   Play,
   Pause,
-  Save
+  Save,
+  Edit2,
+  HelpCircle
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
+import JSZip from 'jszip'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
 
@@ -86,6 +89,9 @@ export default function ProfileImprovementPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isCloningVoice, setIsCloningVoice] = useState(false)
   const [cloneError, setCloneError] = useState<string | null>(null)
+  const [editingItemId, setEditingItemId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatFileInputRef = useRef<HTMLInputElement>(null)
@@ -376,7 +382,7 @@ export default function ProfileImprovementPage() {
 
   const handleChatFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !profile) return
 
     try {
       if (file.name.endsWith('.txt')) {
@@ -394,8 +400,89 @@ export default function ProfileImprovementPage() {
           alert('No messages found in the file. Please check the file format.')
         }
       } else if (file.name.endsWith('.zip')) {
-        // For ZIP files, we'll need to use a library like jszip
-        alert('ZIP file support coming soon! For now, please extract the ZIP file and upload the .txt file inside.')
+        // Handle ZIP files with text, photos, and videos
+        const zip = new JSZip()
+        const zipContents = await zip.loadAsync(file)
+
+        let textMessages: string[] = []
+        let photoCount = 0
+        let videoCount = 0
+
+        // Process all files in ZIP
+        for (const [filename, zipEntry] of Object.entries(zipContents.files)) {
+          if (zipEntry.dir) continue // Skip directories
+
+          if (filename.endsWith('.txt')) {
+            // Extract and parse text files
+            const text = await zipEntry.async('text')
+            const messages = parseChatFile(text)
+            textMessages = [...textMessages, ...messages]
+          } else if (filename.match(/\.(jpg|jpeg|png|gif|webp|heic)$/i)) {
+            // Extract and upload photos
+            const blob = await zipEntry.async('blob')
+            const photoFile = new File([blob], filename, { type: `image/${filename.split('.').pop()}` })
+
+            try {
+              const { publicUrl, path } = await uploadFileToStorage(
+                photoFile,
+                'user-uploads',
+                `profiles/${profile.id}/photos`
+              )
+
+              const id = `photo_${Date.now()}_${Math.random()}`
+              setProfileData(prev => ({
+                ...prev,
+                photos: [
+                  ...prev.photos,
+                  { id, url: publicUrl, name: filename, storagePath: path }
+                ]
+              }))
+              photoCount++
+            } catch (error) {
+              console.error('Error uploading photo from ZIP:', error)
+            }
+          } else if (filename.match(/\.(mp4|mov|avi|webm|mkv)$/i)) {
+            // Extract and upload videos
+            const blob = await zipEntry.async('blob')
+            const videoFile = new File([blob], filename, { type: `video/${filename.split('.').pop()}` })
+
+            try {
+              const { publicUrl, path } = await uploadFileToStorage(
+                videoFile,
+                'user-uploads',
+                `profiles/${profile.id}/videos`
+              )
+
+              const id = `video_${Date.now()}_${Math.random()}`
+              setProfileData(prev => ({
+                ...prev,
+                videos: [
+                  ...prev.videos,
+                  { id, url: publicUrl, name: filename, storagePath: path }
+                ]
+              }))
+              videoCount++
+            } catch (error) {
+              console.error('Error uploading video from ZIP:', error)
+            }
+          }
+        }
+
+        // Update text notes
+        if (textMessages.length > 0) {
+          setProfileData(prev => ({
+            ...prev,
+            textNotes: [...prev.textNotes, ...textMessages]
+          }))
+        }
+
+        // Show summary
+        alert(
+          `Successfully imported from ZIP:\n` +
+          `- ${textMessages.length} text messages\n` +
+          `- ${photoCount} photos\n` +
+          `- ${videoCount} videos`
+        )
       } else {
         alert('Please upload a .txt or .zip file')
       }
@@ -716,6 +803,40 @@ export default function ProfileImprovementPage() {
     }))
   }
 
+  // Rename functions
+  const handleRenameVoice = (id: string, newName: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      voiceSamples: prev.voiceSamples.map(v =>
+        v.id === id ? { ...v, name: newName } : v
+      )
+    }))
+    setEditingItemId(null)
+    setEditingName('')
+  }
+
+  const handleRenamePhoto = (id: string, newName: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      photos: prev.photos.map(p =>
+        p.id === id ? { ...p, name: newName } : p
+      )
+    }))
+    setEditingItemId(null)
+    setEditingName('')
+  }
+
+  const handleRenameVideo = (id: string, newName: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      videos: prev.videos.map(v =>
+        v.id === id ? { ...v, name: newName } : v
+      )
+    }))
+    setEditingItemId(null)
+    setEditingName('')
+  }
+
   const handleCloneVoice = async () => {
     if (!profileData.voiceSamples || profileData.voiceSamples.length === 0) {
       alert('Please record or upload a voice sample first!')
@@ -920,7 +1041,54 @@ export default function ProfileImprovementPage() {
           <div className="bg-white rounded-2xl p-6 shadow-md">
             <div className="flex items-center gap-3 mb-4">
               <FileText className="w-6 h-6 text-orange-500" />
-              <h2 className="text-xl font-bold text-gray-900">Text Notes & Memories</h2>
+              <h2 className="flex-1 text-xl font-bold text-gray-900">Text Notes & Memories</h2>
+              <div className="relative">
+                <button
+                  onClick={() => setShowTextNotesHelp(!showTextNotesHelp)}
+                  className="p-1 text-gray-400 hover:text-orange-500 transition"
+                  title="How to import chat history"
+                >
+                  <HelpCircle className="w-5 h-5" />
+                </button>
+                {showTextNotesHelp && (
+                  <div className="absolute right-0 top-8 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-10">
+                    <h3 className="font-bold text-gray-900 mb-2">Import Chat History</h3>
+                    <div className="text-sm text-gray-600 space-y-2">
+                      <p><strong>WhatsApp:</strong></p>
+                      <ol className="list-decimal ml-4 space-y-1">
+                        <li>Open chat → Menu (⋮) → More → Export chat</li>
+                        <li>Choose "Without Media" or "Include Media"</li>
+                        <li>Save the .zip or .txt file</li>
+                        <li>Upload here using "Upload Chat File"</li>
+                      </ol>
+
+                      <p className="mt-3"><strong>iMessage:</strong></p>
+                      <ol className="list-decimal ml-4 space-y-1">
+                        <li>Use apps like "iMazing" or "Decipher TextMessage"</li>
+                        <li>Export as TXT or PDF</li>
+                        <li>Save and upload here</li>
+                      </ol>
+
+                      <p className="mt-3"><strong>Telegram:</strong></p>
+                      <ol className="list-decimal ml-4 space-y-1">
+                        <li>Settings → Advanced → Export chat history</li>
+                        <li>Choose format (HTML or JSON)</li>
+                        <li>Upload the exported file</li>
+                      </ol>
+
+                      <p className="mt-3 text-xs text-gray-500">
+                        💡 ZIP files can contain text, photos, and videos - all will be imported automatically!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowTextNotesHelp(false)}
+                      className="mt-3 w-full px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm"
+                    >
+                      Got it!
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -998,7 +1166,7 @@ export default function ProfileImprovementPage() {
             <div className="flex items-center gap-3 mb-4">
               <Mic className="w-6 h-6 text-green-500" />
               <h2 className="text-xl font-bold text-gray-900">Voice Samples</h2>
-              <span className="text-sm text-gray-500">(Required for voice calls)</span>
+              <span className="text-sm text-gray-500">(Required for voice cloning)</span>
             </div>
 
             <div className="space-y-4">
@@ -1103,7 +1271,7 @@ export default function ProfileImprovementPage() {
                     <div className="text-left">
                       <p className="font-semibold text-gray-900">🎭 Cloned Voice</p>
                       <p className="text-xs text-gray-600 mt-1">
-                        Use ElevenLabs to clone the voice sample
+                        Clone the voice for a more personalized experience
                       </p>
                       {profileData.voiceConfig?.type === 'cloned' && profileData.voiceConfig.clonedVoiceName && (
                         <p className="text-xs text-purple-600 mt-2 font-medium">
