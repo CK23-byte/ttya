@@ -126,15 +126,24 @@ export default async function handler(
     }
 
     // Return session info compatible with frontend interface
+    // Note: HeyGen returns SDP in various formats depending on API version
+    const sdpOffer = sessionData.sdp?.sdp || sessionData.sdp || ''
+
+    console.log('Preparing SDP offer:', {
+      hasSdp: !!sdpOffer,
+      sdpType: typeof sdpOffer,
+      sdpLength: typeof sdpOffer === 'string' ? sdpOffer.length : 0
+    })
+
     return res.status(200).json({
       success: true,
       id: sessionData.session_id,
       session_id: sessionData.session_id,
       offer: {
-        type: 'offer',
-        sdp: sessionData.sdp?.sdp
+        type: 'offer' as RTCSdpType,
+        sdp: sdpOffer
       },
-      ice_servers: sessionData.ice_servers2 || []
+      ice_servers: sessionData.ice_servers2 || sessionData.ice_servers || []
     })
 
   } catch (error) {

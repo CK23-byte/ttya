@@ -30,6 +30,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
+import { uploadFileToStorage, deleteFileFromStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
 
@@ -619,44 +620,85 @@ export default function ProfileImprovementPage() {
     }
   }
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
+    if (!profile) return
 
-    files.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const url = event.target?.result as string
+    for (const file of files) {
+      try {
+        console.log('Uploading photo to Supabase Storage...', {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        })
+
+        // Upload to Supabase Storage
+        const { publicUrl, path } = await uploadFileToStorage(
+          file,
+          'user-uploads',
+          `profiles/${profile.id}/photos`
+        )
+
         const id = `photo_${Date.now()}_${Math.random()}`
 
         setProfileData(prev => ({
           ...prev,
           photos: [
             ...prev.photos,
-            { id, url, name: file.name }
+            {
+              id,
+              url: publicUrl,
+              name: file.name,
+              storagePath: path // Store path for deletion
+            }
           ]
         }))
+
+        console.log('Photo uploaded successfully:', publicUrl)
+      } catch (error) {
+        console.error('Error uploading photo:', error)
+        alert(`Failed to upload ${file.name}. Please try again.`)
       }
-      reader.readAsDataURL(file)
-    })
+    }
   }
 
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const url = event.target?.result as string
-        const id = `video_${Date.now()}`
+    if (!file || !profile) return
 
-        setProfileData(prev => ({
-          ...prev,
-          videos: [
-            ...prev.videos,
-            { id, url, name: file.name }
-          ]
-        }))
-      }
-      reader.readAsDataURL(file)
+    try {
+      console.log('Uploading video to Supabase Storage...', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      })
+
+      // Upload to Supabase Storage
+      const { publicUrl, path } = await uploadFileToStorage(
+        file,
+        'user-uploads',
+        `profiles/${profile.id}/videos`
+      )
+
+      const id = `video_${Date.now()}`
+
+      setProfileData(prev => ({
+        ...prev,
+        videos: [
+          ...prev.videos,
+          {
+            id,
+            url: publicUrl,
+            name: file.name,
+            storagePath: path // Store path for deletion
+          }
+        ]
+      }))
+
+      console.log('Video uploaded successfully:', publicUrl)
+    } catch (error) {
+      console.error('Error uploading video:', error)
+      alert('Failed to upload video. Please try again.')
     }
   }
 
@@ -697,13 +739,23 @@ export default function ProfileImprovementPage() {
         name: sample.name
       })
 
-      // Get MIME type from blob
-      const mimeType = sample.blob.type || 'audio/mp4'
+      // Convert blob to File if needed
+      const originalFile = sample.blob instanceof File
+        ? sample.blob
+        : new File([sample.blob], sample.name, { type: sample.blob.type })
+
+      // Prepare audio for voice cloning (extract audio from video if needed)
+      console.log('Preparing audio for voice cloning...')
+      const audioFile = await prepareAudioForVoiceCloning(originalFile)
+
+      // Get MIME type from processed audio
+      const mimeType = audioFile.type || 'audio/mp4'
 
       console.log('Cloning voice to ElevenLabs...', {
-        audioSize: sample.blob.size,
+        audioSize: audioFile.size,
         mimeType,
-        duration: sample.duration
+        duration: sample.duration,
+        wasVideo: originalFile.type.startsWith('video/')
       })
 
       // Validate audio duration (ElevenLabs requires at least 30 seconds, recommends 1+ minute)
@@ -713,7 +765,7 @@ export default function ProfileImprovementPage() {
         return
       }
 
-      // Convert blob to base64
+      // Convert audio file to base64
       const reader = new FileReader()
       const base64Promise = new Promise<string>((resolve) => {
         reader.onloadend = () => {
@@ -722,7 +774,7 @@ export default function ProfileImprovementPage() {
           const base64Data = base64.split(',')[1]
           resolve(base64Data)
         }
-        reader.readAsDataURL(sample.blob)
+        reader.readAsDataURL(audioFile) // Use processed audioFile instead of sample.blob
       })
 
       const audioBase64 = await base64Promise
