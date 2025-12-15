@@ -155,7 +155,15 @@ export default async function handler(
       return res.status(500).json({
         error: 'Invalid response from HeyGen',
         details: 'SDP is empty - session created but no media description received',
-        hint: 'Check HeyGen API key permissions and avatar availability'
+        hint: 'Check HeyGen API key permissions and avatar availability',
+        heygenResponse: {
+          session_id: sessionData.session_id,
+          sdp: sessionData.sdp,
+          sdp_sdp: sessionData.sdp?.sdp,
+          allKeys: Object.keys(sessionData),
+          ice_servers: sessionData.ice_servers,
+          ice_servers2: sessionData.ice_servers2
+        }
       })
     }
 
