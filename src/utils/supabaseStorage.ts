@@ -4,7 +4,7 @@
  * Handles file uploads to Supabase Storage for large files (videos, photos, audio)
  */
 
-import { supabase } from '../config/supabase'
+import { supabase } from '../lib/supabase'
 
 export interface UploadResult {
   url: string

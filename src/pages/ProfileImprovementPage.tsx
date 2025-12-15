@@ -30,7 +30,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
-import { uploadFileToStorage, deleteFileFromStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
+import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
 
