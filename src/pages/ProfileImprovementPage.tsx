@@ -1008,9 +1008,17 @@ export default function ProfileImprovementPage() {
         {/* Profile Header */}
         <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center text-white font-semibold text-2xl shadow-lg">
-              {profile.name.charAt(0).toUpperCase()}
-            </div>
+            {profileData.photos.length > 0 ? (
+              <img
+                src={profileData.photos[0].url}
+                alt={profile.name}
+                className="w-20 h-20 rounded-full object-cover shadow-lg border-4 border-white"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center text-white font-semibold text-2xl shadow-lg">
+                {profile.name.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-1">{profile.name}</h1>
               <p className="text-gray-600 capitalize">{profile.relationship}</p>
@@ -1227,14 +1235,49 @@ export default function ProfileImprovementPage() {
                         )}
                       </button>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-700">{sample.name}</p>
+                        {editingItemId === sample.id ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRenameVoice(sample.id, editingName)
+                              if (e.key === 'Escape') {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            onBlur={() => {
+                              if (editingName.trim()) handleRenameVoice(sample.id, editingName)
+                              else {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            className="w-full px-2 py-1 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="font-medium text-gray-700">{sample.name}</p>
+                        )}
                         {sample.duration > 0 && (
                           <p className="text-sm text-gray-500">{formatTime(sample.duration)}</p>
                         )}
                       </div>
                       <button
+                        onClick={() => {
+                          setEditingItemId(sample.id)
+                          setEditingName(sample.name)
+                        }}
+                        className="text-gray-500 hover:text-green-600 transition"
+                        title="Rename"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => handleDeleteVoice(sample.id)}
                         className="text-red-500 hover:text-red-700 transition"
+                        title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1414,12 +1457,52 @@ export default function ProfileImprovementPage() {
                         alt={photo.name}
                         className="w-full h-32 object-cover rounded-lg"
                       />
-                      <button
-                        onClick={() => handleDeletePhoto(photo.id)}
-                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg">
+                        {editingItemId === photo.id ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRenamePhoto(photo.id, editingName)
+                              if (e.key === 'Escape') {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            onBlur={() => {
+                              if (editingName.trim()) handleRenamePhoto(photo.id, editingName)
+                              else {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            className="w-full px-2 py-1 text-xs border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="text-xs text-white truncate">{photo.name}</p>
+                        )}
+                      </div>
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <button
+                          onClick={() => {
+                            setEditingItemId(photo.id)
+                            setEditingName(photo.name)
+                          }}
+                          className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition"
+                          title="Rename"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePhoto(photo.id)}
+                          className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition"
+                          title="Delete"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1458,10 +1541,47 @@ export default function ProfileImprovementPage() {
                       className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100"
                     >
                       <VideoIcon className="w-5 h-5 text-purple-500" />
-                      <p className="flex-1 font-medium text-gray-700">{video.name}</p>
+                      <div className="flex-1">
+                        {editingItemId === video.id ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRenameVideo(video.id, editingName)
+                              if (e.key === 'Escape') {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            onBlur={() => {
+                              if (editingName.trim()) handleRenameVideo(video.id, editingName)
+                              else {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            className="w-full px-2 py-1 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="font-medium text-gray-700">{video.name}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setEditingItemId(video.id)
+                          setEditingName(video.name)
+                        }}
+                        className="text-gray-500 hover:text-purple-600 transition"
+                        title="Rename"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => handleDeleteVideo(video.id)}
                         className="text-red-500 hover:text-red-700 transition"
+                        title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
