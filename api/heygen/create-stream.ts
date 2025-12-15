@@ -109,9 +109,12 @@ export default async function handler(
     }
 
     const heygenData = await heygenResponse.json()
+    console.log('HeyGen full response:', JSON.stringify(heygenData, null, 2))
     console.log('HeyGen streaming session created:', {
       session_id: heygenData.data?.session_id,
-      hasOffer: !!heygenData.data?.sdp?.sdp
+      hasOffer: !!heygenData.data?.sdp?.sdp,
+      hasSdpDirect: !!heygenData.data?.sdp,
+      sdpKeys: heygenData.data?.sdp ? Object.keys(heygenData.data.sdp) : []
     })
 
     // Extract session data
@@ -132,8 +135,20 @@ export default async function handler(
     console.log('Preparing SDP offer:', {
       hasSdp: !!sdpOffer,
       sdpType: typeof sdpOffer,
-      sdpLength: typeof sdpOffer === 'string' ? sdpOffer.length : 0
+      sdpLength: typeof sdpOffer === 'string' ? sdpOffer.length : 0,
+      sdpPreview: typeof sdpOffer === 'string' ? sdpOffer.substring(0, 100) : 'NOT A STRING',
+      rawSdpObject: typeof sdpOffer !== 'string' ? JSON.stringify(sdpOffer) : null
     })
+
+    // Validate SDP
+    if (!sdpOffer || (typeof sdpOffer === 'string' && sdpOffer.length === 0)) {
+      console.error('Empty SDP received from HeyGen!')
+      return res.status(500).json({
+        error: 'Invalid response from HeyGen',
+        details: 'SDP is empty - session created but no media description received',
+        hint: 'Check HeyGen API key permissions and avatar availability'
+      })
+    }
 
     return res.status(200).json({
       success: true,

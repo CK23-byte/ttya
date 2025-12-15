@@ -103,6 +103,22 @@ export default function VideoPage() {
       const session = await createHeyGenStreamingSession(avatarId, 'medium')
       setSessionId(session.session_id)
 
+      console.log('Session offer received:', {
+        hasOffer: !!session.offer,
+        offerType: session.offer?.type,
+        sdpLength: session.offer?.sdp?.length || 0,
+        sdpPreview: session.offer?.sdp?.substring(0, 100) || 'EMPTY'
+      })
+
+      // Validate SDP
+      if (!session.offer || !session.offer.sdp || session.offer.sdp.length === 0) {
+        throw new Error('Invalid SDP received from HeyGen - SDP is empty')
+      }
+
+      if (!session.offer.sdp.startsWith('v=')) {
+        throw new Error(`Invalid SDP format - expected to start with 'v=' but got: ${session.offer.sdp.substring(0, 50)}`)
+      }
+
       // Set up WebRTC peer connection
       const pc = new RTCPeerConnection({
         iceServers: session.ice_servers || [{ urls: 'stun:stun.l.google.com:19302' }],
