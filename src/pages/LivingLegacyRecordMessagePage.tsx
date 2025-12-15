@@ -214,7 +214,7 @@ export default function LivingLegacyRecordMessagePage() {
         // TODO: Add videoUrl and audioUrl after upload
       }
 
-      const response = await fetch('/api/legacy/messages', {
+      const response = await fetch('/api/legacy?action=messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(messageData)

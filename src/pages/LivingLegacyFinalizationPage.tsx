@@ -74,7 +74,7 @@ export default function LivingLegacyFinalizationPage() {
     setError(null)
 
     try {
-      const response = await fetch('/api/legacy/finalize', {
+      const response = await fetch('/api/legacy?action=finalize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profileId })

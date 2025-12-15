@@ -264,7 +264,7 @@ export default function LivingLegacyOnboardingPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('/api/legacy/create-profile', {
+      const response = await fetch('/api/legacy?action=create-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

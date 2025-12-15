@@ -5,7 +5,6 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import FormData from 'form-data'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
@@ -47,12 +46,13 @@ export default async function handler(
       mimeType
     })
 
-    // Create FormData for Whisper API
+    // Create FormData for Whisper API (using native FormData with Blob)
     const formData = new FormData()
-    formData.append('file', audioBuffer, {
-      filename: 'audio.webm',
-      contentType: mimeType
-    })
+
+    // Convert Buffer to Blob for native FormData
+    const audioBlob = new Blob([audioBuffer], { type: mimeType })
+
+    formData.append('file', audioBlob, 'audio.webm')
     formData.append('model', 'whisper-1')
     formData.append('language', 'en') // Optional: specify language
     formData.append('response_format', 'json')
@@ -61,10 +61,10 @@ export default async function handler(
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        ...formData.getHeaders()
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        // Don't set Content-Type header - fetch will set it automatically with boundary
       },
-      body: formData as any // FormData stream is compatible with fetch body
+      body: formData
     })
 
     if (!response.ok) {
