@@ -55,7 +55,14 @@ export async function createHeyGenStreamingSession(
   if (!response.ok) {
     const error = await response.json()
     console.error('HeyGen streaming session error:', error)
-    throw new Error(error.message || 'Failed to create streaming session')
+    console.error('Full error details:', {
+      status: response.status,
+      error: error.error,
+      details: error.details,
+      hint: error.hint,
+      message: error.message
+    })
+    throw new Error(error.details || error.message || 'Failed to create streaming session')
   }
 
   const data = await response.json()

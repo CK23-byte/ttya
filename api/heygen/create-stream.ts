@@ -90,20 +90,29 @@ export default async function handler(
 
     if (!heygenResponse.ok) {
       const error = await heygenResponse.text()
-      console.error('HeyGen API error:', error)
+      console.error('❌ HeyGen API error response:', {
+        status: heygenResponse.status,
+        statusText: heygenResponse.statusText,
+        body: error
+      })
 
       // Parse error if it's JSON
       let errorMessage = 'Failed to create streaming session'
+      let errorDetail = error
       try {
         const errorJson = JSON.parse(error)
-        errorMessage = errorJson.message || errorJson.error || errorMessage
+        console.error('❌ Parsed HeyGen error:', errorJson)
+        errorMessage = errorJson.message || errorJson.error || errorJson.detail || errorMessage
+        errorDetail = JSON.stringify(errorJson, null, 2)
       } catch (e) {
         errorMessage = error || errorMessage
+        errorDetail = error
       }
 
       return res.status(heygenResponse.status).json({
         error: 'Failed to create streaming session',
-        details: errorMessage,
+        details: `HeyGen API (${heygenResponse.status}): ${errorMessage}`,
+        rawError: errorDetail,
         hint: 'Check that your HeyGen API key has streaming permissions and avatar ID is valid'
       })
     }
