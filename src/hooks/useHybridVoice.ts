@@ -76,6 +76,8 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
   const startTimeRef = useRef<number | null>(null)
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const conversationHistoryRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
+  const isStartingRef = useRef<boolean>(false)
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Update status helper
   const updateStatus = useCallback((status: HybridStatus) => {
@@ -85,7 +87,14 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
 
   // Start call
   const startCall = useCallback(async () => {
+    // Prevent multiple simultaneous starts
+    if (isStartingRef.current || audioContextRef.current) {
+      console.log('Call already starting or started, ignoring duplicate startCall()')
+      return
+    }
+
     try {
+      isStartingRef.current = true
       updateStatus('requesting-mic')
 
       // Request microphone access
@@ -113,15 +122,31 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data)
+          console.log(`Audio chunk received: ${event.data.size} bytes, total chunks: ${audioChunksRef.current.length}`)
+
+          // Reset silence timeout - stop recording after 2 seconds of silence
+          if (silenceTimeoutRef.current) {
+            clearTimeout(silenceTimeoutRef.current)
+          }
+          silenceTimeoutRef.current = setTimeout(() => {
+            if (mediaRecorderRef.current?.state === 'recording' && audioChunksRef.current.length > 0) {
+              console.log('Silence detected, processing audio...')
+              mediaRecorderRef.current.stop()
+            }
+          }, 2000)
         }
       }
 
       mediaRecorder.onstop = async () => {
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current)
+          silenceTimeoutRef.current = null
+        }
         await handleRecordingStop()
       }
 
-      // Start recording with 5-second chunks
-      mediaRecorder.start(5000)
+      // Start recording with 250ms chunks for better silence detection
+      mediaRecorder.start(250)
 
       updateStatus('listening')
       setState(prev => ({ ...prev, isListening: true }))
@@ -135,9 +160,11 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
         }
       }, 1000)
 
+      isStartingRef.current = false
       console.log('Hybrid voice call started')
 
     } catch (error) {
+      isStartingRef.current = false
       console.error('Failed to start call:', error)
       updateStatus('error')
       setState(prev => ({
@@ -261,12 +288,8 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       // 4. Play audio
       await playAudio(audioBase64)
 
-      // Resume listening
-      if (mediaRecorderRef.current?.state === 'inactive') {
-        audioChunksRef.current = []
-        mediaRecorderRef.current.start(5000)
-        updateStatus('listening')
-      }
+      // Resume listening after AI finishes speaking
+      // The playAudio function will automatically resume when audio ends (see line ~310)
 
     } catch (error) {
       console.error('Processing error:', error)
@@ -277,9 +300,10 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       onError?.(error instanceof Error ? error : new Error('Processing failed'))
 
       // Resume listening even after error
-      if (mediaRecorderRef.current?.state === 'inactive') {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioChunksRef.current = []
-        mediaRecorderRef.current.start(5000)
+        mediaRecorderRef.current.start(250)
+        setState(prev => ({ ...prev, isListening: true }))
         updateStatus('listening')
       }
     }
@@ -287,7 +311,10 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
 
   // Play audio
   const playAudio = async (audioBase64: string) => {
-    if (!audioContextRef.current) return
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+      console.error('Cannot play audio: AudioContext is not available or closed')
+      return
+    }
 
     updateStatus('speaking')
     setState(prev => ({ ...prev, isSpeaking: true }))
@@ -302,23 +329,48 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       source.buffer = audioBuffer
       source.connect(audioContextRef.current.destination)
 
-      source.onended = () => {
-        setState(prev => ({ ...prev, isSpeaking: false }))
-        updateStatus('listening')
-      }
+      // Wait for audio to finish playing before resuming recording
+      await new Promise<void>((resolve) => {
+        source.onended = () => {
+          setState(prev => ({ ...prev, isSpeaking: false }))
+          console.log('Audio playback finished, resuming listening...')
+          resolve()
+        }
+        source.start()
+      })
 
-      source.start()
+      // Resume recording after AI finishes speaking
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioChunksRef.current = []
+        mediaRecorderRef.current.start(250)
+        setState(prev => ({ ...prev, isListening: true }))
+        updateStatus('listening')
+        console.log('Recording resumed')
+      }
 
     } catch (error) {
       console.error('Audio playback error:', error)
       setState(prev => ({ ...prev, isSpeaking: false }))
-      updateStatus('listening')
+
+      // Try to resume recording even after playback error
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioChunksRef.current = []
+        mediaRecorderRef.current.start(250)
+        setState(prev => ({ ...prev, isListening: true }))
+        updateStatus('listening')
+      }
     }
   }
 
   // End call
   const endCall = useCallback(async () => {
     console.log('Ending hybrid voice call')
+
+    // Clear silence timeout
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+      silenceTimeoutRef.current = null
+    }
 
     // Stop recording
     if (mediaRecorderRef.current?.state !== 'inactive') {
@@ -329,12 +381,17 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
     audioStreamRef.current?.getTracks().forEach(track => track.stop())
 
     // Close audio context
-    await audioContextRef.current?.close()
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      await audioContextRef.current.close()
+    }
 
     // Clear duration timer
     if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current)
     }
+
+    // Reset starting flag
+    isStartingRef.current = false
 
     updateStatus('ended')
     setState(prev => ({ ...prev, isListening: false, isSpeaking: false }))
@@ -344,9 +401,22 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      endCall()
+      // Cleanup only on unmount
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current)
+      }
+      if (mediaRecorderRef.current?.state !== 'inactive') {
+        mediaRecorderRef.current?.stop()
+      }
+      audioStreamRef.current?.getTracks().forEach(track => track.stop())
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close()
+      }
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current)
+      }
     }
-  }, [endCall])
+  }, [])
 
   // Helper: Blob to Base64
   const blobToBase64 = (blob: Blob): Promise<string> => {
