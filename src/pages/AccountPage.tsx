@@ -23,7 +23,6 @@ import {
   Check,
   X,
   Camera,
-  Upload,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { CREDIT_PRICING } from '../types/database'
@@ -56,8 +55,8 @@ export default function AccountPage() {
     if (!user) return
 
     try {
-      const { data: supabase } = await import('../lib/supabase')
-      const { error } = await supabase.supabase
+      const { supabase } = await import('../lib/supabase')
+      const { error } = await supabase
         .from('profiles')
         .update({ display_name: displayName })
         .eq('id', user.id)
@@ -96,7 +95,7 @@ export default function AccountPage() {
     setIsUploadingAvatar(true)
 
     try {
-      const { data: supabase } = await import('../lib/supabase')
+      const { supabase } = await import('../lib/supabase')
 
       // Create unique filename
       const fileExt = file.name.split('.').pop()
@@ -104,7 +103,7 @@ export default function AccountPage() {
       const filePath = `avatars/${fileName}`
 
       // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -119,12 +118,12 @@ export default function AccountPage() {
       }
 
       // Get public URL
-      const { data: urlData } = supabase.supabase.storage
+      const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath)
 
       // Update profile with avatar URL
-      const { error: updateError } = await supabase.supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: urlData.publicUrl })
         .eq('id', user.id)
@@ -161,8 +160,8 @@ export default function AccountPage() {
     }
 
     try {
-      const { data: supabase } = await import('../lib/supabase')
-      const { error } = await supabase.supabase.auth.updateUser({
+      const { supabase } = await import('../lib/supabase')
+      const { error } = await supabase.auth.updateUser({
         password: newPassword
       })
 
