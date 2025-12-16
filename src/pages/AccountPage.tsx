@@ -4,7 +4,7 @@
  * Shows user account info, credits balance, and purchase options
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -22,6 +22,8 @@ import {
   Edit3,
   Check,
   X,
+  Camera,
+  Upload,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { CREDIT_PRICING } from '../types/database'
@@ -30,10 +32,12 @@ import Header from '../components/Header'
 export default function AccountPage() {
   const navigate = useNavigate()
   const { user, profile, credits, isConfigured } = useSupabaseAuth()
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   // Profile editing
   const [isEditingName, setIsEditingName] = useState(false)
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
 
   // Password change
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -49,9 +53,28 @@ export default function AccountPage() {
   }
 
   const handleSaveName = async () => {
-    // TODO: Implement saving display name to Supabase profile
-    setIsEditingName(false)
-    alert('Display name opslaan komt binnenkort!')
+    if (!user) return
+
+    try {
+      const { data: supabase } = await import('../lib/supabase')
+      const { error } = await supabase.supabase
+        .from('profiles')
+        .update({ display_name: displayName })
+        .eq('id', user.id)
+
+      if (error) {
+        console.error('Error updating display name:', error)
+        alert('Er ging iets mis bij het opslaan van je naam. Probeer het opnieuw.')
+        return
+      }
+
+      setIsEditingName(false)
+      // Refresh the page to show updated name
+      window.location.reload()
+    } catch (error) {
+      console.error('Error saving name:', error)
+      alert('Er ging iets mis bij het opslaan van je naam.')
+    }
   }
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -69,14 +92,32 @@ export default function AccountPage() {
       return
     }
 
-    // TODO: Implement password change with Supabase
-    setPasswordSuccess(true)
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-    setIsChangingPassword(false)
+    try {
+      const { data: supabase } = await import('../lib/supabase')
+      const { error } = await supabase.supabase.auth.updateUser({
+        password: newPassword
+      })
 
-    alert('Wachtwoord wijzigen komt binnenkort!')
+      if (error) {
+        console.error('Error updating password:', error)
+        setPasswordError(error.message || 'Er ging iets mis bij het wijzigen van je wachtwoord')
+        return
+      }
+
+      setPasswordSuccess(true)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+
+      // Close password change form after 2 seconds
+      setTimeout(() => {
+        setIsChangingPassword(false)
+        setPasswordSuccess(false)
+      }, 2000)
+    } catch (error) {
+      console.error('Error changing password:', error)
+      setPasswordError('Er ging iets mis. Probeer het opnieuw.')
+    }
   }
 
   // Redirect if not logged in with Supabase

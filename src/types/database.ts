@@ -13,6 +13,7 @@ export interface Database {
           id: string
           email: string
           display_name: string | null
+          avatar_url: string | null
           credits: number
           text_credits: number
           voice_credits: number
@@ -24,6 +25,7 @@ export interface Database {
           id: string
           email: string
           display_name?: string | null
+          avatar_url?: string | null
           credits?: number
           text_credits?: number
           voice_credits?: number
@@ -35,6 +37,7 @@ export interface Database {
           id?: string
           email?: string
           display_name?: string | null
+          avatar_url?: string | null
           credits?: number
           text_credits?: number
           voice_credits?: number
