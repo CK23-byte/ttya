@@ -53,8 +53,8 @@ const PageLoader = () => (
 function App() {
   // Log app version on load
   useEffect(() => {
-    console.log('🚀 TalkToYouAI v2.8.0 - Active Credit Tracking Edition')
-    console.log('📋 Features: Real-time credit deduction (text/voice/video), Low credit warnings, Auto-end calls')
+    console.log('🚀 TalkToYouAI v2.9.0 - Profile & Pricing Edition')
+    console.log('📋 Features: USD pricing, Profile editing (name/password), Stripe product descriptions ready')
     console.log('⏰ Deployed:', new Date().toISOString())
     console.log('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
   }, [])
