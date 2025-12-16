@@ -310,21 +310,45 @@ export default function AccountPage() {
 
         {/* Credits Card */}
         <div className="bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl shadow-lg p-6 mb-6 text-white">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Coins className="w-8 h-8" />
               <div>
-                <p className="text-white/80 text-sm">Huidige saldo</p>
+                <p className="text-white/80 text-sm">Totaal saldo</p>
                 <p className="text-3xl font-bold">{credits} credits</p>
               </div>
             </div>
             <Crown className="w-12 h-12 text-white/30" />
           </div>
 
+          {/* Credit Breakdown */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {/* Text Credits */}
+            <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
+              <p className="text-2xl font-bold">{profile?.text_credits || 0}</p>
+              <p className="text-white/80 text-xs mt-1">💬 Text</p>
+              <p className="text-white/60 text-xs">(messages)</p>
+            </div>
+
+            {/* Voice Credits */}
+            <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
+              <p className="text-2xl font-bold">{profile?.voice_credits || 0}</p>
+              <p className="text-white/80 text-xs mt-1">🎙️ Voice</p>
+              <p className="text-white/60 text-xs">({Math.floor((profile?.voice_credits || 0) / 2)}min)</p>
+            </div>
+
+            {/* Video Credits */}
+            <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
+              <p className="text-2xl font-bold">{profile?.video_credits || 0}</p>
+              <p className="text-white/80 text-xs mt-1">📹 Video</p>
+              <p className="text-white/60 text-xs">({Math.floor((profile?.video_credits || 0) / 5)}min)</p>
+            </div>
+          </div>
+
           <div className="bg-white/20 rounded-lg p-3 text-sm">
-            <p className="flex items-center gap-2">
+            <p className="flex items-center gap-2 text-xs">
               <Sparkles className="w-4 h-4" />
-              <span>1 credit = ~1 AI bericht</span>
+              <span>Text: 1 credit/msg • Voice: 2 credits/min • Video: 5 credits/min</span>
             </p>
           </div>
         </div>

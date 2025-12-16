@@ -53,8 +53,8 @@ const PageLoader = () => (
 function App() {
   // Log app version on load
   useEffect(() => {
-    console.log('🚀 TalkToYouAI v2.6.0 - Low Latency Edition')
-    console.log('📋 New features: 60% faster response time, GPT-4o, ElevenLabs Turbo v2')
+    console.log('🚀 TalkToYouAI v2.7.0 - Credits & Avatar Edition')
+    console.log('📋 New features: Credit tracking (text/voice/video), HeyGen avatar creation, Custom modals')
     console.log('⏰ Deployed:', new Date().toISOString())
     console.log('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
   }, [])
