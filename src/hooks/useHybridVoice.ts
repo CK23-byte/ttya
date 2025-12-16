@@ -73,11 +73,14 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
   const audioStreamRef = useRef<MediaStream | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
   const startTimeRef = useRef<number | null>(null)
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const conversationHistoryRef = useRef<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const isStartingRef = useRef<boolean>(false)
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const silenceCheckIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const lastSpeechTimeRef = useRef<number>(Date.now())
 
   // Update status helper
   const updateStatus = useCallback((status: HybridStatus) => {
@@ -111,6 +114,12 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       // Create audio context
       audioContextRef.current = new AudioContext({ sampleRate: 44100 })
 
+      // Create analyser for voice activity detection
+      analyserRef.current = audioContextRef.current.createAnalyser()
+      analyserRef.current.fftSize = 2048
+      const source = audioContextRef.current.createMediaStreamSource(stream)
+      source.connect(analyserRef.current)
+
       // Start recording
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
@@ -118,35 +127,60 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
 
       mediaRecorderRef.current = mediaRecorder
       audioChunksRef.current = []
+      lastSpeechTimeRef.current = Date.now()
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data)
-          console.log(`Audio chunk received: ${event.data.size} bytes, total chunks: ${audioChunksRef.current.length}`)
-
-          // Reset silence timeout - stop recording after 2 seconds of silence
-          if (silenceTimeoutRef.current) {
-            clearTimeout(silenceTimeoutRef.current)
-          }
-          silenceTimeoutRef.current = setTimeout(() => {
-            if (mediaRecorderRef.current?.state === 'recording' && audioChunksRef.current.length > 0) {
-              console.log('Silence detected, processing audio...')
-              mediaRecorderRef.current.stop()
-            }
-          }, 2000)
         }
       }
 
       mediaRecorder.onstop = async () => {
-        if (silenceTimeoutRef.current) {
-          clearTimeout(silenceTimeoutRef.current)
-          silenceTimeoutRef.current = null
+        if (silenceCheckIntervalRef.current) {
+          clearInterval(silenceCheckIntervalRef.current)
+          silenceCheckIntervalRef.current = null
         }
         await handleRecordingStop()
       }
 
-      // Start recording with 250ms chunks for better silence detection
+      // Start recording
       mediaRecorder.start(250)
+
+      // Start silence detection with amplitude analysis
+      silenceCheckIntervalRef.current = setInterval(() => {
+        if (!analyserRef.current || !mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
+          return
+        }
+
+        const bufferLength = analyserRef.current.frequencyBinCount
+        const dataArray = new Uint8Array(bufferLength)
+        analyserRef.current.getByteTimeDomainData(dataArray)
+
+        // Calculate average amplitude
+        let sum = 0
+        for (let i = 0; i < bufferLength; i++) {
+          const normalized = (dataArray[i] - 128) / 128
+          sum += normalized * normalized
+        }
+        const rms = Math.sqrt(sum / bufferLength)
+        const amplitude = rms * 100
+
+        // Threshold for speech detection (adjust as needed)
+        const SPEECH_THRESHOLD = 1.0
+        const SILENCE_DURATION = 2000 // 2 seconds
+
+        if (amplitude > SPEECH_THRESHOLD) {
+          // Speech detected
+          lastSpeechTimeRef.current = Date.now()
+        } else {
+          // Check if silence has lasted long enough
+          const silenceDuration = Date.now() - lastSpeechTimeRef.current
+          if (silenceDuration > SILENCE_DURATION && audioChunksRef.current.length > 0) {
+            console.log(`Silence detected (${silenceDuration}ms), processing audio...`)
+            mediaRecorderRef.current.stop()
+          }
+        }
+      }, 100) // Check every 100ms
 
       updateStatus('listening')
       setState(prev => ({ ...prev, isListening: true }))
@@ -302,9 +336,42 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       // Resume listening even after error
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
+        lastSpeechTimeRef.current = Date.now()
         mediaRecorderRef.current.start(250)
         setState(prev => ({ ...prev, isListening: true }))
         updateStatus('listening')
+
+        // Restart silence detection
+        silenceCheckIntervalRef.current = setInterval(() => {
+          if (!analyserRef.current || !mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
+            return
+          }
+
+          const bufferLength = analyserRef.current.frequencyBinCount
+          const dataArray = new Uint8Array(bufferLength)
+          analyserRef.current.getByteTimeDomainData(dataArray)
+
+          let sum = 0
+          for (let i = 0; i < bufferLength; i++) {
+            const normalized = (dataArray[i] - 128) / 128
+            sum += normalized * normalized
+          }
+          const rms = Math.sqrt(sum / bufferLength)
+          const amplitude = rms * 100
+
+          const SPEECH_THRESHOLD = 1.0
+          const SILENCE_DURATION = 2000
+
+          if (amplitude > SPEECH_THRESHOLD) {
+            lastSpeechTimeRef.current = Date.now()
+          } else {
+            const silenceDuration = Date.now() - lastSpeechTimeRef.current
+            if (silenceDuration > SILENCE_DURATION && audioChunksRef.current.length > 0) {
+              console.log(`Silence detected (${silenceDuration}ms), processing audio...`)
+              mediaRecorderRef.current.stop()
+            }
+          }
+        }, 100)
       }
     }
   }
@@ -342,9 +409,43 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       // Resume recording after AI finishes speaking
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
+        lastSpeechTimeRef.current = Date.now() // Reset silence timer
         mediaRecorderRef.current.start(250)
         setState(prev => ({ ...prev, isListening: true }))
         updateStatus('listening')
+
+        // Restart silence detection
+        silenceCheckIntervalRef.current = setInterval(() => {
+          if (!analyserRef.current || !mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
+            return
+          }
+
+          const bufferLength = analyserRef.current.frequencyBinCount
+          const dataArray = new Uint8Array(bufferLength)
+          analyserRef.current.getByteTimeDomainData(dataArray)
+
+          let sum = 0
+          for (let i = 0; i < bufferLength; i++) {
+            const normalized = (dataArray[i] - 128) / 128
+            sum += normalized * normalized
+          }
+          const rms = Math.sqrt(sum / bufferLength)
+          const amplitude = rms * 100
+
+          const SPEECH_THRESHOLD = 1.0
+          const SILENCE_DURATION = 2000
+
+          if (amplitude > SPEECH_THRESHOLD) {
+            lastSpeechTimeRef.current = Date.now()
+          } else {
+            const silenceDuration = Date.now() - lastSpeechTimeRef.current
+            if (silenceDuration > SILENCE_DURATION && audioChunksRef.current.length > 0) {
+              console.log(`Silence detected (${silenceDuration}ms), processing audio...`)
+              mediaRecorderRef.current.stop()
+            }
+          }
+        }, 100)
+
         console.log('Recording resumed')
       }
 
@@ -355,9 +456,42 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       // Try to resume recording even after playback error
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
+        lastSpeechTimeRef.current = Date.now()
         mediaRecorderRef.current.start(250)
         setState(prev => ({ ...prev, isListening: true }))
         updateStatus('listening')
+
+        // Restart silence detection
+        silenceCheckIntervalRef.current = setInterval(() => {
+          if (!analyserRef.current || !mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
+            return
+          }
+
+          const bufferLength = analyserRef.current.frequencyBinCount
+          const dataArray = new Uint8Array(bufferLength)
+          analyserRef.current.getByteTimeDomainData(dataArray)
+
+          let sum = 0
+          for (let i = 0; i < bufferLength; i++) {
+            const normalized = (dataArray[i] - 128) / 128
+            sum += normalized * normalized
+          }
+          const rms = Math.sqrt(sum / bufferLength)
+          const amplitude = rms * 100
+
+          const SPEECH_THRESHOLD = 1.0
+          const SILENCE_DURATION = 2000
+
+          if (amplitude > SPEECH_THRESHOLD) {
+            lastSpeechTimeRef.current = Date.now()
+          } else {
+            const silenceDuration = Date.now() - lastSpeechTimeRef.current
+            if (silenceDuration > SILENCE_DURATION && audioChunksRef.current.length > 0) {
+              console.log(`Silence detected (${silenceDuration}ms), processing audio...`)
+              mediaRecorderRef.current.stop()
+            }
+          }
+        }, 100)
       }
     }
   }
@@ -366,7 +500,13 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
   const endCall = useCallback(async () => {
     console.log('Ending hybrid voice call')
 
-    // Clear silence timeout
+    // Clear silence check interval
+    if (silenceCheckIntervalRef.current) {
+      clearInterval(silenceCheckIntervalRef.current)
+      silenceCheckIntervalRef.current = null
+    }
+
+    // Clear silence timeout (deprecated, but keep for safety)
     if (silenceTimeoutRef.current) {
       clearTimeout(silenceTimeoutRef.current)
       silenceTimeoutRef.current = null
@@ -379,6 +519,12 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
 
     // Stop audio stream
     audioStreamRef.current?.getTracks().forEach(track => track.stop())
+
+    // Disconnect analyser
+    if (analyserRef.current) {
+      analyserRef.current.disconnect()
+      analyserRef.current = null
+    }
 
     // Close audio context
     if (audioContextRef.current) {
@@ -406,6 +552,9 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
   useEffect(() => {
     return () => {
       // Cleanup only on unmount
+      if (silenceCheckIntervalRef.current) {
+        clearInterval(silenceCheckIntervalRef.current)
+      }
       if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current)
       }
@@ -413,6 +562,13 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
         mediaRecorderRef.current?.stop()
       }
       audioStreamRef.current?.getTracks().forEach(track => track.stop())
+      if (analyserRef.current) {
+        try {
+          analyserRef.current.disconnect()
+        } catch (err) {
+          // Already disconnected, ignore
+        }
+      }
       if (audioContextRef.current) {
         try {
           audioContextRef.current.close()
