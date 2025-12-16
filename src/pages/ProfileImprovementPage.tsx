@@ -46,6 +46,15 @@ interface VoiceConfig {
   standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if type is 'standard')
 }
 
+// Avatar configuration
+interface AvatarConfig {
+  type: 'custom' | 'default' // custom = HeyGen uploaded, default = HeyGen preset
+  customAvatarId?: string // HeyGen avatar ID (if type is 'custom')
+  customAvatarName?: string // HeyGen avatar name
+  customAvatarThumbnail?: string // Preview thumbnail URL
+  defaultAvatar?: string // Default HeyGen avatar ID (if type is 'default')
+}
+
 // Storage interface (what gets saved - with base64)
 interface StoredProfileData {
   textNotes: string[]
@@ -53,6 +62,7 @@ interface StoredProfileData {
   photos: { id: string; url: string; name: string }[]
   videos: { id: string; url: string; name: string }[]
   voiceConfig?: VoiceConfig // Voice configuration for calls
+  avatarConfig?: AvatarConfig // Avatar configuration for video calls
 }
 
 // Runtime interface (what we work with - with Blobs)
@@ -62,6 +72,7 @@ interface ProfileData {
   photos: { id: string; url: string; name: string }[]
   videos: { id: string; url: string; name: string }[]
   voiceConfig?: VoiceConfig // Voice configuration for calls
+  avatarConfig?: AvatarConfig // Avatar configuration for video calls
 }
 
 export default function ProfileImprovementPage() {
@@ -79,6 +90,10 @@ export default function ProfileImprovementPage() {
     voiceConfig: {
       type: 'standard',
       standardVoice: 'alloy'
+    },
+    avatarConfig: {
+      type: 'default',
+      defaultAvatar: 'Angela-inblackskirt-20220820'
     }
   })
 
@@ -90,6 +105,8 @@ export default function ProfileImprovementPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isCloningVoice, setIsCloningVoice] = useState(false)
   const [cloneError, setCloneError] = useState<string | null>(null)
+  const [isCreatingAvatar, setIsCreatingAvatar] = useState(false)
+  const [avatarCreationStatus, setAvatarCreationStatus] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'error'>('idle')
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
@@ -115,6 +132,7 @@ export default function ProfileImprovementPage() {
   const chatFileInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+  const avatarVideoInputRef = useRef<HTMLInputElement>(null)
   const voiceSectionRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -1000,6 +1018,134 @@ export default function ProfileImprovementPage() {
     }))
   }
 
+  // Avatar creation handler
+  const handleCreateAvatar = async () => {
+    if (!profileData.videos || profileData.videos.length === 0) {
+      showModal('No Video', 'Please upload a video first! Upload a 2-10 second video with clear frontal face and good lighting.', 'warning')
+      return
+    }
+
+    setIsCreatingAvatar(true)
+    setAvatarCreationStatus('uploading')
+
+    try {
+      // Use the first uploaded video
+      const videoUrl = profileData.videos[0].url
+      console.log('Creating avatar from video:', videoUrl)
+
+      // Fetch the video from Supabase Storage
+      const videoResponse = await fetch(videoUrl)
+      if (!videoResponse.ok) {
+        throw new Error('Failed to fetch video')
+      }
+
+      const videoBlob = await videoResponse.blob()
+
+      // Convert to base64
+      const reader = new FileReader()
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          const base64 = reader.result as string
+          resolve(base64.split(',')[1]) // Remove data:video/mp4;base64, prefix
+        }
+        reader.readAsDataURL(videoBlob)
+      })
+
+      const videoBase64 = await base64Promise
+      const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
+
+      console.log('Uploading avatar to HeyGen...', { avatarName, videoSize: videoBlob.size })
+
+      // Upload to HeyGen
+      const response = await fetch('/api/heygen/create-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          videoBase64,
+          avatarName
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.details || error.error || 'Failed to create avatar')
+      }
+
+      const data = await response.json()
+      console.log('Avatar creation response:', data)
+
+      setAvatarCreationStatus('processing')
+
+      // Poll for avatar status
+      const avatarId = data.avatarId
+      let attempts = 0
+      const maxAttempts = 60 // 5 minutes max (5 second intervals)
+
+      const pollStatus = async (): Promise<void> => {
+        if (attempts >= maxAttempts) {
+          throw new Error('Avatar processing timeout. Please try again later.')
+        }
+
+        attempts++
+        const statusResponse = await fetch(`/api/heygen/get-avatar-status?avatarId=${avatarId}`)
+
+        if (!statusResponse.ok) {
+          throw new Error('Failed to check avatar status')
+        }
+
+        const statusData = await statusResponse.json()
+        console.log(`Avatar status check ${attempts}:`, statusData)
+
+        if (statusData.status === 'completed' || statusData.status === 'active') {
+          // Avatar is ready
+          setProfileData(prev => ({
+            ...prev,
+            avatarConfig: {
+              type: 'custom',
+              customAvatarId: avatarId,
+              customAvatarName: avatarName,
+              customAvatarThumbnail: statusData.thumbnailUrl
+            }
+          }))
+
+          setAvatarCreationStatus('completed')
+          showModal(
+            'Avatar Created Successfully',
+            `Your custom avatar "${avatarName}" is ready for video calls!`,
+            'success'
+          )
+        } else if (statusData.status === 'error' || statusData.status === 'failed') {
+          throw new Error('Avatar processing failed. Please try with a different video.')
+        } else {
+          // Still processing, wait and check again
+          await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
+          await pollStatus()
+        }
+      }
+
+      await pollStatus()
+
+    } catch (error) {
+      console.error('Avatar creation error:', error)
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      setAvatarCreationStatus('error')
+      showModal('Avatar Creation Failed', errorMsg, 'error')
+    } finally {
+      setIsCreatingAvatar(false)
+    }
+  }
+
+  const handleAvatarTypeChange = (type: 'custom' | 'default') => {
+    setProfileData(prev => ({
+      ...prev,
+      avatarConfig: {
+        ...prev.avatarConfig,
+        type,
+        ...(type === 'default' && !prev.avatarConfig?.defaultAvatar ? { defaultAvatar: 'Angela-inblackskirt-20220820' } : {})
+      }
+    }))
+  }
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -1443,6 +1589,158 @@ export default function ProfileImprovementPage() {
                   </select>
                   <p className="text-xs text-blue-700">
                     💡 These are preset voices from OpenAI. No voice cloning required.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Avatar Configuration */}
+          <div className="bg-white rounded-2xl p-6 shadow-md">
+            <div className="flex items-center gap-3 mb-4">
+              <VideoIcon className="w-6 h-6 text-pink-500" />
+              <h2 className="text-xl font-bold text-gray-900">Avatar Configuration</h2>
+              <span className="text-sm text-gray-500">(For video calls)</span>
+            </div>
+
+            <div className="space-y-4">
+              {/* Avatar Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choose Avatar Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleAvatarTypeChange('custom')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.avatarConfig?.type === 'custom'
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 hover:border-pink-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">👤 Custom Avatar</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Upload your own video to create a personalized avatar
+                      </p>
+                      {profileData.avatarConfig?.type === 'custom' && profileData.avatarConfig.customAvatarName && (
+                        <p className="text-xs text-pink-600 mt-2 font-medium">
+                          ✓ {profileData.avatarConfig.customAvatarName}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleAvatarTypeChange('default')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.avatarConfig?.type === 'default'
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 hover:border-pink-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">🤖 Default Avatar</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Use HeyGen's preset avatars
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Avatar Section */}
+              {profileData.avatarConfig?.type === 'custom' && (
+                <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 space-y-3">
+                  {!profileData.avatarConfig.customAvatarId ? (
+                    <>
+                      <p className="text-sm text-pink-800">
+                        <strong>Avatar Creation:</strong> Upload a 2-10 second video with clear frontal face and good lighting. This will be used to create your custom HeyGen avatar.
+                      </p>
+
+                      {/* Avatar Preview */}
+                      {profileData.videos.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-pink-900">Preview (using first video):</p>
+                          <div className="relative rounded-lg overflow-hidden bg-black max-w-xs mx-auto">
+                            <video
+                              src={profileData.videos[0].url}
+                              className="w-full"
+                              controls
+                              muted
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleCreateAvatar}
+                        disabled={isCreatingAvatar || profileData.videos.length === 0}
+                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isCreatingAvatar || profileData.videos.length === 0
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-pink-500 text-white hover:bg-pink-600'
+                        }`}
+                      >
+                        {isCreatingAvatar ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            {avatarCreationStatus === 'uploading' && 'Uploading...'}
+                            {avatarCreationStatus === 'processing' && 'Processing Avatar... (this may take a few minutes)'}
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5" />
+                            Create Avatar from Video
+                          </>
+                        )}
+                      </button>
+                      {profileData.videos.length === 0 && (
+                        <p className="text-xs text-pink-600">
+                          ⚠️ Please upload a video first (scroll down to Videos section)
+                        </p>
+                      )}
+                      <p className="text-xs text-pink-600">
+                        💡 <strong>Tips:</strong> Use a 2-10 second video, face the camera directly, ensure good lighting, and speak clearly.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-6 h-6 text-green-500" />
+                        <div className="flex-1">
+                          <p className="font-medium text-pink-900">
+                            Avatar Created Successfully!
+                          </p>
+                          <p className="text-sm text-pink-700">
+                            Using: {profileData.avatarConfig.customAvatarName}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Avatar Thumbnail Preview */}
+                      {profileData.avatarConfig.customAvatarThumbnail && (
+                        <div className="rounded-lg overflow-hidden max-w-xs mx-auto">
+                          <img
+                            src={profileData.avatarConfig.customAvatarThumbnail}
+                            alt="Avatar Preview"
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Default Avatar Selection */}
+              {profileData.avatarConfig?.type === 'default' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <p className="text-sm text-blue-800">
+                    Using default HeyGen avatar: <strong>Angela</strong>
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    💡 Default avatars are ready to use immediately. No setup required!
                   </p>
                 </div>
               )}
