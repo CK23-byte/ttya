@@ -60,10 +60,11 @@ export default async function handler(
       },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_monolingual_v1', // or 'eleven_multilingual_v2'
+        model_id: 'eleven_turbo_v2', // Fastest model with lowest latency
         voice_settings: {
           stability,
-          similarity_boost
+          similarity_boost,
+          use_speaker_boost: true // Enhance voice clarity
         }
       })
     })

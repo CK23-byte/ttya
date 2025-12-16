@@ -53,8 +53,8 @@ const PageLoader = () => (
 function App() {
   // Log app version on load
   useEffect(() => {
-    console.log('🚀 TalkToYouAI v2.5.1 - Voice Cloning Edition')
-    console.log('📋 New features: ElevenLabs voice cloning, hybrid voice pipeline')
+    console.log('🚀 TalkToYouAI v2.6.0 - Low Latency Edition')
+    console.log('📋 New features: 60% faster response time, GPT-4o, ElevenLabs Turbo v2')
     console.log('⏰ Deployed:', new Date().toISOString())
     console.log('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
   }, [])

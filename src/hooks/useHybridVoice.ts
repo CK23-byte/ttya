@@ -100,19 +100,21 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       isStartingRef.current = true
       updateStatus('requesting-mic')
 
-      // Request microphone access
+      // Request microphone access with optimized settings
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          sampleRate: 16000, // Lower sample rate for faster processing
+          channelCount: 1 // Mono audio
         }
       })
 
       audioStreamRef.current = stream
 
-      // Create audio context
-      audioContextRef.current = new AudioContext({ sampleRate: 44100 })
+      // Create audio context with lower sample rate for faster processing
+      audioContextRef.current = new AudioContext({ sampleRate: 16000 })
 
       // Create analyser for voice activity detection
       analyserRef.current = audioContextRef.current.createAnalyser()
@@ -143,8 +145,8 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
         await handleRecordingStop()
       }
 
-      // Start recording
-      mediaRecorder.start(250)
+      // Start recording with optimized chunk size
+      mediaRecorder.start(500)
 
       // Start silence detection with amplitude analysis
       silenceCheckIntervalRef.current = setInterval(() => {
@@ -167,7 +169,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
 
         // Threshold for speech detection (adjust as needed)
         const SPEECH_THRESHOLD = 1.0
-        const SILENCE_DURATION = 2000 // 2 seconds
+        const SILENCE_DURATION = 1200 // 1.2 seconds for faster response
 
         if (amplitude > SPEECH_THRESHOLD) {
           // Speech detected
@@ -337,7 +339,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
         lastSpeechTimeRef.current = Date.now()
-        mediaRecorderRef.current.start(250)
+        mediaRecorderRef.current.start(500)
         setState(prev => ({ ...prev, isListening: true }))
         updateStatus('listening')
 
@@ -360,7 +362,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
           const amplitude = rms * 100
 
           const SPEECH_THRESHOLD = 1.0
-          const SILENCE_DURATION = 2000
+          const SILENCE_DURATION = 1200
 
           if (amplitude > SPEECH_THRESHOLD) {
             lastSpeechTimeRef.current = Date.now()
@@ -410,7 +412,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
         lastSpeechTimeRef.current = Date.now() // Reset silence timer
-        mediaRecorderRef.current.start(250)
+        mediaRecorderRef.current.start(500)
         setState(prev => ({ ...prev, isListening: true }))
         updateStatus('listening')
 
@@ -433,7 +435,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
           const amplitude = rms * 100
 
           const SPEECH_THRESHOLD = 1.0
-          const SILENCE_DURATION = 2000
+          const SILENCE_DURATION = 1200
 
           if (amplitude > SPEECH_THRESHOLD) {
             lastSpeechTimeRef.current = Date.now()
@@ -457,7 +459,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
         lastSpeechTimeRef.current = Date.now()
-        mediaRecorderRef.current.start(250)
+        mediaRecorderRef.current.start(500)
         setState(prev => ({ ...prev, isListening: true }))
         updateStatus('listening')
 
@@ -480,7 +482,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
           const amplitude = rms * 100
 
           const SPEECH_THRESHOLD = 1.0
-          const SILENCE_DURATION = 2000
+          const SILENCE_DURATION = 1200
 
           if (amplitude > SPEECH_THRESHOLD) {
             lastSpeechTimeRef.current = Date.now()

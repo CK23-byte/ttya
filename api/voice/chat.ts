@@ -82,10 +82,10 @@ Remember: You ARE ${personalityName}. Speak as them, with their personality, the
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o', // Fastest GPT-4 model with multimodal capabilities
         messages: fullMessages,
         temperature,
-        max_tokens: 150, // Keep responses concise for voice
+        max_tokens: 100, // Even more concise for lower latency
         presence_penalty: 0.6,
         frequency_penalty: 0.3
       })
