@@ -368,7 +368,7 @@ export default function LivingLegacyPage() {
                 <li>• <strong>You</strong> create your own legacy</li>
                 <li>• Intentional recordings & messages</li>
                 <li>• Full control over your story</li>
-                <li>• One-time investment (€499-€1999)</li>
+                <li>• One-time investment ($499-$1999)</li>
               </ul>
             </div>
           </div>

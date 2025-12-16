@@ -219,7 +219,7 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€0</span>
+                  <span className="text-3xl font-bold text-gray-900">$0</span>
                   <span className="text-gray-500">/month</span>
                 </div>
               </div>
@@ -253,7 +253,7 @@ export default function PricingPage() {
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-gray-900">
-                    €{billingPeriod === 'monthly'
+                    ${billingPeriod === 'monthly'
                       ? SUBSCRIPTION_PLANS.starter.monthly.price
                       : (SUBSCRIPTION_PLANS.starter.yearly.price / 12).toFixed(2)}
                   </span>
@@ -261,7 +261,7 @@ export default function PricingPage() {
                 </div>
                 {billingPeriod === 'yearly' && (
                   <p className="text-xs text-green-600 mt-1">
-                    Billed €{SUBSCRIPTION_PLANS.starter.yearly.price}/year
+                    Billed ${SUBSCRIPTION_PLANS.starter.yearly.price}/year
                   </p>
                 )}
               </div>
@@ -308,7 +308,7 @@ export default function PricingPage() {
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-white">
-                    €{billingPeriod === 'monthly'
+                    ${billingPeriod === 'monthly'
                       ? SUBSCRIPTION_PLANS.pro.monthly.price
                       : (SUBSCRIPTION_PLANS.pro.yearly.price / 12).toFixed(2)}
                   </span>
@@ -316,7 +316,7 @@ export default function PricingPage() {
                 </div>
                 {billingPeriod === 'yearly' && (
                   <p className="text-xs text-white/80 mt-1">
-                    Billed €{SUBSCRIPTION_PLANS.pro.yearly.price}/year
+                    Billed ${SUBSCRIPTION_PLANS.pro.yearly.price}/year
                   </p>
                 )}
               </div>
@@ -363,7 +363,7 @@ export default function PricingPage() {
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-white">
-                    €{billingPeriod === 'monthly'
+                    ${billingPeriod === 'monthly'
                       ? SUBSCRIPTION_PLANS.premium.monthly.price
                       : (SUBSCRIPTION_PLANS.premium.yearly.price / 12).toFixed(2)}
                   </span>
@@ -371,7 +371,7 @@ export default function PricingPage() {
                 </div>
                 {billingPeriod === 'yearly' && (
                   <p className="text-xs text-amber-400 mt-1">
-                    Billed €{SUBSCRIPTION_PLANS.premium.yearly.price}/year
+                    Billed ${SUBSCRIPTION_PLANS.premium.yearly.price}/year
                   </p>
                 )}
               </div>
@@ -433,10 +433,10 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€{VOICE_CREDIT_PACKS.small.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">${VOICE_CREDIT_PACKS.small.price}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  €{VOICE_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
+                  ${VOICE_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
                 </p>
               </div>
 
@@ -470,10 +470,10 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-white">€{VOICE_CREDIT_PACKS.medium.price}</span>
+                  <span className="text-3xl font-bold text-white">${VOICE_CREDIT_PACKS.medium.price}</span>
                 </div>
                 <p className="text-xs text-white/70 mt-1">
-                  €{VOICE_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
+                  ${VOICE_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
                 </p>
               </div>
 
@@ -506,10 +506,10 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€{VOICE_CREDIT_PACKS.large.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">${VOICE_CREDIT_PACKS.large.price}</span>
                 </div>
                 <p className="text-xs text-green-600 mt-1">
-                  €{VOICE_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 20%!
+                  ${VOICE_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 20%!
                 </p>
               </div>
 
@@ -559,10 +559,10 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€{VIDEO_CREDIT_PACKS.small.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">${VIDEO_CREDIT_PACKS.small.price}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  €{VIDEO_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
+                  ${VIDEO_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
                 </p>
               </div>
 
@@ -596,10 +596,10 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-white">€{VIDEO_CREDIT_PACKS.medium.price}</span>
+                  <span className="text-3xl font-bold text-white">${VIDEO_CREDIT_PACKS.medium.price}</span>
                 </div>
                 <p className="text-xs text-white/70 mt-1">
-                  €{VIDEO_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
+                  ${VIDEO_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
                 </p>
               </div>
 
@@ -632,10 +632,10 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€{VIDEO_CREDIT_PACKS.large.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">${VIDEO_CREDIT_PACKS.large.price}</span>
                 </div>
                 <p className="text-xs text-green-600 mt-1">
-                  €{VIDEO_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 20%!
+                  ${VIDEO_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 20%!
                 </p>
               </div>
 

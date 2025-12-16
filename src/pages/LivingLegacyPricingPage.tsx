@@ -143,7 +143,7 @@ export default function LivingLegacyPricingPage() {
                 <p className="text-gray-600 text-sm mb-6">{tier.description}</p>
 
                 <div className="mb-6">
-                  <span className="text-5xl font-bold text-gray-900">€{tier.price}</span>
+                  <span className="text-5xl font-bold text-gray-900">${tier.price}</span>
                   <span className="text-gray-600 ml-2">one-time</span>
                 </div>
 
@@ -264,9 +264,9 @@ export default function LivingLegacyPricingPage() {
                 Spread the cost while you create your legacy:
               </p>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• Essential: 3 monthly payments of €175</li>
-                <li>• Complete: 6 monthly payments of €175</li>
-                <li>• Premium: 12 monthly payments of €175</li>
+                <li>• Essential: 3 monthly payments of $175</li>
+                <li>• Complete: 6 monthly payments of $175</li>
+                <li>• Premium: 12 monthly payments of $175</li>
               </ul>
             </div>
           </div>

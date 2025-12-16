@@ -388,10 +388,10 @@ export default function AccountPage() {
 
                 <div className="flex items-baseline gap-1">
                   <span className="text-xl font-bold text-orange-600">
-                    €{pkg.price.toFixed(2)}
+                    ${pkg.price.toFixed(2)}
                   </span>
                   <span className="text-xs text-gray-500">
-                    (€{(pkg.price / pkg.credits).toFixed(3)}/credit)
+                    (${(pkg.price / pkg.credits).toFixed(3)}/credit)
                   </span>
                 </div>
               </button>
