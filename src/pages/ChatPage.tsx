@@ -26,6 +26,7 @@ import {
   Palette
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { sendMessageToClaude, generateSystemPrompt } from '../utils/claudeAPI'
 import TypingIndicator from '../components/TypingIndicator'
@@ -33,7 +34,9 @@ import EmojiPicker from '../components/EmojiPicker'
 import AttachmentPicker from '../components/AttachmentPicker'
 import VoiceCallModal from '../components/VoiceCallModal'
 import VideoCallModal from '../components/VideoCallModal'
+import Modal from '../components/Modal'
 import { Message, PersonalityProfile } from '../types'
+import { CREDIT_PRICING } from '../types/database'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
 const PROFILES_STORAGE_KEY = 'personality_profiles'
@@ -105,6 +108,7 @@ interface ChatConversation {
 
 export default function ChatPage() {
   const { isAuthenticated, encryptionKey, updateActivity } = useAuth()
+  const { user, profile, refreshCredits } = useSupabaseAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [conversations, setConversations] = useState<ChatConversation[]>([])
@@ -122,6 +126,21 @@ export default function ChatPage() {
   const [theme, setTheme] = useState<ChatTheme>('whatsapp')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const hasLoadedRef = useRef(false)
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showModal = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setModal({ isOpen: true, title, message, type })
+  }
 
   // Load saved theme
   useEffect(() => {
@@ -245,6 +264,30 @@ export default function ChatPage() {
     const activeConvo = getActiveConversation()
     if (!activeConvo) return
 
+    // Check if user has Supabase account and credits
+    if (!user || !profile) {
+      showModal(
+        'Account Required',
+        'Please sign in with email to use chat features and track your credits.',
+        'warning'
+      )
+      return
+    }
+
+    // Check if user has enough text credits
+    const textCredits = profile.text_credits || 0
+    const requiredCredits = CREDIT_PRICING.MESSAGE_BASE_COST
+
+    if (textCredits < requiredCredits) {
+      showModal(
+        'Insufficient Credits',
+        `You need ${requiredCredits} text credit${requiredCredits > 1 ? 's' : ''} to send a message.\n\nYou have ${textCredits} text credit${textCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue chatting.`,
+        'warning'
+      )
+      navigate('/pricing')
+      return
+    }
+
     updateActivity()
 
     const userMessage: Message = {
@@ -291,6 +334,31 @@ export default function ChatPage() {
       const finalMessages = [...updatedMessages, aiMessage]
       setCurrentMessages(finalMessages)
       await saveMessages(activeProfileId, finalMessages)
+
+      // Deduct text credits after successful message
+      try {
+        const response = await fetch('/api/credits/deduct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            amount: requiredCredits,
+            creditType: 'text',
+            description: `Chat message to ${activeConvo.profile.name}`
+          })
+        })
+
+        if (response.ok) {
+          // Refresh credits to update UI
+          await refreshCredits()
+        } else {
+          console.error('Failed to deduct credits:', await response.text())
+        }
+      } catch (creditError) {
+        console.error('Error deducting credits:', creditError)
+        // Don't show error to user - message was already sent successfully
+      }
+
     } catch (error) {
       console.error('Error getting AI response:', error)
 
@@ -730,6 +798,15 @@ export default function ChatPage() {
           theme={theme}
         />
       )}
+
+      {/* Credit Warning Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+      />
     </div>
   )
 }
