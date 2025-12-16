@@ -32,6 +32,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
+import Modal from '../components/Modal'
 import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
 import JSZip from 'jszip'
 
@@ -92,6 +93,23 @@ export default function ProfileImprovementPage() {
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
+
+  // Modal state
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showModal = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setModal({ isOpen: true, title, message, type })
+  }
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatFileInputRef = useRef<HTMLInputElement>(null)
@@ -270,7 +288,7 @@ export default function ProfileImprovementPage() {
       }, 1000)
     } catch (error) {
       console.error('Error saving profile data:', error)
-      alert('Failed to save changes. Please try again.')
+      showModal('Save Failed', 'Failed to save changes. Please try again.', 'error')
     } finally {
       setIsSaving(false)
     }
@@ -395,9 +413,9 @@ export default function ProfileImprovementPage() {
             ...prev,
             textNotes: [...prev.textNotes, ...messages]
           }))
-          alert(`Successfully imported ${messages.length} messages from chat export!`)
+          showModal('Import Successful', `Successfully imported ${messages.length} messages from chat export!`, 'success')
         } else {
-          alert('No messages found in the file. Please check the file format.')
+          showModal('No Messages Found', 'No messages found in the file. Please check the file format.', 'warning')
         }
       } else if (file.name.endsWith('.zip')) {
         // Handle ZIP files with text, photos, and videos
@@ -477,18 +495,17 @@ export default function ProfileImprovementPage() {
         }
 
         // Show summary
-        alert(
-          `Successfully imported from ZIP:\n` +
-          `- ${textMessages.length} text messages\n` +
-          `- ${photoCount} photos\n` +
-          `- ${videoCount} videos`
+        showModal(
+          'ZIP Import Successful',
+          `Successfully imported from ZIP:\n- ${textMessages.length} text messages\n- ${photoCount} photos\n- ${videoCount} videos`,
+          'success'
         )
       } else {
-        alert('Please upload a .txt or .zip file')
+        showModal('Invalid File Type', 'Please upload a .txt or .zip file', 'warning')
       }
     } catch (error) {
       console.error('Error reading chat file:', error)
-      alert('Failed to read chat file. Please try again.')
+      showModal('File Read Error', 'Failed to read chat file. Please try again.', 'error')
     }
 
     // Reset file input
@@ -602,7 +619,7 @@ export default function ProfileImprovementPage() {
         errorMsg = 'Microphone error: ' + err.message
       }
 
-      alert(errorMsg)
+      showModal('Microphone Error', errorMsg, 'error')
       setIsRecording(false)
     }
   }
@@ -652,7 +669,7 @@ export default function ProfileImprovementPage() {
         })
       } catch (error) {
         console.error('Error reading audio duration:', error)
-        alert('Failed to read audio file. Please try again.')
+        showModal('Audio File Error', 'Failed to read audio file. Please try again.', 'error')
       }
     }
   }
@@ -744,7 +761,7 @@ export default function ProfileImprovementPage() {
         console.log('Photo uploaded successfully:', publicUrl)
       } catch (error) {
         console.error('Error uploading photo:', error)
-        alert(`Failed to upload ${file.name}. Please try again.`)
+        showModal('Upload Failed', `Failed to upload ${file.name}. Please try again.`, 'error')
       }
     }
   }
@@ -785,7 +802,7 @@ export default function ProfileImprovementPage() {
       console.log('Video uploaded successfully:', publicUrl)
     } catch (error) {
       console.error('Error uploading video:', error)
-      alert('Failed to upload video. Please try again.')
+      showModal('Upload Failed', 'Failed to upload video. Please try again.', 'error')
     }
   }
 
@@ -839,7 +856,7 @@ export default function ProfileImprovementPage() {
 
   const handleCloneVoice = async () => {
     if (!profileData.voiceSamples || profileData.voiceSamples.length === 0) {
-      alert('Please record or upload a voice sample first!')
+      showModal('No Voice Sample', 'Please record or upload a voice sample first!', 'warning')
       return
     }
 
@@ -881,7 +898,11 @@ export default function ProfileImprovementPage() {
 
       // Validate audio duration (ElevenLabs requires at least 30 seconds, recommends 1+ minute)
       if (!sample.duration || sample.duration < 30) {
-        alert(`Voice sample is too short! Duration: ${sample.duration || 0} seconds. ElevenLabs requires at least 30 seconds of audio. Please record a longer sample.`)
+        showModal(
+          'Voice Sample Too Short',
+          `Duration: ${sample.duration || 0} seconds.\n\nElevenLabs requires at least 30 seconds of audio. Please record a longer sample.`,
+          'warning'
+        )
         setIsCloningVoice(false)
         return
       }
@@ -941,13 +962,17 @@ export default function ProfileImprovementPage() {
         }
       }))
 
-      alert(`Voice cloned successfully! Your cloned voice "${data.voiceName}" is ready to use in calls.`)
+      showModal(
+        'Voice Cloned Successfully',
+        `Your cloned voice "${data.voiceName}" is ready to use in voice calls!`,
+        'success'
+      )
 
     } catch (error) {
       console.error('Voice cloning error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       setCloneError(errorMsg)
-      alert(`Failed to clone voice: ${errorMsg}`)
+      showModal('Voice Cloning Failed', errorMsg, 'error')
     } finally {
       setIsCloningVoice(false)
     }
@@ -1624,6 +1649,15 @@ export default function ProfileImprovementPage() {
           </button>
         </div>
       </div>
+
+      {/* Custom Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+      />
     </div>
   )
 }
