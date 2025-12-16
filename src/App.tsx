@@ -53,8 +53,8 @@ const PageLoader = () => (
 function App() {
   // Log app version on load
   useEffect(() => {
-    console.log('🚀 TalkToYouAI v2.9.0 - Profile & Pricing Edition')
-    console.log('📋 Features: USD pricing, Profile editing (name/password), Stripe product descriptions ready')
+    console.log('🚀 TalkToYouAI v2.10.0 - Avatar Upload Edition')
+    console.log('📋 Features: Profile photo upload, Security fixes, Supabase Storage integration')
     console.log('⏰ Deployed:', new Date().toISOString())
     console.log('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
   }, [])

@@ -77,6 +77,74 @@ export default function AccountPage() {
     }
   }
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Alleen afbeeldingsbestanden zijn toegestaan')
+      return
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Bestand is te groot. Maximale grootte is 2MB')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+
+    try {
+      const { data: supabase } = await import('../lib/supabase')
+
+      // Create unique filename
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        alert('Er ging iets mis bij het uploaden. Probeer het opnieuw.')
+        setIsUploadingAvatar(false)
+        return
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      // Update profile with avatar URL
+      const { error: updateError } = await supabase.supabase
+        .from('profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('Error updating profile:', updateError)
+        alert('Er ging iets mis bij het opslaan. Probeer het opnieuw.')
+        setIsUploadingAvatar(false)
+        return
+      }
+
+      // Refresh page to show new avatar
+      window.location.reload()
+    } catch (error) {
+      console.error('Error uploading avatar:', error)
+      alert('Er ging iets mis. Probeer het opnieuw.')
+      setIsUploadingAvatar(false)
+    }
+  }
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordError('')
@@ -170,6 +238,61 @@ export default function AccountPage() {
           </h3>
 
           <div className="space-y-4">
+            {/* Avatar Upload */}
+            <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+              <div className="relative">
+                {/* Avatar Display */}
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{(profile?.display_name || user.email || 'U')[0].toUpperCase()}</span>
+                  )}
+                </div>
+
+                {/* Camera icon overlay */}
+                {!isUploadingAvatar && (
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 p-1.5 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition shadow-lg"
+                    title="Foto uploaden"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </button>
+                )}
+
+                {/* Loading spinner */}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-700">Profielfoto</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Klik op het camera icoon om een foto te uploaden
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Max 2MB • JPG, PNG of GIF
+                </p>
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
+
             {/* Display Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Weergavenaam</label>
