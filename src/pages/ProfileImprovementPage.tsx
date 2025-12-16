@@ -132,7 +132,6 @@ export default function ProfileImprovementPage() {
   const chatFileInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
-  const avatarVideoInputRef = useRef<HTMLInputElement>(null)
   const voiceSectionRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -1057,7 +1056,7 @@ export default function ProfileImprovementPage() {
       console.log('Uploading avatar to HeyGen...', { avatarName, videoSize: videoBlob.size })
 
       // Upload to HeyGen
-      const response = await fetch('/api/heygen/create-avatar', {
+      const response = await fetch('/api/heygen/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1087,7 +1086,7 @@ export default function ProfileImprovementPage() {
         }
 
         attempts++
-        const statusResponse = await fetch(`/api/heygen/get-avatar-status?avatarId=${avatarId}`)
+        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`)
 
         if (!statusResponse.ok) {
           throw new Error('Failed to check avatar status')

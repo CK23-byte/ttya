@@ -39,7 +39,7 @@ export async function createHeyGenStreamingSession(
     endpoint: '/api/heygen/create-stream'
   })
 
-  const response = await fetch('/api/heygen/create-stream', {
+  const response = await fetch('/api/heygen/stream?action=create', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -88,14 +88,14 @@ export async function sendHeyGenStreamMessage(
     task_type
   })
 
-  const response = await fetch('/api/heygen/stream-message', {
+  const response = await fetch('/api/heygen/stream?action=message', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       sessionId,
-      message,
+      text: message,
       task_type
     }),
   })
@@ -117,7 +117,7 @@ export async function sendHeyGenStreamMessage(
 export async function closeHeyGenStreamSession(sessionId: string): Promise<void> {
   console.log('Closing HeyGen streaming session:', sessionId)
 
-  const response = await fetch('/api/heygen/close-stream', {
+  const response = await fetch('/api/heygen/stream?action=close', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
