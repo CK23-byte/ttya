@@ -300,7 +300,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       onError?.(error instanceof Error ? error : new Error('Processing failed'))
 
       // Resume listening even after error
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
         mediaRecorderRef.current.start(250)
         setState(prev => ({ ...prev, isListening: true }))
@@ -311,8 +311,8 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
 
   // Play audio
   const playAudio = async (audioBase64: string) => {
-    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      console.error('Cannot play audio: AudioContext is not available or closed')
+    if (!audioContextRef.current) {
+      console.error('Cannot play audio: AudioContext is not available')
       return
     }
 
@@ -340,7 +340,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       })
 
       // Resume recording after AI finishes speaking
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
         mediaRecorderRef.current.start(250)
         setState(prev => ({ ...prev, isListening: true }))
@@ -353,7 +353,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       setState(prev => ({ ...prev, isSpeaking: false }))
 
       // Try to resume recording even after playback error
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive' && audioContextRef.current) {
         audioChunksRef.current = []
         mediaRecorderRef.current.start(250)
         setState(prev => ({ ...prev, isListening: true }))
@@ -381,8 +381,12 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
     audioStreamRef.current?.getTracks().forEach(track => track.stop())
 
     // Close audio context
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      await audioContextRef.current.close()
+    if (audioContextRef.current) {
+      try {
+        await audioContextRef.current.close()
+      } catch (err) {
+        // Already closed, ignore
+      }
     }
 
     // Clear duration timer
@@ -409,8 +413,12 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
         mediaRecorderRef.current?.stop()
       }
       audioStreamRef.current?.getTracks().forEach(track => track.stop())
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close()
+      if (audioContextRef.current) {
+        try {
+          audioContextRef.current.close()
+        } catch (err) {
+          // Already closed, ignore
+        }
       }
       if (durationIntervalRef.current) {
         clearInterval(durationIntervalRef.current)
