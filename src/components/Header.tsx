@@ -15,12 +15,13 @@ import {
   Heart,
   User,
   Settings,
-  Key,
   CreditCard,
   LogOut,
   ChevronDown,
+  Zap,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
+import { formatCredits } from '../utils/unifiedCredits'
 
 interface HeaderProps {
   variant?: 'default' | 'transparent'
@@ -103,6 +104,21 @@ export default function Header({ variant = 'default' }: HeaderProps) {
             Pricing
           </button>
 
+          {/* Credit Display - Always visible when logged in */}
+          {user && profile && (
+            <div
+              onClick={() => navigate('/pricing')}
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-200 rounded-full cursor-pointer hover:shadow-sm transition group"
+              title="Click to buy more credits"
+            >
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 group-hover:scale-110 transition-transform" />
+              <span className="text-xs sm:text-sm font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+                {formatCredits(user.email, profile.credits)}
+              </span>
+              <span className="text-xs text-gray-600 hidden sm:inline">credits</span>
+            </div>
+          )}
+
           {/* User Menu or Sign In */}
           {user ? (
             <div className="relative" ref={dropdownRef}>
@@ -148,17 +164,6 @@ export default function Header({ variant = 'default' }: HeaderProps) {
                   >
                     <Settings className="w-4 h-4" />
                     <span className="text-sm font-medium">Account Settings</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setIsDropdownOpen(false)
-                      navigate('/account#password')
-                    }}
-                    className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-gray-700 transition"
-                  >
-                    <Key className="w-4 h-4" />
-                    <span className="text-sm font-medium">Change Password</span>
                   </button>
 
                   <button

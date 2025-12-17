@@ -25,7 +25,8 @@ import {
   Camera,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { CREDIT_PRICING } from '../types/database'
+import { UNIFIED_CREDIT_PACKS } from '../utils/unifiedCredits'
+import { formatCredits } from '../utils/unifiedCredits'
 import Header from '../components/Header'
 
 export default function AccountPage() {
@@ -63,7 +64,7 @@ export default function AccountPage() {
 
       if (error) {
         console.error('Error updating display name:', error)
-        alert('Er ging iets mis bij het opslaan van je naam. Probeer het opnieuw.')
+        alert('Something went wrong saving your name. Please try again.')
         return
       }
 
@@ -72,7 +73,7 @@ export default function AccountPage() {
       window.location.reload()
     } catch (error) {
       console.error('Error saving name:', error)
-      alert('Er ging iets mis bij het opslaan van je naam.')
+      alert('Something went wrong saving your name.')
     }
   }
 
@@ -82,13 +83,13 @@ export default function AccountPage() {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Alleen afbeeldingsbestanden zijn toegestaan')
+      alert('Only image files are allowed')
       return
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert('Bestand is te groot. Maximale grootte is 2MB')
+      alert('File is too large. Maximum size is 2MB')
       return
     }
 
@@ -112,7 +113,7 @@ export default function AccountPage() {
 
       if (uploadError) {
         console.error('Upload error:', uploadError)
-        alert('Er ging iets mis bij het uploaden. Probeer het opnieuw.')
+        alert('Er ging iets mis bij het uploaden. Please try again.')
         setIsUploadingAvatar(false)
         return
       }
@@ -130,7 +131,7 @@ export default function AccountPage() {
 
       if (updateError) {
         console.error('Error updating profile:', updateError)
-        alert('Er ging iets mis bij het opslaan. Probeer het opnieuw.')
+        alert('Er ging iets mis bij het opslaan. Please try again.')
         setIsUploadingAvatar(false)
         return
       }
@@ -139,7 +140,7 @@ export default function AccountPage() {
       window.location.reload()
     } catch (error) {
       console.error('Error uploading avatar:', error)
-      alert('Er ging iets mis. Probeer het opnieuw.')
+      alert('Er ging iets mis. Please try again.')
       setIsUploadingAvatar(false)
     }
   }
@@ -150,12 +151,12 @@ export default function AccountPage() {
     setPasswordSuccess(false)
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('Nieuwe wachtwoorden komen niet overeen')
+      setPasswordError('New passwords do not match')
       return
     }
 
     if (newPassword.length < 8) {
-      setPasswordError('Wachtwoord moet minimaal 8 tekens zijn')
+      setPasswordError('Password must be at least 8 characters')
       return
     }
 
@@ -167,7 +168,7 @@ export default function AccountPage() {
 
       if (error) {
         console.error('Error updating password:', error)
-        setPasswordError(error.message || 'Er ging iets mis bij het wijzigen van je wachtwoord')
+        setPasswordError(error.message || 'Something went wrong changing your password')
         return
       }
 
@@ -183,7 +184,7 @@ export default function AccountPage() {
       }, 2000)
     } catch (error) {
       console.error('Error changing password:', error)
-      setPasswordError('Er ging iets mis. Probeer het opnieuw.')
+      setPasswordError('Er ging iets mis. Please try again.')
     }
   }
 
@@ -194,16 +195,16 @@ export default function AccountPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
           <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-gray-800 mb-2">
-            Niet ingelogd
+            Not Logged In
           </h2>
           <p className="text-gray-600 mb-6">
-            Log in met je e-mailadres om je account te bekijken.
+            Log in with your email to view your account.
           </p>
           <button
             onClick={() => navigate('/email-auth')}
             className="bg-gradient-to-r from-orange-500 to-rose-500 text-white px-6 py-3 rounded-lg font-medium hover:from-orange-600 hover:to-rose-600 transition"
           >
-            Inloggen
+            Sign In
           </button>
         </div>
       </div>
@@ -223,17 +224,17 @@ export default function AccountPage() {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Terug naar Dashboard</span>
+            <span>Back to Dashboard</span>
           </button>
           <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-          <p className="text-gray-600 mt-2">Beheer je profiel, wachtwoord en abonnement</p>
+          <p className="text-gray-600 mt-2">Manage your profile, password and subscription</p>
         </div>
 
         {/* Profile Card */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <User className="w-5 h-5 text-orange-500" />
-            Profiel Informatie
+            Profile Information
           </h3>
 
           <div className="space-y-4">
@@ -273,9 +274,9 @@ export default function AccountPage() {
               </div>
 
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">Profielfoto</p>
+                <p className="text-sm font-medium text-gray-700">Profile Photo</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Klik op het camera icoon om een foto te uploaden
+                  Click the camera icon to upload a photo
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   Max 2MB • JPG, PNG of GIF
@@ -294,7 +295,7 @@ export default function AccountPage() {
 
             {/* Display Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Weergavenaam</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
               {isEditingName ? (
                 <div className="flex gap-2">
                   <input
@@ -302,7 +303,7 @@ export default function AccountPage() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Je naam"
+                    placeholder="Your name"
                   />
                   <button
                     onClick={handleSaveName}
@@ -319,13 +320,13 @@ export default function AccountPage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <span className="text-gray-900">{profile?.display_name || 'Geen naam ingesteld'}</span>
+                  <span className="text-gray-900">{profile?.display_name || 'No name set'}</span>
                   <button
                     onClick={() => setIsEditingName(true)}
                     className="flex items-center gap-2 text-orange-600 hover:text-orange-700 transition"
                   >
                     <Edit3 className="w-4 h-4" />
-                    <span className="text-sm font-medium">Bewerken</span>
+                    <span className="text-sm font-medium">Edit</span>
                   </button>
                 </div>
               )}
@@ -333,7 +334,7 @@ export default function AccountPage() {
 
             {/* Email (read-only) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">E-mailadres</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
               <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-lg">
                 <Mail className="w-4 h-4 text-gray-400" />
                 <span className="text-gray-900">{user.email}</span>
@@ -346,7 +347,7 @@ export default function AccountPage() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <Key className="w-5 h-5 text-orange-500" />
-            Wachtwoord Wijzigen
+            Change Password
           </h3>
 
           {!isChangingPassword ? (
@@ -355,12 +356,12 @@ export default function AccountPage() {
               className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
             >
               <Lock className="w-4 h-4" />
-              Wachtwoord wijzigen
+              Change password
             </button>
           ) : (
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Huidig wachtwoord</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Current password</label>
                 <input
                   type="password"
                   value={currentPassword}
@@ -371,7 +372,7 @@ export default function AccountPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nieuw wachtwoord</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">New password</label>
                 <input
                   type="password"
                   value={newPassword}
@@ -383,7 +384,7 @@ export default function AccountPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bevestig nieuw wachtwoord</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm new password</label>
                 <input
                   type="password"
                   value={confirmPassword}
@@ -403,7 +404,7 @@ export default function AccountPage() {
               {passwordSuccess && (
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
                   <Check className="w-4 h-4" />
-                  Wachtwoord succesvol gewijzigd!
+                  Password successfully changed!
                 </div>
               )}
 
@@ -413,7 +414,7 @@ export default function AccountPage() {
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2"
                 >
                   <Check className="w-4 h-4" />
-                  Opslaan
+                  Save
                 </button>
                 <button
                   type="button"
@@ -426,7 +427,7 @@ export default function AccountPage() {
                   }}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
                 >
-                  Annuleren
+                  Cancel
                 </button>
               </div>
             </form>
@@ -437,19 +438,19 @@ export default function AccountPage() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-orange-500" />
-            Abonnement Beheren
+            Manage Subscription
           </h3>
 
           <div className="space-y-4">
             <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-gray-900">Huidige plan</span>
+                <span className="font-semibold text-gray-900">Current Plan</span>
                 <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-sm font-medium">
                   Free
                 </span>
               </div>
               <p className="text-sm text-gray-600">
-                Je gebruikt momenteel het gratis plan met basisfeatures.
+                You are currently using the free plan with basic features.
               </p>
             </div>
 
@@ -459,13 +460,13 @@ export default function AccountPage() {
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg hover:from-orange-600 hover:to-rose-600 transition font-semibold flex items-center justify-center gap-2"
               >
                 <Crown className="w-4 h-4" />
-                Upgrade naar Pro
+                Upgrade to Pro
               </button>
               <button
                 onClick={() => alert('Abonnement annuleren komt binnenkort!')}
                 className="px-4 py-3 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition font-medium"
               >
-                Annuleren
+                Cancel
               </button>
             </div>
           </div>
@@ -477,41 +478,41 @@ export default function AccountPage() {
             <div className="flex items-center gap-3">
               <Coins className="w-8 h-8" />
               <div>
-                <p className="text-white/80 text-sm">Totaal saldo</p>
+                <p className="text-white/80 text-sm">Total Balance</p>
                 <p className="text-3xl font-bold">{credits} credits</p>
               </div>
             </div>
             <Crown className="w-12 h-12 text-white/30" />
           </div>
 
-          {/* Credit Breakdown */}
+          {/* What Your Credits Can Do */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            {/* Text Credits */}
+            {/* Text */}
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{profile?.text_credits || 0}</p>
-              <p className="text-white/80 text-xs mt-1">💬 Text</p>
-              <p className="text-white/60 text-xs">(messages)</p>
+              <p className="text-2xl font-bold">{Math.floor((profile?.credits || 0) * 50)}</p>
+              <p className="text-white/80 text-xs mt-1">💬 Messages</p>
+              <p className="text-white/60 text-xs">(1 credit = 50)</p>
             </div>
 
-            {/* Voice Credits */}
+            {/* Voice */}
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{profile?.voice_credits || 0}</p>
-              <p className="text-white/80 text-xs mt-1">🎙️ Voice</p>
-              <p className="text-white/60 text-xs">({Math.floor((profile?.voice_credits || 0) / 2)}min)</p>
+              <p className="text-2xl font-bold">{Math.floor((profile?.credits || 0) * 0.5)}</p>
+              <p className="text-white/80 text-xs mt-1">🎙️ Voice min</p>
+              <p className="text-white/60 text-xs">(2 credits/min)</p>
             </div>
 
-            {/* Video Credits */}
+            {/* Video */}
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{profile?.video_credits || 0}</p>
-              <p className="text-white/80 text-xs mt-1">📹 Video</p>
-              <p className="text-white/60 text-xs">({Math.floor((profile?.video_credits || 0) / 5)}min)</p>
+              <p className="text-2xl font-bold">{((profile?.credits || 0) * 0.1).toFixed(1)}</p>
+              <p className="text-white/80 text-xs mt-1">📹 Video min</p>
+              <p className="text-white/60 text-xs">(10 credits/min)</p>
             </div>
           </div>
 
           <div className="bg-white/20 rounded-lg p-3 text-sm">
             <p className="flex items-center gap-2 text-xs">
               <Sparkles className="w-4 h-4" />
-              <span>Text: 1 credit/msg • Voice: 2 credits/min • Video: 5 credits/min</span>
+              <span>One credit type - use for messages, voice, or video</span>
             </p>
           </div>
         </div>
@@ -520,29 +521,34 @@ export default function AccountPage() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <Gift className="w-5 h-5 text-orange-500" />
-            Credits Kopen
+            Buy Credits
           </h3>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            {CREDIT_PRICING.PACKAGES.map((pkg) => (
+            {Object.entries(UNIFIED_CREDIT_PACKS).map(([key, pack]) => (
               <button
-                key={pkg.id}
-                onClick={() => handleBuyCredits(pkg.id)}
+                key={pack.priceId}
+                onClick={() => navigate('/pricing')}
                 className={`relative p-4 rounded-xl border-2 transition hover:shadow-md text-left ${
-                  pkg.popular
+                  pack.popular
                     ? 'border-orange-300 bg-orange-50'
                     : 'border-gray-200 hover:border-orange-200'
                 }`}
               >
-                {pkg.popular && (
+                {pack.popular && (
                   <span className="absolute -top-2 right-3 px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded-full">
-                    Populair
+                    Popular
+                  </span>
+                )}
+                {pack.bestValue && (
+                  <span className="absolute -top-2 right-3 px-2 py-0.5 bg-green-500 text-white text-xs font-medium rounded-full">
+                    Best Value
                   </span>
                 )}
 
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-2xl font-bold text-gray-800">
-                    {pkg.credits}
+                    {pack.credits}
                   </span>
                   <CreditCard className="w-5 h-5 text-gray-400" />
                 </div>
@@ -551,18 +557,20 @@ export default function AccountPage() {
 
                 <div className="flex items-baseline gap-1">
                   <span className="text-xl font-bold text-orange-600">
-                    ${pkg.price.toFixed(2)}
+                    ${pack.price.toFixed(2)}
                   </span>
                   <span className="text-xs text-gray-500">
-                    (${(pkg.price / pkg.credits).toFixed(3)}/credit)
+                    (${pack.pricePerCredit.toFixed(2)}/credit)
                   </span>
                 </div>
+
+                <p className="text-xs text-gray-500 mt-2">{pack.description}</p>
               </button>
             ))}
           </div>
 
           <p className="mt-4 text-xs text-gray-500 text-center">
-            Veilig betalen via Stripe. Je credits worden direct bijgeschreven.
+            Secure payment via Stripe. Your credits will be added immediately.
           </p>
         </div>
 
@@ -570,14 +578,14 @@ export default function AccountPage() {
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <History className="w-5 h-5 text-blue-500" />
-            Transactiegeschiedenis
+            Transaction History
           </h3>
 
           <div className="text-center py-8 text-gray-500">
             <History className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Nog geen transacties</p>
+            <p className="text-sm">No transactions yet</p>
             <p className="text-xs text-gray-400 mt-1">
-              Je transacties verschijnen hier na je eerste aankoop
+              Your transactions will appear here after your first purchase
             </p>
           </div>
         </div>
@@ -589,7 +597,7 @@ export default function AccountPage() {
             className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition"
           >
             <ExternalLink className="w-4 h-4" />
-            <span>Hulp nodig? Bekijk onze FAQ</span>
+            <span>Need help? View our FAQ</span>
           </a>
         </div>
       </main>
