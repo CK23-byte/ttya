@@ -26,6 +26,7 @@ interface SupabaseAuthContextType {
   // Auth methods
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: AuthError | null }>
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signInWithOAuth: (provider: 'google' | 'apple') => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>
   updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>
@@ -229,6 +230,24 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     return { error }
   }
 
+  // Sign in with OAuth (Google, Apple)
+  const signInWithOAuth = async (
+    provider: 'google' | 'apple'
+  ): Promise<{ error: AuthError | null }> => {
+    if (!isConfigured) {
+      return { error: { message: 'Supabase niet geconfigureerd' } as AuthError }
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    return { error }
+  }
+
   // Sign out
   const signOut = async () => {
     await supabase.auth.signOut()
@@ -280,6 +299,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         refreshCredits,
         signUp,
         signIn,
+        signInWithOAuth,
         signOut,
         resetPassword,
         updatePassword,

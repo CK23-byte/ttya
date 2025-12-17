@@ -40,19 +40,19 @@ const PROFILES_STORAGE_KEY = 'personality_profiles'
 
 // Voice configuration
 interface VoiceConfig {
-  type: 'cloned' | 'standard' // cloned = ElevenLabs, standard = OpenAI
-  clonedVoiceId?: string // ElevenLabs voice ID (if type is 'cloned')
-  clonedVoiceName?: string // ElevenLabs voice name
-  standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if type is 'standard')
+  type: 'cloned' | 'standard' // cloned = voice cloning, standard = preset voice
+  clonedVoiceId?: string // Cloned voice ID (if type is 'cloned')
+  clonedVoiceName?: string // Cloned voice name
+  standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // Standard voice (if type is 'standard')
 }
 
 // Avatar configuration
 interface AvatarConfig {
-  type: 'custom' | 'default' // custom = HeyGen uploaded, default = HeyGen preset
-  customAvatarId?: string // HeyGen avatar ID (if type is 'custom')
-  customAvatarName?: string // HeyGen avatar name
+  type: 'custom' | 'default' // custom = custom uploaded, default = preset avatar
+  customAvatarId?: string // Custom avatar ID (if type is 'custom')
+  customAvatarName?: string // Custom avatar name
   customAvatarThumbnail?: string // Preview thumbnail URL
-  defaultAvatar?: string // Default HeyGen avatar ID (if type is 'default')
+  defaultAvatar?: string // Default avatar ID (if type is 'default')
 }
 
 // Storage interface (what gets saved - with base64)
@@ -1053,9 +1053,9 @@ export default function ProfileImprovementPage() {
       const videoBase64 = await base64Promise
       const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
 
-      console.log('Uploading avatar to HeyGen...', { avatarName, videoSize: videoBlob.size })
+      console.log('Uploading avatar...', { avatarName, videoSize: videoBlob.size })
 
-      // Upload to HeyGen
+      // Upload avatar
       const response = await fetch('/api/heygen/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1505,7 +1505,7 @@ export default function ProfileImprovementPage() {
                     <div className="text-left">
                       <p className="font-semibold text-gray-900">🔊 Standard Voice</p>
                       <p className="text-xs text-gray-600 mt-1">
-                        Use OpenAI's preset voices
+                        Use preset AI voices
                       </p>
                     </div>
                   </button>
@@ -1518,7 +1518,7 @@ export default function ProfileImprovementPage() {
                   {!profileData.voiceConfig.clonedVoiceId ? (
                     <>
                       <p className="text-sm text-purple-800">
-                        <strong>Voice Cloning:</strong> Upload your voice sample to ElevenLabs to create a cloned voice. This requires at least 1 voice sample.
+                        <strong>Voice Cloning:</strong> Upload your voice sample to create a cloned voice. This requires at least 1 voice sample.
                       </p>
                       <button
                         onClick={handleCloneVoice}
@@ -1537,7 +1537,7 @@ export default function ProfileImprovementPage() {
                         ) : (
                           <>
                             <Upload className="w-5 h-5" />
-                            Clone Voice to ElevenLabs
+                            Clone Voice
                           </>
                         )}
                       </button>
@@ -1572,7 +1572,7 @@ export default function ProfileImprovementPage() {
               {profileData.voiceConfig?.type === 'standard' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
                   <label className="block text-sm font-medium text-gray-700">
-                    Select OpenAI Voice
+                    Select AI Voice
                   </label>
                   <select
                     value={profileData.voiceConfig.standardVoice || 'alloy'}
@@ -1587,7 +1587,7 @@ export default function ProfileImprovementPage() {
                     <option value="shimmer">Shimmer (Soft Female)</option>
                   </select>
                   <p className="text-xs text-blue-700">
-                    💡 These are preset voices from OpenAI. No voice cloning required.
+                    💡 These are preset AI voices. No voice cloning required.
                   </p>
                 </div>
               )}
@@ -1641,7 +1641,7 @@ export default function ProfileImprovementPage() {
                     <div className="text-left">
                       <p className="font-semibold text-gray-900">🤖 Default Avatar</p>
                       <p className="text-xs text-gray-600 mt-1">
-                        Use HeyGen's preset avatars
+                        Use preset AI avatars
                       </p>
                     </div>
                   </button>
@@ -1654,7 +1654,7 @@ export default function ProfileImprovementPage() {
                   {!profileData.avatarConfig.customAvatarId ? (
                     <>
                       <p className="text-sm text-pink-800">
-                        <strong>Avatar Creation:</strong> Upload a 2-10 second video with clear frontal face and good lighting. This will be used to create your custom HeyGen avatar.
+                        <strong>Avatar Creation:</strong> Upload a 2-10 second video with clear frontal face and good lighting. This will be used to create your custom AI avatar.
                       </p>
 
                       {/* Avatar Preview */}
@@ -1736,7 +1736,7 @@ export default function ProfileImprovementPage() {
               {profileData.avatarConfig?.type === 'default' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
                   <p className="text-sm text-blue-800">
-                    Using default HeyGen avatar: <strong>Angela</strong>
+                    Using default AI avatar: <strong>Angela</strong>
                   </p>
                   <p className="text-xs text-blue-700">
                     💡 Default avatars are ready to use immediately. No setup required!
