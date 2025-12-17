@@ -26,7 +26,6 @@ import {
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { UNIFIED_CREDIT_PACKS } from '../utils/unifiedCredits'
-import { formatCredits } from '../utils/unifiedCredits'
 import Header from '../components/Header'
 
 export default function AccountPage() {
@@ -46,11 +45,6 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState(false)
-
-  const handleBuyCredits = async (packageId: string) => {
-    // TODO: Implement Stripe checkout
-    alert(`Stripe checkout voor ${packageId} komt binnenkort!`)
-  }
 
   const handleSaveName = async () => {
     if (!user) return
@@ -525,22 +519,22 @@ export default function AccountPage() {
           </h3>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            {Object.entries(UNIFIED_CREDIT_PACKS).map(([key, pack]) => (
+            {Object.entries(UNIFIED_CREDIT_PACKS).map(([_key, pack]) => (
               <button
                 key={pack.priceId}
                 onClick={() => navigate('/pricing')}
                 className={`relative p-4 rounded-xl border-2 transition hover:shadow-md text-left ${
-                  pack.popular
+                  'popular' in pack && pack.popular
                     ? 'border-orange-300 bg-orange-50'
                     : 'border-gray-200 hover:border-orange-200'
                 }`}
               >
-                {pack.popular && (
+                {'popular' in pack && pack.popular && (
                   <span className="absolute -top-2 right-3 px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded-full">
                     Popular
                   </span>
                 )}
-                {pack.bestValue && (
+                {'bestValue' in pack && pack.bestValue && (
                   <span className="absolute -top-2 right-3 px-2 py-0.5 bg-green-500 text-white text-xs font-medium rounded-full">
                     Best Value
                   </span>
