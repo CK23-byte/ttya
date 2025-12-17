@@ -19,6 +19,7 @@ import {
   Crown,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { usePayment } from '../contexts/PaymentContext'
 import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile, Message } from '../types'
@@ -53,18 +54,31 @@ interface StoredProfileData {
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { isAuthenticated, encryptionKey } = useAuth()
+  const { user, isLoading: supabaseLoading, isConfigured } = useSupabaseAuth()
   const { subscription } = usePayment()
   const [profiles, setProfiles] = useState<ProfileWithStats[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // Check auth: Support both old password-based and new Supabase email auth
+  const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
+
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for Supabase auth to finish loading
+    if (isConfigured && supabaseLoading) {
+      logger.log('Waiting for Supabase auth to load...')
+      return
+    }
+
+    // Redirect to login if not authenticated
+    if (!isUserAuthenticated) {
+      logger.log('User not authenticated, redirecting to email-auth')
       navigate('/email-auth')
       return
     }
 
+    logger.log('User authenticated, loading profiles')
     loadProfiles()
-  }, [isAuthenticated, encryptionKey])
+  }, [isUserAuthenticated, supabaseLoading, encryptionKey])
 
   const loadProfiles = async () => {
     if (!encryptionKey) return
