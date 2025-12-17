@@ -92,12 +92,6 @@ export default function Header({ variant = 'default' }: HeaderProps) {
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Navigation Links */}
           <button
-            onClick={() => navigate('/living-legacy')}
-            className="text-sm sm:text-base text-gray-600 hover:text-orange-600 font-medium transition-colors px-2 hidden sm:block"
-          >
-            Living Legacy
-          </button>
-          <button
             onClick={() => navigate('/pricing')}
             className="text-sm sm:text-base text-gray-600 hover:text-orange-600 font-medium transition-colors px-2"
           >
