@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { PaymentProvider } from './contexts/PaymentContext'
 import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext'
+import { logger } from './utils/logger'
 
 // Eager load: Only landing and auth pages (critical for first paint)
 import LandingPage from './pages/LandingPage'
@@ -34,12 +35,12 @@ const PageLoader = () => (
 )
 
 function App() {
-  // Log app version on load
+  // Log app version on load (dev only)
   useEffect(() => {
-    console.log('🚀 TalkToYouAI v2.10.0 - Avatar Upload Edition')
-    console.log('📋 Features: Profile photo upload, Security fixes, Supabase Storage integration')
-    console.log('⏰ Deployed:', new Date().toISOString())
-    console.log('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
+    logger.info('🚀 TalkToYouAI v2.10.0 - Avatar Upload Edition')
+    logger.info('📋 Features: Profile photo upload, Security fixes, Supabase Storage integration')
+    logger.info('⏰ Deployed:', new Date().toISOString())
+    logger.info('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
   }, [])
 
   // Security: Enforce HTTPS in production
