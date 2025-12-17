@@ -1,17 +1,10 @@
 /**
-import { logger } from '../utils/logger'
  * Memories Page
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Upload system for WhatsApp exports, photos, and audio clips
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect } from 'react'
-import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -20,6 +13,7 @@ import WhatsAppUploader from '../components/WhatsAppUploader'
 import PhotoUploader from '../components/PhotoUploader'
 import AudioUploader from '../components/AudioUploader'
 import { WhatsAppMessage, PhotoMemory, AudioMemory, MemoryCollection } from '../types'
+import { logger } from '../utils/logger'
 
 const MEMORIES_STORAGE_KEY = 'memory_collection'
 

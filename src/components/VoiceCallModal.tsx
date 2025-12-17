@@ -1,22 +1,14 @@
 /**
-import { logger } from '../utils/logger'
  * Voice Call Modal Component
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Allows users to:
-import { logger } from '../utils/logger'
  * - Buy voice call credits
-import { logger } from '../utils/logger'
  * - Upload required voice sample (10+ seconds)
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useRef } from 'react'
-import { logger } from '../utils/logger'
 import { X, Phone, Mic, Upload, Play, Pause, ShoppingCart, Clock, AlertCircle } from 'lucide-react'
+import { logger } from '../utils/logger'
 
 type ChatTheme = 'whatsapp' | 'imessage' | 'messenger'
 

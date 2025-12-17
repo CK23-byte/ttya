@@ -1,15 +1,11 @@
 /**
-import { logger } from '../utils/logger'
  * Photo Uploader Component
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState } from 'react'
-import { logger } from '../utils/logger'
 import { Upload, Image as ImageIcon, X } from 'lucide-react'
 import { PhotoMemory } from '../types'
+import { logger } from '../utils/logger'
 
 interface PhotoUploaderProps {
   onPhotosLoaded: (photos: PhotoMemory[]) => void

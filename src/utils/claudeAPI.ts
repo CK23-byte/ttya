@@ -1,17 +1,11 @@
 /**
-import { logger } from '../utils/logger'
  * Anthropic Claude API Integration
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Handles communication with Claude API for AI responses via Vercel serverless function
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { Message } from '../types'
-import { logger } from '../utils/logger'
+import { logger } from './logger'
 
 // Use Vercel serverless function instead of direct API calls
 const API_ENDPOINT = '/api/chat'

@@ -1,28 +1,17 @@
 /**
-import { logger } from '../utils/logger'
  * Chat Page - Multi-Theme Chat Interface
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Features:
-import { logger } from '../utils/logger'
  * - Theme switcher: WhatsApp, iMessage, Messenger
-import { logger } from '../utils/logger'
  * - Left sidebar with conversation list
-import { logger } from '../utils/logger'
  * - Right panel with active chat
-import { logger } from '../utils/logger'
  * - Persistent chat history per personality profile
-import { logger } from '../utils/logger'
  * - Working emoji picker
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect, useRef } from 'react'
-import { logger } from '../utils/logger'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   MoreVertical,
   Search,

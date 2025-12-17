@@ -1,20 +1,14 @@
 /**
-import { logger } from '../utils/logger'
  * Avatar Orchestration Service
-import { logger } from '../utils/logger'
  * Combines ElevenLabs voice cloning + D-ID video generation
-import { logger } from '../utils/logger'
  * Main service for creating and interacting with Living Legacy avatars
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import * as ElevenLabs from './elevenlabs.service'
-import { logger } from '../utils/logger'
 import * as DID from './did.service'
 import * as Storage from './storage.service'
 import { supabase } from './storage.service'
+import { logger } from '../utils/logger'
 
 export interface AvatarProfile {
   id: string

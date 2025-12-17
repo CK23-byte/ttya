@@ -1,21 +1,14 @@
 /**
-import { logger } from '../utils/logger'
  * Payment Context
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Manages subscription status and payment state
-import { logger } from '../utils/logger'
  * Stores subscription info encrypted in localStorage
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { logger } from '../utils/logger'
 import { useAuth } from './AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
+import { logger } from '../utils/logger'
 
 type SubscriptionPlan = 'free' | 'pro' | 'lifetime'
 

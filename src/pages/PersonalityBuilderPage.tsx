@@ -1,23 +1,17 @@
 /**
-import { logger } from '../utils/logger'
  * Simplified Personality Builder
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Create a personality profile from WhatsApp export in 3 simple steps
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect } from 'react'
-import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload, User, Check, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { setSecure, getSecure } from '../utils/secureStorage'
 import { parseWhatsAppExport, getUniqueSenders, filterBySender } from '../utils/whatsappParser'
 import { PersonalityProfile, WhatsAppMessage } from '../types'
+import { logger } from '../utils/logger'
 
 const PERSONALITY_STORAGE_KEY = 'personality_profiles'
 

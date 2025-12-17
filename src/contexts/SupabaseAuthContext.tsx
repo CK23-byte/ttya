@@ -1,23 +1,16 @@
 /**
-import { logger } from '../utils/logger'
  * Supabase Authentication Context
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Manages email-based authentication with Supabase
-import { logger } from '../utils/logger'
  * Handles user sessions, profiles, and credits
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { logger } from '../utils/logger'
 import { User, Session, AuthError, AuthChangeEvent } from '@supabase/supabase-js'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { Profile, CREDIT_PRICING } from '../types/database'
+import { logger } from '../utils/logger'
 
 interface SupabaseAuthContextType {
   // Auth state

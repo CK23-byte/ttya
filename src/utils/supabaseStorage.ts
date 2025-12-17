@@ -1,17 +1,11 @@
 /**
-import { logger } from '../utils/logger'
  * Supabase Storage Utilities
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Handles file uploads to Supabase Storage for large files (videos, photos, audio)
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { supabase } from '../lib/supabase'
-import { logger } from '../utils/logger'
+import { logger } from './logger'
 
 export interface UploadResult {
   url: string

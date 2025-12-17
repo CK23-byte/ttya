@@ -1,15 +1,11 @@
 /**
-import { logger } from '../utils/logger'
  * Audio Uploader Component
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState } from 'react'
-import { logger } from '../utils/logger'
 import { Upload, Music, X, Play, Pause } from 'lucide-react'
 import { AudioMemory } from '../types'
+import { logger } from '../utils/logger'
 
 interface AudioUploaderProps {
   onAudioLoaded: (audio: AudioMemory[]) => void

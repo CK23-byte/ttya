@@ -1,19 +1,12 @@
 /**
-import { logger } from '../utils/logger'
  * Secure Storage Utility
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Wrapper for localStorage that automatically encrypts/decrypts data
-import { logger } from '../utils/logger'
  * All data stored using this utility is encrypted with AES-GCM
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { encrypt, decrypt } from './encryption'
-import { logger } from '../utils/logger'
+import { logger } from './logger'
 
 const STORAGE_PREFIX = 'ttya_secure_'
 const METADATA_KEY = 'ttya_metadata'

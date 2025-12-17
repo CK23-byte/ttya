@@ -1,24 +1,15 @@
 /**
-import { logger } from '../utils/logger'
  * Video Call Page - WhatsApp Style Video Call
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Features:
-import { logger } from '../utils/logger'
  * - HeyGen Interactive Avatar powered video
-import { logger } from '../utils/logger'
  * - WhatsApp-style video call interface
-import { logger } from '../utils/logger'
  * - Real-time conversation with avatars
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect, useRef } from 'react'
-import { logger } from '../utils/logger'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   PhoneOff,
   Mic,

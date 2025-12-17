@@ -1,18 +1,12 @@
 /**
-import { logger } from '../utils/logger'
  * Account Page
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Shows user account info, credits balance, and purchase options
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useRef } from 'react'
-import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   ArrowLeft,
   CreditCard,
@@ -32,7 +26,6 @@ import {
   Camera,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { VOICE_CREDIT_PACKS, VIDEO_CREDIT_PACKS } from '../lib/stripe'
 import Header from '../components/Header'
 
 export default function AccountPage() {

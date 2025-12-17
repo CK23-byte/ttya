@@ -1,25 +1,14 @@
 /**
-import { logger } from '../utils/logger'
  * useWebRTC - Custom Hook for OpenAI Realtime WebRTC Connection
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Manages the complete lifecycle of a voice call:
-import { logger } from '../utils/logger'
  * - Microphone access
-import { logger } from '../utils/logger'
  * - WebRTC connection to OpenAI Realtime API
-import { logger } from '../utils/logger'
  * - Audio streaming and playback
-import { logger } from '../utils/logger'
  * - Transcription handling
-import { logger } from '../utils/logger'
  * - Session management
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { logger } from '../utils/logger'
 

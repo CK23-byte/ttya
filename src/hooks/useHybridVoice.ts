@@ -1,29 +1,16 @@
 /**
-import { logger } from '../utils/logger'
  * useHybridVoice - Custom Hook for Hybrid Voice Pipeline
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Pipeline: Whisper (STT) → GPT-4 (Chat) → ElevenLabs (TTS)
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * This hook orchestrates:
-import { logger } from '../utils/logger'
  * 1. Audio recording with Voice Activity Detection
-import { logger } from '../utils/logger'
  * 2. Transcription with OpenAI Whisper
-import { logger } from '../utils/logger'
  * 3. Chat completion with GPT-4
-import { logger } from '../utils/logger'
  * 4. Text-to-speech with ElevenLabs cloned voice
-import { logger } from '../utils/logger'
  * 5. Audio playback with queueing
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { logger } from '../utils/logger'
 

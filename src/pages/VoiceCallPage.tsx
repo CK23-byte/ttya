@@ -1,30 +1,19 @@
 /**
-import { logger } from '../utils/logger'
  * Voice Call Page - Phone-style Interface for AI Voice Calls
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Full-screen phone call interface with:
-import { logger } from '../utils/logger'
  * - Large profile photo/avatar
-import { logger } from '../utils/logger'
  * - Call duration timer
-import { logger } from '../utils/logger'
  * - Live transcription
-import { logger } from '../utils/logger'
  * - Audio visualization
-import { logger } from '../utils/logger'
  * - Mute and end call controls
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect, useRef } from 'react'
-import { logger } from '../utils/logger'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Phone, PhoneOff, Mic, MicOff, User, AlertCircle } from 'lucide-react'
 import { useWebRTC } from '../hooks/useWebRTC'
+import { logger } from '../utils/logger'
 import { useHybridVoice } from '../hooks/useHybridVoice'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import AudioVisualizer from '../components/AudioVisualizer'

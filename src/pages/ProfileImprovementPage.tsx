@@ -1,30 +1,18 @@
 /**
-import { logger } from '../utils/logger'
  * Profile Improvement Page
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Allows users to enhance personality profiles by adding:
-import { logger } from '../utils/logger'
  * - Text notes and memories
-import { logger } from '../utils/logger'
  * - Voice samples
-import { logger } from '../utils/logger'
  * - Photos
-import { logger } from '../utils/logger'
  * - Videos
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Shows profile completeness indicator (but everything is optional)
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect, useRef } from 'react'
-import { logger } from '../utils/logger'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   ArrowLeft,
   FileText,

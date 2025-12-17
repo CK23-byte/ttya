@@ -1,13 +1,8 @@
 /**
-import { logger } from '../utils/logger'
  * WebRTC Service for Living Legacy Real-Time Conversations
-import { logger } from '../utils/logger'
  * Handles peer connection, audio streaming, and real-time communication
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { io, Socket } from 'socket.io-client'
 import { logger } from '../utils/logger'
 

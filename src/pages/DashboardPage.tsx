@@ -1,20 +1,13 @@
 /**
-import { logger } from '../utils/logger'
  * Dashboard Page - Active Chats Overview
-import { logger } from '../utils/logger'
  *
-import { logger } from '../utils/logger'
  * Shows all personality profiles as cards
-import { logger } from '../utils/logger'
  * Easy navigation to individual chats
-import { logger } from '../utils/logger'
  */
-import { logger } from '../utils/logger'
 
-import { logger } from '../utils/logger'
 import { useState, useEffect } from 'react'
-import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   Plus,
   MessageCircle,
