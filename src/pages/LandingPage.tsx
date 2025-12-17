@@ -161,13 +161,6 @@ export default function LandingPage() {
           Pricing
         </button>
         <button
-          onClick={() => navigate('/living-legacy')}
-          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600 whitespace-nowrap"
-        >
-          <span className="hidden sm:inline">Living Legacy</span>
-          <span className="sm:hidden">Legacy</span>
-        </button>
-        <button
           onClick={() => navigate('/email-auth')}
           className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
         >
@@ -950,14 +943,14 @@ export default function LandingPage() {
           {/* CTA Button */}
           <div className="text-center">
             <button
-              onClick={() => navigate('/living-legacy')}
+              onClick={() => navigate('/email-auth')}
               className="group px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-2xl hover:shadow-orange-500/50 transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-3"
             >
-              Create Your Avatar Now
+              Start Your Journey Now
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </button>
             <p className="text-sm text-purple-200 mt-4">
-              Fine-tune your digital personality • Available for loved ones forever
+              Create your AI companion • Available whenever you need
             </p>
           </div>
         </div>
