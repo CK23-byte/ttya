@@ -186,7 +186,7 @@ export default function Header({ variant = 'default' }: HeaderProps) {
             </div>
           ) : (
             <button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/email-auth')}
               className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
             >
               Sign In

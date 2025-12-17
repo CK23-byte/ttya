@@ -68,9 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // For protected routes: redirect to setup if not complete, or login if not authenticated
     if (!setupComplete) {
-      navigate('/setup')
+      navigate('/email-auth')
     } else if (!authState.isAuthenticated) {
-      navigate('/login')
+      navigate('/email-auth')
     }
   }, [])
 
@@ -202,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       encryptionKey: null,
       lastActivity: Date.now(),
     })
-    navigate('/login')
+    navigate('/email-auth')
   }
 
   /**
@@ -235,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsSetupComplete(false)
       setLoginAttempts(0)
       setLockoutEndsAt(null)
-      navigate('/setup')
+      navigate('/email-auth')
     }
   }
 

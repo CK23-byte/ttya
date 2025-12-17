@@ -163,7 +163,7 @@ export default function ChatPage() {
     // Give auth context time to initialize before redirecting
     const timeoutId = setTimeout(() => {
       if (!isAuthenticated && !encryptionKey) {
-        navigate('/login')
+        navigate('/email-auth')
       }
     }, 100)
 

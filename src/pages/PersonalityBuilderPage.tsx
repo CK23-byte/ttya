@@ -33,7 +33,7 @@ export default function PersonalityBuilderPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/email-auth')
     }
   }, [isAuthenticated, navigate])
 

@@ -28,7 +28,7 @@ export default function MemoriesPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/email-auth')
     }
   }, [isAuthenticated, navigate])
 

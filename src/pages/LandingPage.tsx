@@ -74,7 +74,7 @@ export default function LandingPage() {
     if (user) {
       navigate('/dashboard')
     } else {
-      navigate('/auth')
+      navigate('/email-auth')
     }
   }
 
@@ -168,7 +168,7 @@ export default function LandingPage() {
           <span className="sm:hidden">Legacy</span>
         </button>
         <button
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate('/email-auth')}
           className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
         >
           Sign In
@@ -204,7 +204,7 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-6">
               <button
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/email-auth')}
                 className="group px-6 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
               >
                 Start Free Now
@@ -269,7 +269,7 @@ export default function LandingPage() {
                 <div className="px-4 py-4 bg-gradient-to-r from-orange-50 to-rose-50 border-t border-orange-100 text-center">
                   <p className="text-sm font-medium text-gray-800 mb-2">Want to create your own?</p>
                   <button
-                    onClick={() => navigate('/auth')}
+                    onClick={() => navigate('/email-auth')}
                     className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg text-sm font-medium hover:shadow-md transition"
                   >
                     Get Started Free
@@ -513,7 +513,7 @@ export default function LandingPage() {
           {/* CTA */}
           <div className="text-center mt-12">
             <button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/email-auth')}
               className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2"
             >
               Create Your First Memory
@@ -876,7 +876,7 @@ export default function LandingPage() {
               <span className="font-semibold text-gray-900"> Start preserving what matters today.</span>
             </p>
             <button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/email-auth')}
               className="group px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-3"
             >
               Start Preserving Memories Now
@@ -1118,7 +1118,7 @@ export default function LandingPage() {
             Start with 10 free credits. No credit card required.
           </p>
           <button
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate('/email-auth')}
             className="group px-10 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-3 mx-auto"
           >
             Create Free Account

@@ -74,7 +74,7 @@ export default function VideoPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/email-auth')
       return
     }
 
