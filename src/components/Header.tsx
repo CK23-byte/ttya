@@ -21,7 +21,6 @@ import {
   Zap,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { formatCredits } from '../utils/unifiedCredits'
 
 interface HeaderProps {
   variant?: 'default' | 'transparent'
@@ -101,13 +100,13 @@ export default function Header({ variant = 'default' }: HeaderProps) {
           {/* Credit Display - Always visible when logged in */}
           {user && profile && (
             <div
-              onClick={() => navigate('/pricing')}
+              onClick={() => navigate('/account')}
               className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-200 rounded-full cursor-pointer hover:shadow-sm transition group"
-              title="Click to buy more credits"
+              title="View your credits"
             >
               <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 group-hover:scale-110 transition-transform" />
               <span className="text-xs sm:text-sm font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
-                {formatCredits(user.email, profile.credits)}
+                {profile.credits || 0}
               </span>
               <span className="text-xs text-gray-600 hidden sm:inline">credits</span>
             </div>

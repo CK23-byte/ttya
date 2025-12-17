@@ -25,7 +25,7 @@ import {
   Camera,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { UNIFIED_CREDIT_PACKS } from '../utils/unifiedCredits'
+import { VOICE_CREDIT_PACKS, VIDEO_CREDIT_PACKS } from '../lib/stripe'
 import Header from '../components/Header'
 
 export default function AccountPage() {
@@ -479,34 +479,34 @@ export default function AccountPage() {
             <Crown className="w-12 h-12 text-white/30" />
           </div>
 
-          {/* What Your Credits Can Do */}
+          {/* Credit Breakdown */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            {/* Text */}
+            {/* Text Credits */}
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{Math.floor((profile?.credits || 0) * 50)}</p>
-              <p className="text-white/80 text-xs mt-1">💬 Messages</p>
-              <p className="text-white/60 text-xs">(1 credit = 50)</p>
+              <p className="text-2xl font-bold">{profile?.text_credits || 0}</p>
+              <p className="text-white/80 text-xs mt-1">💬 Text</p>
+              <p className="text-white/60 text-xs">(messages)</p>
             </div>
 
-            {/* Voice */}
+            {/* Voice Credits */}
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{Math.floor((profile?.credits || 0) * 0.5)}</p>
-              <p className="text-white/80 text-xs mt-1">🎙️ Voice min</p>
-              <p className="text-white/60 text-xs">(2 credits/min)</p>
+              <p className="text-2xl font-bold">{profile?.voice_credits || 0}</p>
+              <p className="text-white/80 text-xs mt-1">🎙️ Voice</p>
+              <p className="text-white/60 text-xs">({Math.floor((profile?.voice_credits || 0) / 2)}min)</p>
             </div>
 
-            {/* Video */}
+            {/* Video Credits */}
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{((profile?.credits || 0) * 0.1).toFixed(1)}</p>
-              <p className="text-white/80 text-xs mt-1">📹 Video min</p>
-              <p className="text-white/60 text-xs">(10 credits/min)</p>
+              <p className="text-2xl font-bold">{profile?.video_credits || 0}</p>
+              <p className="text-white/80 text-xs mt-1">📹 Video</p>
+              <p className="text-white/60 text-xs">({Math.floor((profile?.video_credits || 0) / 5)}min)</p>
             </div>
           </div>
 
           <div className="bg-white/20 rounded-lg p-3 text-sm">
             <p className="flex items-center gap-2 text-xs">
               <Sparkles className="w-4 h-4" />
-              <span>One credit type - use for messages, voice, or video</span>
+              <span>Text: 1 credit/msg • Voice: 2 credits/min • Video: 5 credits/min</span>
             </p>
           </div>
         </div>
@@ -518,54 +518,16 @@ export default function AccountPage() {
             Buy Credits
           </h3>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            {Object.entries(UNIFIED_CREDIT_PACKS).map(([_key, pack]) => (
-              <button
-                key={pack.priceId}
-                onClick={() => navigate('/pricing')}
-                className={`relative p-4 rounded-xl border-2 transition hover:shadow-md text-left ${
-                  'popular' in pack && pack.popular
-                    ? 'border-orange-300 bg-orange-50'
-                    : 'border-gray-200 hover:border-orange-200'
-                }`}
-              >
-                {'popular' in pack && pack.popular && (
-                  <span className="absolute -top-2 right-3 px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded-full">
-                    Popular
-                  </span>
-                )}
-                {'bestValue' in pack && pack.bestValue && (
-                  <span className="absolute -top-2 right-3 px-2 py-0.5 bg-green-500 text-white text-xs font-medium rounded-full">
-                    Best Value
-                  </span>
-                )}
-
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl font-bold text-gray-800">
-                    {pack.credits}
-                  </span>
-                  <CreditCard className="w-5 h-5 text-gray-400" />
-                </div>
-
-                <p className="text-sm text-gray-600 mb-2">credits</p>
-
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-bold text-orange-600">
-                    ${pack.price.toFixed(2)}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    (${pack.pricePerCredit.toFixed(2)}/credit)
-                  </span>
-                </div>
-
-                <p className="text-xs text-gray-500 mt-2">{pack.description}</p>
-              </button>
-            ))}
-          </div>
-
-          <p className="mt-4 text-xs text-gray-500 text-center">
-            Secure payment via Stripe. Your credits will be added immediately.
+          <p className="text-sm text-gray-600 mb-4">
+            Purchase voice and video credits for calling features. Click to view all options.
           </p>
+
+          <button
+            onClick={() => navigate('/pricing')}
+            className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-medium hover:from-orange-600 hover:to-rose-600 transition"
+          >
+            View All Credit Packs
+          </button>
         </div>
 
         {/* Transaction History */}
