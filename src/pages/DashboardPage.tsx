@@ -1,11 +1,19 @@
 /**
+import { logger } from '../utils/logger'
  * Dashboard Page - Active Chats Overview
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Shows all personality profiles as cards
+import { logger } from '../utils/logger'
  * Easy navigation to individual chats
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus,
@@ -102,7 +110,7 @@ export default function DashboardPage() {
 
       setProfiles(profilesWithStats)
     } catch (error) {
-      console.error('Error loading profiles:', error)
+      logger.error('Error loading profiles:', error)
     } finally {
       setIsLoading(false)
     }
@@ -177,7 +185,7 @@ export default function DashboardPage() {
 
       navigate(`/voice-call?${params.toString()}`)
     } catch (error) {
-      console.error('Error checking voice samples:', error)
+      logger.error('Error checking voice samples:', error)
       // On error, show improvement page to be safe
       alert('Please add a voice sample to enable voice calls!')
       navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)

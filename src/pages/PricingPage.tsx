@@ -42,6 +42,7 @@ import {
   VideoCreditPackType,
   BillingPeriod
 } from '../lib/stripe'
+import { logger } from '../utils/logger'
 import Header from '../components/Header'
 
 export default function PricingPage() {
@@ -81,7 +82,7 @@ export default function PricingPage() {
     try {
       await redirectToCheckout(priceId, user.email || undefined)
     } catch (err) {
-      console.error('Checkout error:', err)
+      logger.error('Checkout error:', err)
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
       setIsLoading(null)
@@ -101,7 +102,7 @@ export default function PricingPage() {
     try {
       await buyVoiceCredits(pack, user.email || undefined)
     } catch (err) {
-      console.error('Checkout error:', err)
+      logger.error('Checkout error:', err)
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
       setIsLoading(null)
@@ -121,7 +122,7 @@ export default function PricingPage() {
     try {
       await buyVideoCredits(pack, user.email || undefined)
     } catch (err) {
-      console.error('Checkout error:', err)
+      logger.error('Checkout error:', err)
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
       setIsLoading(null)

@@ -1,12 +1,21 @@
 /**
+import { logger } from '../utils/logger'
  * Voice Call Modal Component
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Allows users to:
+import { logger } from '../utils/logger'
  * - Buy voice call credits
+import { logger } from '../utils/logger'
  * - Upload required voice sample (10+ seconds)
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useRef } from 'react'
+import { logger } from '../utils/logger'
 import { X, Phone, Mic, Upload, Play, Pause, ShoppingCart, Clock, AlertCircle } from 'lucide-react'
 
 type ChatTheme = 'whatsapp' | 'imessage' | 'messenger'
@@ -101,7 +110,7 @@ export default function VoiceCallModal({
         setRecordingTime(prev => prev + 1)
       }, 1000)
     } catch (error) {
-      console.error('Error starting recording:', error)
+      logger.error('Error starting recording:', error)
       alert('Could not access microphone. Please check permissions.')
     }
   }

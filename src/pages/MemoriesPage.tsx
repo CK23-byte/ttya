@@ -1,10 +1,17 @@
 /**
+import { logger } from '../utils/logger'
  * Memories Page
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Upload system for WhatsApp exports, photos, and audio clips
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -49,7 +56,7 @@ export default function MemoriesPage() {
           setAudioClips(saved.audioClips || [])
         }
       } catch (error) {
-        console.error('Error loading memories:', error)
+        logger.error('Error loading memories:', error)
       }
     }
 
@@ -80,7 +87,7 @@ export default function MemoriesPage() {
         setSaveSuccess(false)
       }, 3000)
     } catch (error) {
-      console.error('Error saving memories:', error)
+      logger.error('Error saving memories:', error)
       alert('Fout bij opslaan. Probeer het opnieuw.')
     } finally {
       setIsSaving(false)

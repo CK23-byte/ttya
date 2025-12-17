@@ -1,10 +1,17 @@
 /**
+import { logger } from '../utils/logger'
  * Account Page
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Shows user account info, credits balance, and purchase options
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useRef } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -57,7 +64,7 @@ export default function AccountPage() {
         .eq('id', user.id)
 
       if (error) {
-        console.error('Error updating display name:', error)
+        logger.error('Error updating display name:', error)
         alert('Something went wrong saving your name. Please try again.')
         return
       }
@@ -66,7 +73,7 @@ export default function AccountPage() {
       // Refresh the page to show updated name
       window.location.reload()
     } catch (error) {
-      console.error('Error saving name:', error)
+      logger.error('Error saving name:', error)
       alert('Something went wrong saving your name.')
     }
   }
@@ -106,7 +113,7 @@ export default function AccountPage() {
         })
 
       if (uploadError) {
-        console.error('Upload error:', uploadError)
+        logger.error('Upload error:', uploadError)
         alert('Er ging iets mis bij het uploaden. Please try again.')
         setIsUploadingAvatar(false)
         return
@@ -124,7 +131,7 @@ export default function AccountPage() {
         .eq('id', user.id)
 
       if (updateError) {
-        console.error('Error updating profile:', updateError)
+        logger.error('Error updating profile:', updateError)
         alert('Er ging iets mis bij het opslaan. Please try again.')
         setIsUploadingAvatar(false)
         return
@@ -133,7 +140,7 @@ export default function AccountPage() {
       // Refresh page to show new avatar
       window.location.reload()
     } catch (error) {
-      console.error('Error uploading avatar:', error)
+      logger.error('Error uploading avatar:', error)
       alert('Er ging iets mis. Please try again.')
       setIsUploadingAvatar(false)
     }
@@ -161,7 +168,7 @@ export default function AccountPage() {
       })
 
       if (error) {
-        console.error('Error updating password:', error)
+        logger.error('Error updating password:', error)
         setPasswordError(error.message || 'Something went wrong changing your password')
         return
       }
@@ -177,7 +184,7 @@ export default function AccountPage() {
         setPasswordSuccess(false)
       }, 2000)
     } catch (error) {
-      console.error('Error changing password:', error)
+      logger.error('Error changing password:', error)
       setPasswordError('Er ging iets mis. Please try again.')
     }
   }

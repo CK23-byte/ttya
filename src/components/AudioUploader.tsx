@@ -1,8 +1,13 @@
 /**
+import { logger } from '../utils/logger'
  * Audio Uploader Component
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState } from 'react'
+import { logger } from '../utils/logger'
 import { Upload, Music, X, Play, Pause } from 'lucide-react'
 import { AudioMemory } from '../types'
 
@@ -48,7 +53,7 @@ export default function AudioUploader({ onAudioLoaded, maxSize = 5 }: AudioUploa
           timestamp: Date.now(),
         })
       } catch (err) {
-        console.error('Error processing audio:', err)
+        logger.error('Error processing audio:', err)
         setError('Fout bij het verwerken van audiobestand')
       }
     }

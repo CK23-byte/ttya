@@ -12,12 +12,9 @@ export const logger = {
     }
   },
 
-  error: (message: string, error?: any) => {
-    if (isDevelopment) {
-      console.error(message, error)
-    }
-    // In production, you would send to error tracking service
-    // Example: Sentry.captureException(error)
+  error: (...args: any[]) => {
+    // Always log errors (important for production debugging)
+    console.error(...args)
   },
 
   warn: (...args: any[]) => {

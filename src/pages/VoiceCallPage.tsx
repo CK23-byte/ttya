@@ -1,15 +1,27 @@
 /**
+import { logger } from '../utils/logger'
  * Voice Call Page - Phone-style Interface for AI Voice Calls
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Full-screen phone call interface with:
+import { logger } from '../utils/logger'
  * - Large profile photo/avatar
+import { logger } from '../utils/logger'
  * - Call duration timer
+import { logger } from '../utils/logger'
  * - Live transcription
+import { logger } from '../utils/logger'
  * - Audio visualization
+import { logger } from '../utils/logger'
  * - Mute and end call controls
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect, useRef } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Phone, PhoneOff, Mic, MicOff, User, AlertCircle } from 'lucide-react'
 import { useWebRTC } from '../hooks/useWebRTC'
@@ -71,7 +83,7 @@ export default function VoiceCallPage() {
     voiceId: voiceId || undefined,
     voice: voice || 'alloy',
     onError: (error) => {
-      console.error('WebRTC error:', error)
+      logger.error('WebRTC error:', error)
     }
   })
 
@@ -84,7 +96,7 @@ export default function VoiceCallPage() {
     userId: user?.id || '00000000-0000-0000-0000-000000000001',
     voiceId: voiceId || '',
     onError: (error) => {
-      console.error('Hybrid voice error:', error)
+      logger.error('Hybrid voice error:', error)
     }
   })
 
@@ -212,7 +224,7 @@ export default function VoiceCallPage() {
           }
         })
         .catch((error) => {
-          console.error('Error deducting voice credits:', error)
+          logger.error('Error deducting voice credits:', error)
         })
     }
   }, [duration, status, user, profile]) // eslint-disable-line react-hooks/exhaustive-deps

@@ -1,10 +1,17 @@
 /**
+import { logger } from '../utils/logger'
  * Supabase Storage Utilities
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Handles file uploads to Supabase Storage for large files (videos, photos, audio)
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { supabase } from '../lib/supabase'
+import { logger } from '../utils/logger'
 
 export interface UploadResult {
   url: string
@@ -34,7 +41,7 @@ export async function uploadFileToStorage(
     // Construct full path
     const filePath = folder ? `${folder}/${fileName}` : fileName
 
-    console.log('Uploading file to Supabase Storage:', {
+    logger.log('Uploading file to Supabase Storage:', {
       fileName,
       size: file.size,
       type: file.type,
@@ -50,7 +57,7 @@ export async function uploadFileToStorage(
       })
 
     if (error) {
-      console.error('Supabase Storage upload error:', error)
+      logger.error('Supabase Storage upload error:', error)
       throw new Error(`Failed to upload file: ${error.message}`)
     }
 
@@ -59,7 +66,7 @@ export async function uploadFileToStorage(
       .from(bucket)
       .getPublicUrl(filePath)
 
-    console.log('File uploaded successfully:', {
+    logger.log('File uploaded successfully:', {
       path: data.path,
       publicUrl
     })
@@ -70,7 +77,7 @@ export async function uploadFileToStorage(
       publicUrl
     }
   } catch (error) {
-    console.error('Error uploading file:', error)
+    logger.error('Error uploading file:', error)
     throw error
   }
 }
@@ -86,20 +93,20 @@ export async function deleteFileFromStorage(
   bucket: string = 'user-uploads'
 ): Promise<void> {
   try {
-    console.log('Deleting file from Supabase Storage:', path)
+    logger.log('Deleting file from Supabase Storage:', path)
 
     const { error } = await supabase.storage
       .from(bucket)
       .remove([path])
 
     if (error) {
-      console.error('Supabase Storage delete error:', error)
+      logger.error('Supabase Storage delete error:', error)
       throw new Error(`Failed to delete file: ${error.message}`)
     }
 
-    console.log('File deleted successfully')
+    logger.log('File deleted successfully')
   } catch (error) {
-    console.error('Error deleting file:', error)
+    logger.error('Error deleting file:', error)
     // Don't throw - deletion is best effort
   }
 }
@@ -184,7 +191,7 @@ export async function extractAudioFromVideo(videoFile: File): Promise<Blob> {
  * @returns Audio file ready for voice cloning
  */
 export async function prepareAudioForVoiceCloning(file: File): Promise<File> {
-  console.log('Preparing audio for voice cloning:', {
+  logger.log('Preparing audio for voice cloning:', {
     name: file.name,
     type: file.type,
     size: file.size
@@ -193,13 +200,13 @@ export async function prepareAudioForVoiceCloning(file: File): Promise<File> {
   // If it's already an audio file and supported format, return as-is
   const supportedAudioFormats = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/wav', 'audio/ogg', 'audio/flac']
   if (supportedAudioFormats.includes(file.type)) {
-    console.log('File is already in supported audio format')
+    logger.log('File is already in supported audio format')
     return file
   }
 
   // If it's a video, extract audio
   if (file.type.startsWith('video/')) {
-    console.log('Extracting audio from video...')
+    logger.log('Extracting audio from video...')
     const audioBlob = await extractAudioFromVideo(file)
 
     // Convert blob to File
@@ -207,7 +214,7 @@ export async function prepareAudioForVoiceCloning(file: File): Promise<File> {
       type: 'audio/webm'
     })
 
-    console.log('Audio extracted from video:', {
+    logger.log('Audio extracted from video:', {
       size: audioFile.size,
       type: audioFile.type
     })
@@ -216,6 +223,6 @@ export async function prepareAudioForVoiceCloning(file: File): Promise<File> {
   }
 
   // If it's an unsupported audio format, return as-is and let the backend handle it
-  console.warn('Unsupported format, passing through:', file.type)
+  logger.warn('Unsupported format, passing through:', file.type)
   return file
 }

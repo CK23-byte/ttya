@@ -1,17 +1,31 @@
 /**
+import { logger } from '../utils/logger'
  * useHybridVoice - Custom Hook for Hybrid Voice Pipeline
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Pipeline: Whisper (STT) → GPT-4 (Chat) → ElevenLabs (TTS)
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * This hook orchestrates:
+import { logger } from '../utils/logger'
  * 1. Audio recording with Voice Activity Detection
+import { logger } from '../utils/logger'
  * 2. Transcription with OpenAI Whisper
+import { logger } from '../utils/logger'
  * 3. Chat completion with GPT-4
+import { logger } from '../utils/logger'
  * 4. Text-to-speech with ElevenLabs cloned voice
+import { logger } from '../utils/logger'
  * 5. Audio playback with queueing
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { logger } from '../utils/logger'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -92,7 +106,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
   const startCall = useCallback(async () => {
     // Prevent multiple simultaneous starts
     if (isStartingRef.current || audioContextRef.current) {
-      console.log('Call already starting or started, ignoring duplicate startCall()')
+      logger.log('Call already starting or started, ignoring duplicate startCall()')
       return
     }
 
@@ -178,7 +192,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
           // Check if silence has lasted long enough
           const silenceDuration = Date.now() - lastSpeechTimeRef.current
           if (silenceDuration > SILENCE_DURATION && audioChunksRef.current.length > 0) {
-            console.log(`Silence detected (${silenceDuration}ms), processing audio...`)
+            logger.log(`Silence detected (${silenceDuration}ms), processing audio...`)
             mediaRecorderRef.current.stop()
           }
         }
@@ -197,11 +211,11 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       }, 1000)
 
       isStartingRef.current = false
-      console.log('Hybrid voice call started')
+      logger.log('Hybrid voice call started')
 
     } catch (error) {
       isStartingRef.current = false
-      console.error('Failed to start call:', error)
+      logger.error('Failed to start call:', error)
       updateStatus('error')
       setState(prev => ({
         ...prev,
@@ -214,7 +228,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
   // Handle recording stop (when user stops speaking)
   const handleRecordingStop = async () => {
     if (audioChunksRef.current.length === 0) {
-      console.log('No audio chunks to process')
+      logger.log('No audio chunks to process')
       return
     }
 
@@ -228,7 +242,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       // Convert to base64
       const base64Audio = await blobToBase64(audioBlob)
 
-      console.log('Transcribing audio...')
+      logger.log('Transcribing audio...')
 
       // 1. Transcribe with Whisper
       const transcriptResponse = await fetch('/api/voice/transcribe', {
@@ -245,7 +259,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       }
 
       const { text: userText } = await transcriptResponse.json()
-      console.log('User said:', userText)
+      logger.log('User said:', userText)
 
       // Add to conversation history
       const userMessage: Message = {
@@ -266,7 +280,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       onTranscript?.(userMessage)
 
       // 2. Get response from GPT-4
-      console.log('Generating response...')
+      logger.log('Generating response...')
       const chatResponse = await fetch('/api/voice/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -283,7 +297,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       }
 
       const { text: responseText } = await chatResponse.json()
-      console.log('AI response:', responseText)
+      logger.log('AI response:', responseText)
 
       // Add to conversation history
       const assistantMessage: Message = {
@@ -304,7 +318,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       onTranscript?.(assistantMessage)
 
       // 3. Convert to speech with ElevenLabs
-      console.log('Generating speech with cloned voice...')
+      logger.log('Generating speech with cloned voice...')
       const ttsResponse = await fetch('/api/voice/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -319,7 +333,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       }
 
       const { audioBase64 } = await ttsResponse.json()
-      console.log('Speech generated, playing audio...')
+      logger.log('Speech generated, playing audio...')
 
       // 4. Play audio
       await playAudio(audioBase64)
@@ -328,7 +342,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       // The playAudio function will automatically resume when audio ends (see line ~310)
 
     } catch (error) {
-      console.error('Processing error:', error)
+      logger.error('Processing error:', error)
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Processing failed'
@@ -369,7 +383,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
           } else {
             const silenceDuration = Date.now() - lastSpeechTimeRef.current
             if (silenceDuration > SILENCE_DURATION && audioChunksRef.current.length > 0) {
-              console.log(`Silence detected (${silenceDuration}ms), processing audio...`)
+              logger.log(`Silence detected (${silenceDuration}ms), processing audio...`)
               mediaRecorderRef.current.stop()
             }
           }
@@ -381,7 +395,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
   // Play audio
   const playAudio = async (audioBase64: string) => {
     if (!audioContextRef.current) {
-      console.error('Cannot play audio: AudioContext is not available')
+      logger.error('Cannot play audio: AudioContext is not available')
       return
     }
 
@@ -402,7 +416,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
       await new Promise<void>((resolve) => {
         source.onended = () => {
           setState(prev => ({ ...prev, isSpeaking: false }))
-          console.log('Audio playback finished, resuming listening...')
+          logger.log('Audio playback finished, resuming listening...')
           resolve()
         }
         source.start()
@@ -442,17 +456,17 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
           } else {
             const silenceDuration = Date.now() - lastSpeechTimeRef.current
             if (silenceDuration > SILENCE_DURATION && audioChunksRef.current.length > 0) {
-              console.log(`Silence detected (${silenceDuration}ms), processing audio...`)
+              logger.log(`Silence detected (${silenceDuration}ms), processing audio...`)
               mediaRecorderRef.current.stop()
             }
           }
         }, 100)
 
-        console.log('Recording resumed')
+        logger.log('Recording resumed')
       }
 
     } catch (error) {
-      console.error('Audio playback error:', error)
+      logger.error('Audio playback error:', error)
       setState(prev => ({ ...prev, isSpeaking: false }))
 
       // Try to resume recording even after playback error
@@ -489,7 +503,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
           } else {
             const silenceDuration = Date.now() - lastSpeechTimeRef.current
             if (silenceDuration > SILENCE_DURATION && audioChunksRef.current.length > 0) {
-              console.log(`Silence detected (${silenceDuration}ms), processing audio...`)
+              logger.log(`Silence detected (${silenceDuration}ms), processing audio...`)
               mediaRecorderRef.current.stop()
             }
           }
@@ -500,7 +514,7 @@ export function useHybridVoice(options: UseHybridVoiceOptions) {
 
   // End call
   const endCall = useCallback(async () => {
-    console.log('Ending hybrid voice call')
+    logger.log('Ending hybrid voice call')
 
     // Clear silence check interval
     if (silenceCheckIntervalRef.current) {

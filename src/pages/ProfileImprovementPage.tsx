@@ -1,16 +1,29 @@
 /**
+import { logger } from '../utils/logger'
  * Profile Improvement Page
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Allows users to enhance personality profiles by adding:
+import { logger } from '../utils/logger'
  * - Text notes and memories
+import { logger } from '../utils/logger'
  * - Voice samples
+import { logger } from '../utils/logger'
  * - Photos
+import { logger } from '../utils/logger'
  * - Videos
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Shows profile completeness indicator (but everything is optional)
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect, useRef } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -188,7 +201,7 @@ export default function ProfileImprovementPage() {
         navigate('/dashboard')
       }
     } catch (error) {
-      console.error('Error loading profile:', error)
+      logger.error('Error loading profile:', error)
     }
   }
 
@@ -201,7 +214,7 @@ export default function ProfileImprovementPage() {
         encryptionKey
       )
 
-      console.log('Loading profile data:', data)
+      logger.log('Loading profile data:', data)
 
       if (data) {
         // Convert base64 voice samples back to Blobs for runtime use
@@ -217,7 +230,7 @@ export default function ProfileImprovementPage() {
                 name: sample.name
               }
             } catch (error) {
-              console.error('Error converting voice sample:', error)
+              logger.error('Error converting voice sample:', error)
               return null
             }
           })
@@ -234,7 +247,7 @@ export default function ProfileImprovementPage() {
           voiceConfig: data.voiceConfig // ✅ Load voice config
         })
 
-        console.log('Profile data loaded successfully:', {
+        logger.log('Profile data loaded successfully:', {
           textNotes: data.textNotes?.length || 0,
           voiceSamples: validVoiceSamples.length,
           photos: data.photos?.length || 0,
@@ -243,7 +256,7 @@ export default function ProfileImprovementPage() {
         })
       }
     } catch (error) {
-      console.error('Error loading profile data:', error)
+      logger.error('Error loading profile data:', error)
     }
   }
 
@@ -281,7 +294,7 @@ export default function ProfileImprovementPage() {
         voiceConfig: profileData.voiceConfig // ✅ Save voice config
       }
 
-      console.log('Saving profile data:', {
+      logger.log('Saving profile data:', {
         textNotes: dataToStore.textNotes.length,
         voiceSamples: dataToStore.voiceSamples.length,
         photos: dataToStore.photos.length,
@@ -295,7 +308,7 @@ export default function ProfileImprovementPage() {
         encryptionKey
       )
 
-      console.log('Profile data saved successfully')
+      logger.log('Profile data saved successfully')
 
       setSaveSuccess(true)
 
@@ -304,7 +317,7 @@ export default function ProfileImprovementPage() {
         navigate('/dashboard')
       }, 1000)
     } catch (error) {
-      console.error('Error saving profile data:', error)
+      logger.error('Error saving profile data:', error)
       showModal('Save Failed', 'Failed to save changes. Please try again.', 'error')
     } finally {
       setIsSaving(false)
@@ -474,7 +487,7 @@ export default function ProfileImprovementPage() {
               }))
               photoCount++
             } catch (error) {
-              console.error('Error uploading photo from ZIP:', error)
+              logger.error('Error uploading photo from ZIP:', error)
             }
           } else if (filename.match(/\.(mp4|mov|avi|webm|mkv)$/i)) {
             // Extract and upload videos
@@ -498,7 +511,7 @@ export default function ProfileImprovementPage() {
               }))
               videoCount++
             } catch (error) {
-              console.error('Error uploading video from ZIP:', error)
+              logger.error('Error uploading video from ZIP:', error)
             }
           }
         }
@@ -521,7 +534,7 @@ export default function ProfileImprovementPage() {
         showModal('Invalid File Type', 'Please upload a .txt or .zip file', 'warning')
       }
     } catch (error) {
-      console.error('Error reading chat file:', error)
+      logger.error('Error reading chat file:', error)
       showModal('File Read Error', 'Failed to read chat file. Please try again.', 'error')
     }
 
@@ -532,18 +545,18 @@ export default function ProfileImprovementPage() {
   }
 
   const startRecording = async () => {
-    console.log('🎤 Starting recording...')
+    logger.log('🎤 Starting recording...')
 
     try {
       // Simple audio request - no fancy options
-      console.log('🎤 Requesting microphone access...')
+      logger.log('🎤 Requesting microphone access...')
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      console.log('✅ Microphone access granted!')
+      logger.log('✅ Microphone access granted!')
 
       streamRef.current = stream
 
       // Create recorder with simple webm format
-      console.log('🎤 Creating MediaRecorder...')
+      logger.log('🎤 Creating MediaRecorder...')
 
       // Choose audio format that ElevenLabs supports
       // ElevenLabs supports: MP3, WAV, FLAC, OGG, M4A (but NOT WEBM!)
@@ -556,22 +569,22 @@ export default function ProfileImprovementPage() {
         mimeType = 'audio/ogg'
       }
 
-      console.log('🎵 Using audio format:', mimeType)
+      logger.log('🎵 Using audio format:', mimeType)
       const recorder = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = recorder
       audioChunksRef.current = []
 
       recorder.ondataavailable = (e) => {
-        console.log('📦 Data available:', e.data.size, 'bytes')
+        logger.log('📦 Data available:', e.data.size, 'bytes')
         if (e.data.size > 0) {
           audioChunksRef.current.push(e.data)
         }
       }
 
       recorder.onstop = () => {
-        console.log('⏹️ Recording stopped')
+        logger.log('⏹️ Recording stopped')
         const blob = new Blob(audioChunksRef.current, { type: mimeType })
-        console.log('✅ Created audio blob:', blob.size, 'bytes, type:', mimeType)
+        logger.log('✅ Created audio blob:', blob.size, 'bytes, type:', mimeType)
 
         // IMPORTANT: Capture recordingTime BEFORE resetting
         const capturedDuration = recordingTime
@@ -583,7 +596,7 @@ export default function ProfileImprovementPage() {
           name: `Voice Sample ${profileData.voiceSamples.length + 1}`
         }
 
-        console.log('📝 Saving voice sample:', {
+        logger.log('📝 Saving voice sample:', {
           id: newSample.id,
           blobSize: newSample.blob.size,
           duration: newSample.duration,
@@ -600,7 +613,7 @@ export default function ProfileImprovementPage() {
         // Stop stream tracks
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => {
-            console.log('🛑 Stopping track:', track.kind)
+            logger.log('🛑 Stopping track:', track.kind)
             track.stop()
           })
           streamRef.current = null
@@ -608,10 +621,10 @@ export default function ProfileImprovementPage() {
       }
 
       // Start recording
-      console.log('▶️ Starting MediaRecorder...')
+      logger.log('▶️ Starting MediaRecorder...')
       recorder.start()
       setIsRecording(true)
-      console.log('✅ Recording started!')
+      logger.log('✅ Recording started!')
 
       // Start timer
       const interval = setInterval(() => {
@@ -620,9 +633,9 @@ export default function ProfileImprovementPage() {
       recordingIntervalRef.current = interval
 
     } catch (err: any) {
-      console.error('❌ Microphone error:', err)
-      console.error('Error name:', err.name)
-      console.error('Error message:', err.message)
+      logger.error('❌ Microphone error:', err)
+      logger.error('Error name:', err.name)
+      logger.error('Error message:', err.message)
 
       let errorMsg = 'Could not access microphone.'
 
@@ -642,10 +655,10 @@ export default function ProfileImprovementPage() {
   }
 
   const stopRecording = () => {
-    console.log('⏹️ Stop recording requested')
+    logger.log('⏹️ Stop recording requested')
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      console.log('⏹️ Stopping MediaRecorder...')
+      logger.log('⏹️ Stopping MediaRecorder...')
       mediaRecorderRef.current.stop()
     }
 
@@ -678,14 +691,14 @@ export default function ProfileImprovementPage() {
           ]
         }))
 
-        console.log('✅ Voice file uploaded:', {
+        logger.log('✅ Voice file uploaded:', {
           name: file.name,
           size: file.size,
           type: file.type,
           duration: audioDuration
         })
       } catch (error) {
-        console.error('Error reading audio duration:', error)
+        logger.error('Error reading audio duration:', error)
         showModal('Audio File Error', 'Failed to read audio file. Please try again.', 'error')
       }
     }
@@ -747,7 +760,7 @@ export default function ProfileImprovementPage() {
 
     for (const file of files) {
       try {
-        console.log('Uploading photo to Supabase Storage...', {
+        logger.log('Uploading photo to Supabase Storage...', {
           name: file.name,
           size: file.size,
           type: file.type
@@ -775,9 +788,9 @@ export default function ProfileImprovementPage() {
           ]
         }))
 
-        console.log('Photo uploaded successfully:', publicUrl)
+        logger.log('Photo uploaded successfully:', publicUrl)
       } catch (error) {
-        console.error('Error uploading photo:', error)
+        logger.error('Error uploading photo:', error)
         showModal('Upload Failed', `Failed to upload ${file.name}. Please try again.`, 'error')
       }
     }
@@ -788,7 +801,7 @@ export default function ProfileImprovementPage() {
     if (!file || !profile) return
 
     try {
-      console.log('Uploading video to Supabase Storage...', {
+      logger.log('Uploading video to Supabase Storage...', {
         name: file.name,
         size: file.size,
         type: file.type
@@ -816,9 +829,9 @@ export default function ProfileImprovementPage() {
         ]
       }))
 
-      console.log('Video uploaded successfully:', publicUrl)
+      logger.log('Video uploaded successfully:', publicUrl)
     } catch (error) {
-      console.error('Error uploading video:', error)
+      logger.error('Error uploading video:', error)
       showModal('Upload Failed', 'Failed to upload video. Please try again.', 'error')
     }
   }
@@ -886,7 +899,7 @@ export default function ProfileImprovementPage() {
       // Use the first voice sample for cloning
       const sample = profileData.voiceSamples[0]
 
-      console.log('📋 Sample info:', {
+      logger.log('📋 Sample info:', {
         id: sample.id,
         blobSize: sample.blob.size,
         blobType: sample.blob.type,
@@ -900,13 +913,13 @@ export default function ProfileImprovementPage() {
         : new File([sample.blob], sample.name, { type: sample.blob.type })
 
       // Prepare audio for voice cloning (extract audio from video if needed)
-      console.log('Preparing audio for voice cloning...')
+      logger.log('Preparing audio for voice cloning...')
       const audioFile = await prepareAudioForVoiceCloning(originalFile)
 
       // Get MIME type from processed audio
       const mimeType = audioFile.type || 'audio/mp4'
 
-      console.log('Cloning voice to ElevenLabs...', {
+      logger.log('Cloning voice to ElevenLabs...', {
         audioSize: audioFile.size,
         mimeType,
         duration: sample.duration,
@@ -956,7 +969,7 @@ export default function ProfileImprovementPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        console.error('❌ ElevenLabs API Error:', {
+        logger.error('❌ ElevenLabs API Error:', {
           status: response.status,
           error: error.error,
           details: error.details,
@@ -967,7 +980,7 @@ export default function ProfileImprovementPage() {
       }
 
       const data = await response.json()
-      console.log('Voice cloned successfully:', data)
+      logger.log('Voice cloned successfully:', data)
 
       // Update voice config with cloned voice ID
       setProfileData(prev => ({
@@ -986,7 +999,7 @@ export default function ProfileImprovementPage() {
       )
 
     } catch (error) {
-      console.error('Voice cloning error:', error)
+      logger.error('Voice cloning error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       setCloneError(errorMsg)
       showModal('Voice Cloning Failed', errorMsg, 'error')
@@ -1030,7 +1043,7 @@ export default function ProfileImprovementPage() {
     try {
       // Use the first uploaded video
       const videoUrl = profileData.videos[0].url
-      console.log('Creating avatar from video:', videoUrl)
+      logger.log('Creating avatar from video:', videoUrl)
 
       // Fetch the video from Supabase Storage
       const videoResponse = await fetch(videoUrl)
@@ -1053,7 +1066,7 @@ export default function ProfileImprovementPage() {
       const videoBase64 = await base64Promise
       const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
 
-      console.log('Uploading avatar...', { avatarName, videoSize: videoBlob.size })
+      logger.log('Uploading avatar...', { avatarName, videoSize: videoBlob.size })
 
       // Upload avatar
       const response = await fetch('/api/heygen/avatar', {
@@ -1071,7 +1084,7 @@ export default function ProfileImprovementPage() {
       }
 
       const data = await response.json()
-      console.log('Avatar creation response:', data)
+      logger.log('Avatar creation response:', data)
 
       setAvatarCreationStatus('processing')
 
@@ -1093,7 +1106,7 @@ export default function ProfileImprovementPage() {
         }
 
         const statusData = await statusResponse.json()
-        console.log(`Avatar status check ${attempts}:`, statusData)
+        logger.log(`Avatar status check ${attempts}:`, statusData)
 
         if (statusData.status === 'completed' || statusData.status === 'active') {
           // Avatar is ready
@@ -1125,7 +1138,7 @@ export default function ProfileImprovementPage() {
       await pollStatus()
 
     } catch (error) {
-      console.error('Avatar creation error:', error)
+      logger.error('Avatar creation error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       setAvatarCreationStatus('error')
       showModal('Avatar Creation Failed', errorMsg, 'error')

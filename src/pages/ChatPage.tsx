@@ -1,15 +1,27 @@
 /**
+import { logger } from '../utils/logger'
  * Chat Page - Multi-Theme Chat Interface
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Features:
+import { logger } from '../utils/logger'
  * - Theme switcher: WhatsApp, iMessage, Messenger
+import { logger } from '../utils/logger'
  * - Left sidebar with conversation list
+import { logger } from '../utils/logger'
  * - Right panel with active chat
+import { logger } from '../utils/logger'
  * - Persistent chat history per personality profile
+import { logger } from '../utils/logger'
  * - Working emoji picker
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect, useRef } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   MoreVertical,
@@ -224,7 +236,7 @@ export default function ChatPage() {
           hasLoadedRef.current = true
         }
       } catch (error) {
-        console.error('Error loading conversations:', error)
+        logger.error('Error loading conversations:', error)
       } finally {
         setIsLoading(false)
       }
@@ -254,7 +266,7 @@ export default function ChatPage() {
           : c
       ))
     } catch (error) {
-      console.error('Error saving messages:', error)
+      logger.error('Error saving messages:', error)
     }
   }
 
@@ -352,15 +364,15 @@ export default function ChatPage() {
           // Refresh credits to update UI
           await refreshCredits()
         } else {
-          console.error('Failed to deduct credits:', await response.text())
+          logger.error('Failed to deduct credits:', await response.text())
         }
       } catch (creditError) {
-        console.error('Error deducting credits:', creditError)
+        logger.error('Error deducting credits:', creditError)
         // Don't show error to user - message was already sent successfully
       }
 
     } catch (error) {
-      console.error('Error getting AI response:', error)
+      logger.error('Error getting AI response:', error)
 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -412,21 +424,21 @@ export default function ChatPage() {
 
   // Handle file attachments
   const handleAttachmentUpload = (files: File[], type: 'photo' | 'video' | 'text') => {
-    console.log(`Uploading ${files.length} ${type} files:`, files.map(f => f.name))
+    logger.log(`Uploading ${files.length} ${type} files:`, files.map(f => f.name))
     // TODO: Store files locally and attach to profile
     alert(`${files.length} ${type} file(s) uploaded successfully! These will help the AI better understand ${getActiveConversation()?.profile.name}.`)
   }
 
   // Handle voice sample upload
   const handleVoiceSampleUpload = (file: File) => {
-    console.log('Voice sample uploaded:', file.name)
+    logger.log('Voice sample uploaded:', file.name)
     // TODO: Store voice sample with profile
     alert(`Voice sample "${file.name}" uploaded! This will be used to generate voice calls.`)
   }
 
   // Handle media upload for video calls
   const handleMediaUpload = (files: File[], type: 'photo' | 'video' | 'voice') => {
-    console.log(`Uploading ${files.length} ${type} files for video:`, files.map(f => f.name))
+    logger.log(`Uploading ${files.length} ${type} files for video:`, files.map(f => f.name))
     // TODO: Store media with profile
   }
 

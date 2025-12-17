@@ -1,13 +1,23 @@
 /**
+import { logger } from '../utils/logger'
  * Video Call Page - WhatsApp Style Video Call
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Features:
+import { logger } from '../utils/logger'
  * - HeyGen Interactive Avatar powered video
+import { logger } from '../utils/logger'
  * - WhatsApp-style video call interface
+import { logger } from '../utils/logger'
  * - Real-time conversation with avatars
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect, useRef } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   PhoneOff,
@@ -169,7 +179,7 @@ export default function VideoPage() {
           }
         })
         .catch((error) => {
-          console.error('Error deducting video credits:', error)
+          logger.error('Error deducting video credits:', error)
         })
     }
   }, [duration, callStatus, user, supabaseProfile]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -197,7 +207,7 @@ export default function VideoPage() {
 
       setProfile(foundProfile)
     } catch (error) {
-      console.error('Error loading profile:', error)
+      logger.error('Error loading profile:', error)
       setError('Failed to load profile')
     }
   }
@@ -237,13 +247,13 @@ export default function VideoPage() {
       // Default to a professional avatar ID (customize in env)
       const avatarId = import.meta.env.VITE_HEYGEN_AVATAR_ID || 'Angela-inblackskirt-20220820'
 
-      console.log('Creating HeyGen streaming session with avatar:', avatarId)
+      logger.log('Creating HeyGen streaming session with avatar:', avatarId)
 
       // Create HeyGen streaming session
       const session = await createHeyGenStreamingSession(avatarId, 'medium')
       setSessionId(session.session_id)
 
-      console.log('Session offer received:', {
+      logger.log('Session offer received:', {
         hasOffer: !!session.offer,
         offerType: session.offer?.type,
         sdpLength: session.offer?.sdp?.length || 0,
@@ -282,12 +292,12 @@ export default function VideoPage() {
 
       // Send answer back to HeyGen
       // HeyGen handles this automatically via their API
-      console.log('HeyGen session established successfully')
+      logger.log('HeyGen session established successfully')
 
       callStartTimeRef.current = Date.now()
       setCallStatus('connected')
     } catch (error) {
-      console.error('Error starting call:', error)
+      logger.error('Error starting call:', error)
       setError('Failed to start video call. Please check your HeyGen API configuration.')
       setCallStatus('error')
     }
@@ -298,7 +308,7 @@ export default function VideoPage() {
       try {
         await closeHeyGenStreamSession(sessionId)
       } catch (error) {
-        console.error('Error closing session:', error)
+        logger.error('Error closing session:', error)
       }
     }
 

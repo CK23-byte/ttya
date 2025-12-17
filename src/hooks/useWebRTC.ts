@@ -1,15 +1,27 @@
 /**
+import { logger } from '../utils/logger'
  * useWebRTC - Custom Hook for OpenAI Realtime WebRTC Connection
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Manages the complete lifecycle of a voice call:
+import { logger } from '../utils/logger'
  * - Microphone access
+import { logger } from '../utils/logger'
  * - WebRTC connection to OpenAI Realtime API
+import { logger } from '../utils/logger'
  * - Audio streaming and playback
+import { logger } from '../utils/logger'
  * - Transcription handling
+import { logger } from '../utils/logger'
  * - Session management
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { logger } from '../utils/logger'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -155,7 +167,7 @@ export function useWebRTC(options: UseWebRTCOptions) {
       dataChannelRef.current = dc
 
       dc.onopen = () => {
-        console.log('Data channel opened')
+        logger.log('Data channel opened')
         updateStatus('connected')
         startDurationTimer()
       }
@@ -194,7 +206,7 @@ export function useWebRTC(options: UseWebRTCOptions) {
       updateStatus('active')
 
     } catch (error) {
-      console.error('Failed to start call:', error)
+      logger.error('Failed to start call:', error)
       handleError(error as Error)
     }
   }, [personalityId, userId, personalityName, personalityRelationship, personalityDescription])
@@ -258,7 +270,7 @@ export function useWebRTC(options: UseWebRTCOptions) {
       startTimeRef.current = null
 
     } catch (error) {
-      console.error('Error ending call:', error)
+      logger.error('Error ending call:', error)
       handleError(error as Error)
     }
   }, [userId, state.messages])
@@ -315,12 +327,12 @@ export function useWebRTC(options: UseWebRTCOptions) {
           break
 
         case 'error':
-          console.error('OpenAI error:', event.error)
+          logger.error('OpenAI error:', event.error)
           handleError(new Error(event.error.message))
           break
       }
     } catch (error) {
-      console.error('Error parsing data channel message:', error)
+      logger.error('Error parsing data channel message:', error)
     }
   }, [onTranscript])
 

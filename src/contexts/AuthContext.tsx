@@ -1,12 +1,21 @@
 /**
+import { logger } from '../utils/logger'
  * Authentication Context
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Manages authentication state and encryption key
+import { logger } from '../utils/logger'
  * Implements auto-logout after inactivity timeout
+import { logger } from '../utils/logger'
  * Encryption key is kept only in memory - never persisted
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
 import {
   deriveKeyFromPassword,
@@ -125,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       navigate('/dashboard')
     } catch (error) {
-      console.error('Error setting up master password:', error)
+      logger.error('Error setting up master password:', error)
       throw new Error('Failed to setup master password')
     }
   }

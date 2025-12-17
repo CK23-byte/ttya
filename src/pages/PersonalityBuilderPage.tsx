@@ -1,10 +1,17 @@
 /**
+import { logger } from '../utils/logger'
  * Simplified Personality Builder
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Create a personality profile from WhatsApp export in 3 simple steps
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { useState, useEffect } from 'react'
+import { logger } from '../utils/logger'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload, User, Check, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -45,27 +52,27 @@ export default function PersonalityBuilderPage() {
     setError('')
 
     try {
-      console.log('Reading file:', file.name)
+      logger.log('Reading file:', file.name)
       const text = await file.text()
-      console.log('File size:', text.length, 'characters')
+      logger.log('File size:', text.length, 'characters')
 
       const messages = parseWhatsAppExport(text)
-      console.log('Parsed messages:', messages.length)
+      logger.log('Parsed messages:', messages.length)
 
       if (messages.length === 0) {
         setError('No messages found. Please check if this is a valid WhatsApp export file. The file should start with a date and time.')
-        console.log('First 500 chars:', text.substring(0, 500))
+        logger.log('First 500 chars:', text.substring(0, 500))
         return
       }
 
       setAllMessages(messages)
       const uniqueSenders = getUniqueSenders(messages)
-      console.log('Unique senders:', uniqueSenders)
+      logger.log('Unique senders:', uniqueSenders)
       setSenders(uniqueSenders)
       setStep('select')
     } catch (err) {
       setError('Error reading file: ' + (err as Error).message)
-      console.error('Upload error:', err)
+      logger.error('Upload error:', err)
     }
   }
 
@@ -158,7 +165,7 @@ export default function PersonalityBuilderPage() {
       }, 2000)
     } catch (err) {
       setError('Error creating profile')
-      console.error(err)
+      logger.error(err)
     } finally {
       setIsProcessing(false)
     }

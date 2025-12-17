@@ -1,11 +1,19 @@
 /**
+import { logger } from '../utils/logger'
  * Supabase Authentication Context
+import { logger } from '../utils/logger'
  *
+import { logger } from '../utils/logger'
  * Manages email-based authentication with Supabase
+import { logger } from '../utils/logger'
  * Handles user sessions, profiles, and credits
+import { logger } from '../utils/logger'
  */
+import { logger } from '../utils/logger'
 
+import { logger } from '../utils/logger'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { logger } from '../utils/logger'
 import { User, Session, AuthError, AuthChangeEvent } from '@supabase/supabase-js'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
@@ -108,7 +116,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         // Profile doesn't exist yet - will be created on signup
-        console.log('Profile not found, might be new user')
+        logger.log('Profile not found, might be new user')
         setProfile(null)
         setCredits(0)
       } else if (data) {
@@ -116,7 +124,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         setCredits((data as Profile).credits)
       }
     } catch (err) {
-      console.error('Error fetching profile:', err)
+      logger.error('Error fetching profile:', err)
     } finally {
       setIsLoading(false)
     }
@@ -172,7 +180,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         })
 
       if (profileError) {
-        console.error('Error creating profile:', profileError)
+        logger.error('Error creating profile:', profileError)
       } else {
         // Record the signup bonus transactions
         const transactions = [
