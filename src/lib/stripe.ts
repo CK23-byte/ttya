@@ -172,6 +172,8 @@ export const UNIVERSAL_CREDIT_PACKS = {
     pricePerCredit: 0.10,
     description: 'Perfect for casual use',
     priceId: 'universal_credits_100',
+    popular: false,
+    bestValue: false,
   },
   medium: {
     name: '500 Universal Credits',
@@ -179,6 +181,7 @@ export const UNIVERSAL_CREDIT_PACKS = {
     price: 39.99,
     pricePerCredit: 0.08,
     popular: true,
+    bestValue: false,
     description: 'Most popular',
     priceId: 'universal_credits_500',
   },
@@ -187,6 +190,7 @@ export const UNIVERSAL_CREDIT_PACKS = {
     credits: 1000,
     price: 69.99,
     pricePerCredit: 0.07,
+    popular: false,
     bestValue: true,
     description: 'Best value',
     priceId: 'universal_credits_1000',
@@ -198,6 +202,8 @@ export const UNIVERSAL_CREDIT_PACKS = {
     pricePerCredit: 0.06,
     description: 'Maximum savings',
     priceId: 'universal_credits_2500',
+    popular: false,
+    bestValue: false,
   },
 } as const
 
