@@ -1,26 +1,31 @@
 /**
  * Secure Logger Utility
- * TEMPORARY: All logs enabled for production debugging
+ * Only logs in development mode to prevent data leakage in production
  */
+
+const isDevelopment = import.meta.env.MODE === 'development'
 
 export const logger = {
   log: (...args: any[]) => {
-    // TEMPORARY: Always log for debugging
-    console.log('[LOG]', ...args)
+    if (isDevelopment) {
+      console.log(...args)
+    }
   },
 
   error: (...args: any[]) => {
     // Always log errors (important for production debugging)
-    console.error('[ERROR]', ...args)
+    console.error(...args)
   },
 
   warn: (...args: any[]) => {
-    // TEMPORARY: Always log for debugging
-    console.warn('[WARN]', ...args)
+    if (isDevelopment) {
+      console.warn(...args)
+    }
   },
 
   info: (...args: any[]) => {
-    // TEMPORARY: Always log for debugging
-    console.info('[INFO]', ...args)
+    if (isDevelopment) {
+      console.info(...args)
+    }
   }
 }
