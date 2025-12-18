@@ -371,8 +371,8 @@ export default function VideoPage() {
             </div>
           </div>
 
-          <span className="px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs font-semibold rounded">
-            v2.5.1
+          <span className="px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs font-semibold rounded" title="Build: 2025-12-18 10:57 UTC">
+            v2.11.0
           </span>
         </div>
       </div>

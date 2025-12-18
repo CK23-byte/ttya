@@ -142,7 +142,7 @@ export default function LandingPage() {
       {/* Version Badge */}
       <div className="fixed top-4 left-4 z-50">
         <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
-          <span className="text-xs font-semibold text-gray-600">v2.5.1</span>
+          <span className="text-xs font-semibold text-gray-600" title="Build: 2025-12-18 10:57 UTC">v2.11.0</span>
         </div>
       </div>
 
