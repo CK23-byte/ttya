@@ -101,26 +101,29 @@ export const SUBSCRIPTION_PLANS = {
 } as const
 
 // Voice Credits (separate from text subscriptions)
-// 1 voice credit = 1 minute of voice call
+// 1 voice credit = 30 seconds of voice call (2 credits per minute)
 export const VOICE_CREDIT_PACKS = {
   small: {
     name: '50 Voice Credits',
     credits: 50,
-    price: 4.99,
-    pricePerCredit: 0.10,
+    minutes: 25,
+    price: 5.99,
+    pricePerCredit: 0.12,
     priceId: 'voice_credits_50',
   },
   medium: {
     name: '100 Voice Credits',
     credits: 100,
-    price: 8.99,
-    pricePerCredit: 0.09,
+    minutes: 50,
+    price: 9.99,
+    pricePerCredit: 0.10,
     popular: true,
     priceId: 'voice_credits_100',
   },
   large: {
     name: '500 Voice Credits',
     credits: 500,
+    minutes: 250,
     price: 39.99,
     pricePerCredit: 0.08,
     bestValue: true,
@@ -129,28 +132,31 @@ export const VOICE_CREDIT_PACKS = {
 } as const
 
 // Video Credits (separate from text subscriptions and voice credits)
-// 1 video credit = 1 minute of video call
+// 1 video credit = 12 seconds of video call (5 credits per minute)
 export const VIDEO_CREDIT_PACKS = {
   small: {
     name: '50 Video Credits',
     credits: 50,
-    price: 4.99,
-    pricePerCredit: 0.10,
+    minutes: 10,
+    price: 19.99,
+    pricePerCredit: 0.40,
     priceId: 'video_credits_50',
   },
   medium: {
     name: '100 Video Credits',
     credits: 100,
-    price: 8.99,
-    pricePerCredit: 0.09,
+    minutes: 20,
+    price: 34.99,
+    pricePerCredit: 0.35,
     popular: true,
     priceId: 'video_credits_100',
   },
   large: {
     name: '500 Video Credits',
     credits: 500,
-    price: 39.99,
-    pricePerCredit: 0.08,
+    minutes: 100,
+    price: 149.99,
+    pricePerCredit: 0.30,
     bestValue: true,
     priceId: 'video_credits_500',
   },
@@ -225,22 +231,22 @@ Je Stripe API key is geconfigureerd! Nu moet je Payment Links aanmaken:
 Ga naar: https://dashboard.stripe.com/products
 
 **Subscriptions (recurring):**
-- Starter Monthly: €9.99/maand
-- Starter Yearly: €99/jaar
-- Pro Monthly: €24.99/maand
-- Pro Yearly: €249/jaar
-- Premium Monthly: €49.99/maand
-- Premium Yearly: €499/jaar
+- Starter Monthly: $9.99/month
+- Starter Yearly: $99/year
+- Pro Monthly: $24.99/month
+- Pro Yearly: $249/year
+- Premium Monthly: $49.99/month
+- Premium Yearly: $499/year
 
 **Voice Credit Packs (one-time):**
-- 50 Voice Credits: €4.99
-- 100 Voice Credits: €8.99
-- 500 Voice Credits: €39.99
+- 50 Voice Credits (25 minutes): $5.99
+- 100 Voice Credits (50 minutes): $9.99
+- 500 Voice Credits (250 minutes): $39.99
 
 **Video Credit Packs (one-time):**
-- 50 Video Credits: €4.99
-- 100 Video Credits: €8.99
-- 500 Video Credits: €39.99
+- 50 Video Credits (10 minutes): $19.99
+- 100 Video Credits (20 minutes): $34.99
+- 500 Video Credits (100 minutes): $149.99
 
 ### Stap 2: Maak Payment Links
 Voor elk product:

@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import { Upload, Image as ImageIcon, X } from 'lucide-react'
 import { PhotoMemory } from '../types'
+import { logger } from '../utils/logger'
 
 interface PhotoUploaderProps {
   onPhotosLoaded: (photos: PhotoMemory[]) => void
@@ -89,7 +90,7 @@ export default function PhotoUploader({ onPhotosLoaded, maxSize = 10 }: PhotoUpl
           timestamp: Date.now(),
         })
       } catch (err) {
-        console.error('Error compressing image:', err)
+        logger.error('Error compressing image:', err)
         setError('Fout bij het verwerken van afbeelding')
       }
     }

@@ -9,18 +9,21 @@
  * - Mute and end call controls
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Phone, PhoneOff, Mic, MicOff, User, AlertCircle } from 'lucide-react'
 import { useWebRTC } from '../hooks/useWebRTC'
+import { logger } from '../utils/logger'
 import { useHybridVoice } from '../hooks/useHybridVoice'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import AudioVisualizer from '../components/AudioVisualizer'
+import Modal from '../components/Modal'
+import { CREDIT_PRICING } from '../types/database'
 
 export default function VoiceCallPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user } = useSupabaseAuth()
+  const { user, profile, refreshCredits } = useSupabaseAuth()
 
   // Get personality details from URL params
   const personalityId = searchParams.get('personalityId') || ''
@@ -35,6 +38,25 @@ export default function VoiceCallPage() {
 
   const [isMuted, setIsMuted] = useState(false)
   const [showTranscript, setShowTranscript] = useState(true)
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showModal = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setModal({ isOpen: true, title, message, type })
+  }
+
+  // Credit tracking
+  const lastCreditDeductionRef = useRef<number>(0)
+  const hasShownLowCreditWarningRef = useRef<boolean>(false)
 
   // Determine which voice mode to use
   const useClonedVoice = voiceType === 'cloned' && voiceId
@@ -50,7 +72,7 @@ export default function VoiceCallPage() {
     voiceId: voiceId || undefined,
     voice: voice || 'alloy',
     onError: (error) => {
-      console.error('WebRTC error:', error)
+      logger.error('WebRTC error:', error)
     }
   })
 
@@ -63,7 +85,7 @@ export default function VoiceCallPage() {
     userId: user?.id || '00000000-0000-0000-0000-000000000001',
     voiceId: voiceId || '',
     onError: (error) => {
-      console.error('Hybrid voice error:', error)
+      logger.error('Hybrid voice error:', error)
     }
   })
 
@@ -82,10 +104,35 @@ export default function VoiceCallPage() {
   const isSpeaking = useClonedVoice ? hybridState.isSpeaking : webrtcState.isSpeaking
   const isUserSpeaking = useClonedVoice ? hybridState.isListening : webrtcState.isUserSpeaking
 
-  // Auto-start call on mount
+  // Check credits and auto-start call on mount
   useEffect(() => {
     if (!personalityId) {
       navigate('/dashboard')
+      return
+    }
+
+    // Check if user has Supabase account and credits
+    if (!user || !profile) {
+      showModal(
+        'Account Required',
+        'Please sign in with email to use voice call features and track your credits.',
+        'warning'
+      )
+      setTimeout(() => navigate('/dashboard'), 2000)
+      return
+    }
+
+    // Check if user has enough voice credits for at least 30 seconds
+    const voiceCredits = profile.voice_credits || 0
+    const minRequiredCredits = CREDIT_PRICING.VOICE_COST_PER_MINUTE / 2 // 1 credit for 30 seconds
+
+    if (voiceCredits < minRequiredCredits) {
+      showModal(
+        'Insufficient Voice Credits',
+        `You need at least ${minRequiredCredits} voice credit${minRequiredCredits > 1 ? 's' : ''} for a voice call (30 seconds minimum).\n\nYou have ${voiceCredits} voice credit${voiceCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue.`,
+        'warning'
+      )
+      setTimeout(() => navigate('/pricing'), 2000)
       return
     }
 
@@ -96,6 +143,80 @@ export default function VoiceCallPage() {
 
     return () => clearTimeout(timer)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Track call duration and deduct credits
+  useEffect(() => {
+    if (!user || !profile || status !== 'active' && status !== 'listening' && status !== 'speaking') {
+      return
+    }
+
+    // Deduct credits every minute
+    const currentMinute = Math.floor(duration / 60)
+
+    // If we've entered a new minute, deduct credits
+    if (currentMinute > lastCreditDeductionRef.current && duration > 0) {
+      lastCreditDeductionRef.current = currentMinute
+
+      const creditsToDeduct = CREDIT_PRICING.VOICE_COST_PER_MINUTE
+
+      // Deduct credits
+      fetch('/api/credits/deduct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          amount: creditsToDeduct,
+          creditType: 'voice',
+          description: `Voice call with ${personalityName} (minute ${currentMinute})`
+        })
+      })
+        .then(async (response) => {
+          if (response.ok) {
+            await refreshCredits()
+
+            // Check remaining credits
+            const updatedProfile = await fetch(`/api/credits/check?userId=${user.id}`).then(r => r.json())
+            const remainingCredits = updatedProfile.voice_credits || 0
+            const remainingMinutes = Math.floor(remainingCredits / CREDIT_PRICING.VOICE_COST_PER_MINUTE)
+
+            // Show warning if low on credits (less than 1 minute left)
+            if (remainingMinutes < 1 && !hasShownLowCreditWarningRef.current) {
+              hasShownLowCreditWarningRef.current = true
+              showModal(
+                'Low Voice Credits',
+                `You have less than 1 minute of voice call time remaining. Your call will end when you run out of credits.`,
+                'warning'
+              )
+            }
+
+            // End call if out of credits
+            if (remainingCredits < CREDIT_PRICING.VOICE_COST_PER_MINUTE) {
+              showModal(
+                'Credits Exhausted',
+                'Your voice credits have been exhausted. The call will now end.',
+                'info'
+              )
+              setTimeout(() => {
+                handleEndCall()
+              }, 3000)
+            }
+          } else if (response.status === 402) {
+            // Insufficient credits
+            showModal(
+              'Credits Exhausted',
+              'Your voice credits have been exhausted. The call will now end.',
+              'info'
+            )
+            setTimeout(() => {
+              handleEndCall()
+            }, 3000)
+          }
+        })
+        .catch((error) => {
+          logger.error('Error deducting voice credits:', error)
+        })
+    }
+  }, [duration, status, user, profile]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle end call
   const handleEndCall = async () => {
@@ -288,6 +409,15 @@ export default function VoiceCallPage() {
           </p>
         )}
       </div>
+
+      {/* Credit Warning Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+      />
     </div>
   )
 }

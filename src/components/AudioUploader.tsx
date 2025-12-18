@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import { Upload, Music, X, Play, Pause } from 'lucide-react'
 import { AudioMemory } from '../types'
+import { logger } from '../utils/logger'
 
 interface AudioUploaderProps {
   onAudioLoaded: (audio: AudioMemory[]) => void
@@ -48,7 +49,7 @@ export default function AudioUploader({ onAudioLoaded, maxSize = 5 }: AudioUploa
           timestamp: Date.now(),
         })
       } catch (err) {
-        console.error('Error processing audio:', err)
+        logger.error('Error processing audio:', err)
         setError('Fout bij het verwerken van audiobestand')
       }
     }

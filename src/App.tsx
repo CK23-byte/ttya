@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { PaymentProvider } from './contexts/PaymentContext'
 import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext'
+import { logger } from './utils/logger'
 
 // Eager load: Only landing and auth pages (critical for first paint)
 import LandingPage from './pages/LandingPage'
@@ -20,23 +21,6 @@ const PersonalityBuilderPage = lazy(() => import('./pages/PersonalityBuilderPage
 const VideoPage = lazy(() => import('./pages/VideoPage'))
 const AccountPage = lazy(() => import('./pages/AccountPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
-const LivingLegacyPage = lazy(() => import('./pages/LivingLegacyPage'))
-const LivingLegacyPricingPage = lazy(() => import('./pages/LivingLegacyPricingPage'))
-const LivingLegacyOnboardingPage = lazy(() => import('./pages/LivingLegacyOnboardingPage'))
-const LivingLegacyCreationDashboard = lazy(() => import('./pages/LivingLegacyCreationDashboard'))
-const LivingLegacyRecordMessagePage = lazy(() => import('./pages/LivingLegacyRecordMessagePage'))
-const LivingLegacyVoiceSetupPage = lazy(() => import('./pages/LivingLegacyVoiceSetupPage'))
-const LivingLegacyAvatarSetupPage = lazy(() => import('./pages/LivingLegacyAvatarSetupPage'))
-const LivingLegacyPreviewPage = lazy(() => import('./pages/LivingLegacyPreviewPage'))
-const LivingLegacyFinalizationPage = lazy(() => import('./pages/LivingLegacyFinalizationPage'))
-const LivingLegacyMessageRecordingPage = lazy(() => import('./pages/LivingLegacyMessageRecordingPage'))
-const LivingLegacyTimeCapsulePage = lazy(() => import('./pages/LivingLegacyTimeCapsulePage'))
-const LivingLegacyRecipientManagementPage = lazy(() => import('./pages/LivingLegacyRecipientManagementPage'))
-const LivingLegacyProgressDashboardPage = lazy(() => import('./pages/LivingLegacyProgressDashboardPage'))
-const LivingLegacyAuthPage = lazy(() => import('./pages/LivingLegacyAuthPage'))
-const LivingLegacyUploadDashboard = lazy(() => import('./pages/LivingLegacyUploadDashboard'))
-const LivingLegacyConversationPage = lazy(() => import('./pages/LivingLegacyConversationPage'))
-const LivingLegacyConversationPageWebRTC = lazy(() => import('./pages/LivingLegacyConversationPageWebRTC'))
 const VoiceCallPage = lazy(() => import('./pages/VoiceCallPage'))
 const ProfileImprovementPage = lazy(() => import('./pages/ProfileImprovementPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
@@ -51,12 +35,12 @@ const PageLoader = () => (
 )
 
 function App() {
-  // Log app version on load
+  // Log app version on load (dev only)
   useEffect(() => {
-    console.log('🚀 TalkToYouAI v2.5.1 - Voice Cloning Edition')
-    console.log('📋 New features: ElevenLabs voice cloning, hybrid voice pipeline')
-    console.log('⏰ Deployed:', new Date().toISOString())
-    console.log('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
+    logger.info('🚀 TalkToYouAI v2.11.0 - Production Ready Edition')
+    logger.info('📋 Features: Full auth system, RLS security, Auto-profile creation')
+    logger.info('⏰ Deployed:', new Date().toISOString())
+    logger.info('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
   }, [])
 
   // Security: Enforce HTTPS in production
@@ -92,23 +76,6 @@ function App() {
                 <Route path="/voice-call" element={<VoiceCallPage />} />
                 <Route path="/profile-improvement" element={<ProfileImprovementPage />} />
                 <Route path="/account" element={<AccountPage />} />
-                <Route path="/living-legacy" element={<LivingLegacyPage />} />
-                <Route path="/living-legacy/auth" element={<LivingLegacyAuthPage />} />
-                <Route path="/living-legacy/upload-dashboard" element={<LivingLegacyUploadDashboard />} />
-                <Route path="/living-legacy/conversation" element={<LivingLegacyConversationPage />} />
-                <Route path="/living-legacy/conversation-webrtc" element={<LivingLegacyConversationPageWebRTC />} />
-                <Route path="/pricing/living-legacy" element={<LivingLegacyPricingPage />} />
-                <Route path="/living-legacy/onboarding" element={<LivingLegacyOnboardingPage />} />
-                <Route path="/living-legacy/create/:profileId" element={<LivingLegacyCreationDashboard />} />
-                <Route path="/living-legacy/:profileId/record" element={<LivingLegacyRecordMessagePage />} />
-                <Route path="/living-legacy/:profileId/voice-setup" element={<LivingLegacyVoiceSetupPage />} />
-                <Route path="/living-legacy/:profileId/avatar-setup" element={<LivingLegacyAvatarSetupPage />} />
-                <Route path="/living-legacy/:profileId/preview" element={<LivingLegacyPreviewPage />} />
-                <Route path="/living-legacy/:profileId/finalize" element={<LivingLegacyFinalizationPage />} />
-                <Route path="/living-legacy/record-message" element={<LivingLegacyMessageRecordingPage />} />
-                <Route path="/living-legacy/time-capsule" element={<LivingLegacyTimeCapsulePage />} />
-                <Route path="/living-legacy/recipients" element={<LivingLegacyRecipientManagementPage />} />
-                <Route path="/living-legacy/progress" element={<LivingLegacyProgressDashboardPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/contact" element={<ContactPage />} />

@@ -8,6 +8,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useAuth } from './AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
+import { logger } from '../utils/logger'
 
 type SubscriptionPlan = 'free' | 'pro' | 'lifetime'
 
@@ -79,7 +80,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
           setSubscription(DEFAULT_SUBSCRIPTION)
         }
       } catch (error) {
-        console.error('Error loading subscription:', error)
+        logger.error('Error loading subscription:', error)
         setSubscription(DEFAULT_SUBSCRIPTION)
       } finally {
         setIsLoading(false)
@@ -136,7 +137,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       await setSecure(SUBSCRIPTION_STORAGE_KEY, newSubscription, encryptionKey)
       setSubscription(newSubscription)
     } catch (error) {
-      console.error('Error updating subscription:', error)
+      logger.error('Error updating subscription:', error)
       throw error
     }
   }

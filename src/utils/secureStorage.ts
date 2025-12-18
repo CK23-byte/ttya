@@ -6,6 +6,7 @@
  */
 
 import { encrypt, decrypt } from './encryption'
+import { logger } from './logger'
 
 const STORAGE_PREFIX = 'ttya_secure_'
 const METADATA_KEY = 'ttya_metadata'
@@ -52,7 +53,7 @@ export async function setSecure(
     // Update metadata
     updateMetadata(key, 'add')
   } catch (error) {
-    console.error('Error storing secure data:', error)
+    logger.error('Error storing secure data:', error)
     throw new Error('Failed to store encrypted data')
   }
 }
@@ -78,7 +79,7 @@ export async function getSecure<T = any>(
     const decrypted = await decrypt(encrypted, encryptionKey)
     return JSON.parse(decrypted) as T
   } catch (error) {
-    console.error('Error retrieving secure data:', error)
+    logger.error('Error retrieving secure data:', error)
     return null
   }
 }

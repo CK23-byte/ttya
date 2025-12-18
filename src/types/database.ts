@@ -13,7 +13,11 @@ export interface Database {
           id: string
           email: string
           display_name: string | null
+          avatar_url: string | null
           credits: number
+          text_credits: number
+          voice_credits: number
+          video_credits: number
           created_at: string
           updated_at: string
         }
@@ -21,7 +25,11 @@ export interface Database {
           id: string
           email: string
           display_name?: string | null
+          avatar_url?: string | null
           credits?: number
+          text_credits?: number
+          voice_credits?: number
+          video_credits?: number
           created_at?: string
           updated_at?: string
         }
@@ -29,7 +37,11 @@ export interface Database {
           id?: string
           email?: string
           display_name?: string | null
+          avatar_url?: string | null
           credits?: number
+          text_credits?: number
+          voice_credits?: number
+          video_credits?: number
           created_at?: string
           updated_at?: string
         }
@@ -40,6 +52,7 @@ export interface Database {
           user_id: string
           amount: number
           type: 'purchase' | 'usage' | 'bonus' | 'refund'
+          credit_type: 'general' | 'text' | 'voice' | 'video'
           description: string | null
           stripe_payment_id: string | null
           created_at: string
@@ -49,6 +62,7 @@ export interface Database {
           user_id: string
           amount: number
           type: 'purchase' | 'usage' | 'bonus' | 'refund'
+          credit_type?: 'general' | 'text' | 'voice' | 'video'
           description?: string | null
           stripe_payment_id?: string | null
           created_at?: string
@@ -58,6 +72,7 @@ export interface Database {
           user_id?: string
           amount?: number
           type?: 'purchase' | 'usage' | 'bonus' | 'refund'
+          credit_type?: 'general' | 'text' | 'voice' | 'video'
           description?: string | null
           stripe_payment_id?: string | null
           created_at?: string
@@ -117,9 +132,15 @@ export interface CreditPackage {
 
 // Credit pricing (in credits)
 export const CREDIT_PRICING = {
-  // Message costs based on token usage (approximate)
-  MESSAGE_BASE_COST: 1, // 1 credit per message minimum
-  TOKEN_COST_PER_1K: 0.5, // 0.5 credits per 1000 tokens
+  // Text message costs based on token usage (approximate)
+  MESSAGE_BASE_COST: 1, // 1 text credit per message minimum
+  TOKEN_COST_PER_1K: 0.5, // 0.5 text credits per 1000 tokens
+
+  // Voice call costs (per minute)
+  VOICE_COST_PER_MINUTE: 2, // 2 voice credits per minute (Whisper STT + GPT-4o + ElevenLabs TTS)
+
+  // Video call costs (per minute)
+  VIDEO_COST_PER_MINUTE: 5, // 5 video credits per minute (HeyGen streaming + GPT-4o)
 
   // Credit packages (EUR)
   PACKAGES: [
@@ -130,5 +151,8 @@ export const CREDIT_PRICING = {
   ] as CreditPackage[],
 
   // Bonus credits for new users
-  SIGNUP_BONUS: 10,
+  SIGNUP_BONUS: 10, // General credits
+  SIGNUP_BONUS_TEXT: 10, // Text credits
+  SIGNUP_BONUS_VOICE: 5, // Voice credits (2.5 minutes)
+  SIGNUP_BONUS_VIDEO: 2, // Video credits (24 seconds)
 }

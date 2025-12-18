@@ -5,6 +5,8 @@
  * https://docs.d-id.com/reference/api-overview
  */
 
+import { logger } from './logger'
+
 export interface VideoGenerationOptions {
   sourceUrl?: string // URL to image/avatar
   script: string // What the avatar should say
@@ -25,7 +27,7 @@ export interface VideoStream {
 export async function createDIDVideo(
   options: VideoGenerationOptions
 ): Promise<VideoStream> {
-  console.log('Creating D-ID video...', {
+  logger.log('Creating D-ID video...', {
     hasSourceUrl: !!options.sourceUrl,
     scriptLength: options.script.length
   })
@@ -43,16 +45,16 @@ export async function createDIDVideo(
     }),
   })
 
-  console.log('D-ID video creation response status:', response.status)
+  logger.log('D-ID video creation response status:', response.status)
 
   if (!response.ok) {
     const error = await response.json()
-    console.error('D-ID video creation error:', error)
+    logger.error('D-ID video creation error:', error)
     throw new Error(error.message || 'Failed to create video')
   }
 
   const data = await response.json()
-  console.log('D-ID video created:', { id: data.id, status: data.status })
+  logger.log('D-ID video created:', { id: data.id, status: data.status })
   return data
 }
 
@@ -75,7 +77,7 @@ export async function getDIDVideoStatus(videoId: string): Promise<VideoStream> {
 export async function createDIDStreamingSession(
   sourceUrl: string
 ): Promise<{ id: string; session_id: string; offer: RTCSessionDescriptionInit }> {
-  console.log('Creating D-ID streaming session...', {
+  logger.log('Creating D-ID streaming session...', {
     sourceUrl: sourceUrl.substring(0, 50) + '...',
     endpoint: '/api/did/create-stream'
   })
@@ -88,16 +90,16 @@ export async function createDIDStreamingSession(
     body: JSON.stringify({ sourceUrl }),
   })
 
-  console.log('D-ID streaming session response status:', response.status)
+  logger.log('D-ID streaming session response status:', response.status)
 
   if (!response.ok) {
     const error = await response.json()
-    console.error('D-ID streaming session error:', error)
+    logger.error('D-ID streaming session error:', error)
     throw new Error(error.message || 'Failed to create streaming session')
   }
 
   const data = await response.json()
-  console.log('D-ID streaming session created:', {
+  logger.log('D-ID streaming session created:', {
     id: data.id,
     session_id: data.session_id,
     hasOffer: !!data.offer
@@ -112,7 +114,7 @@ export async function sendDIDStreamMessage(
   sessionId: string,
   message: string
 ): Promise<void> {
-  console.log('Sending D-ID stream message...', {
+  logger.log('Sending D-ID stream message...', {
     sessionId,
     messageLength: message.length
   })
@@ -128,22 +130,22 @@ export async function sendDIDStreamMessage(
     }),
   })
 
-  console.log('D-ID stream message response status:', response.status)
+  logger.log('D-ID stream message response status:', response.status)
 
   if (!response.ok) {
     const error = await response.json()
-    console.error('D-ID stream message error:', error)
+    logger.error('D-ID stream message error:', error)
     throw new Error(error.message || 'Failed to send message')
   }
 
-  console.log('D-ID stream message sent successfully')
+  logger.log('D-ID stream message sent successfully')
 }
 
 /**
  * Close streaming session
  */
 export async function closeDIDStreamSession(sessionId: string): Promise<void> {
-  console.log('Closing D-ID streaming session:', sessionId)
+  logger.log('Closing D-ID streaming session:', sessionId)
 
   const response = await fetch('/api/did/close-stream', {
     method: 'POST',
@@ -153,13 +155,13 @@ export async function closeDIDStreamSession(sessionId: string): Promise<void> {
     body: JSON.stringify({ sessionId }),
   })
 
-  console.log('D-ID close stream response status:', response.status)
+  logger.log('D-ID close stream response status:', response.status)
 
   if (!response.ok) {
     const error = await response.json()
-    console.error('D-ID close stream error:', error)
+    logger.error('D-ID close stream error:', error)
     // Don't throw error - closing is best effort
   } else {
-    console.log('D-ID stream closed successfully')
+    logger.log('D-ID stream closed successfully')
   }
 }

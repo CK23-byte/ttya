@@ -8,6 +8,7 @@
 
 import { useState, useRef } from 'react'
 import { X, Phone, Mic, Upload, Play, Pause, ShoppingCart, Clock, AlertCircle } from 'lucide-react'
+import { logger } from '../utils/logger'
 
 type ChatTheme = 'whatsapp' | 'imessage' | 'messenger'
 
@@ -101,7 +102,7 @@ export default function VoiceCallModal({
         setRecordingTime(prev => prev + 1)
       }, 1000)
     } catch (error) {
-      console.error('Error starting recording:', error)
+      logger.error('Error starting recording:', error)
       alert('Could not access microphone. Please check permissions.')
     }
   }

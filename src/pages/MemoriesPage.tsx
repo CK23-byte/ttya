@@ -13,6 +13,7 @@ import WhatsAppUploader from '../components/WhatsAppUploader'
 import PhotoUploader from '../components/PhotoUploader'
 import AudioUploader from '../components/AudioUploader'
 import { WhatsAppMessage, PhotoMemory, AudioMemory, MemoryCollection } from '../types'
+import { logger } from '../utils/logger'
 
 const MEMORIES_STORAGE_KEY = 'memory_collection'
 
@@ -28,7 +29,7 @@ export default function MemoriesPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/email-auth')
     }
   }, [isAuthenticated, navigate])
 
@@ -49,7 +50,7 @@ export default function MemoriesPage() {
           setAudioClips(saved.audioClips || [])
         }
       } catch (error) {
-        console.error('Error loading memories:', error)
+        logger.error('Error loading memories:', error)
       }
     }
 
@@ -80,7 +81,7 @@ export default function MemoriesPage() {
         setSaveSuccess(false)
       }, 3000)
     } catch (error) {
-      console.error('Error saving memories:', error)
+      logger.error('Error saving memories:', error)
       alert('Fout bij opslaan. Probeer het opnieuw.')
     } finally {
       setIsSaving(false)

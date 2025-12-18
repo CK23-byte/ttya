@@ -6,12 +6,13 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { logger } from '../utils/logger'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
+  logger.warn(
     'Supabase credentials not configured. Email authentication will not work. ' +
     'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.'
   )
@@ -25,6 +26,15 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+    },
+    global: {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    },
+    db: {
+      schema: 'public',
     },
   }
 )

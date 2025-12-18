@@ -4,6 +4,7 @@
  */
 
 import { io, Socket } from 'socket.io-client'
+import { logger } from '../utils/logger'
 
 export interface WebRTCConfig {
   serverUrl: string
@@ -78,10 +79,10 @@ export class WebRTCConversationService {
         avatarId: this.config.avatarId
       })
 
-      console.log('[WebRTC] Initialization complete')
+      logger.log('[WebRTC] Initialization complete')
 
     } catch (error) {
-      console.error('[WebRTC] Initialization error:', error)
+      logger.error('[WebRTC] Initialization error:', error)
       this.updateState('failed')
       throw error
     }
@@ -110,7 +111,7 @@ export class WebRTCConversationService {
     // Handle connection state changes
     this.peerConnection.onconnectionstatechange = () => {
       const state = this.peerConnection!.connectionState
-      console.log('[WebRTC] Connection state:', state)
+      logger.log('[WebRTC] Connection state:', state)
 
       if (state === 'connected') {
         this.updateState('connected')
@@ -121,13 +122,13 @@ export class WebRTCConversationService {
 
     // Handle incoming tracks (if any)
     this.peerConnection.ontrack = (event) => {
-      console.log('[WebRTC] Received track:', event.track.kind)
+      logger.log('[WebRTC] Received track:', event.track.kind)
     }
 
     // Handle data channel
     this.peerConnection.ondatachannel = (event) => {
       this.dataChannel = event.channel
-      console.log('[WebRTC] Data channel opened')
+      logger.log('[WebRTC] Data channel opened')
     }
   }
 
@@ -138,24 +139,24 @@ export class WebRTCConversationService {
     if (!this.socket) return
 
     this.socket.on('connect', () => {
-      console.log('[WebRTC] Socket connected')
+      logger.log('[WebRTC] Socket connected')
       this.updateState('connecting')
     })
 
     this.socket.on('disconnect', () => {
-      console.log('[WebRTC] Socket disconnected')
+      logger.log('[WebRTC] Socket disconnected')
       this.updateState('disconnected')
     })
 
     this.socket.on('webrtc-answer', async (data: { answer: RTCSessionDescriptionInit }) => {
-      console.log('[WebRTC] Received answer')
+      logger.log('[WebRTC] Received answer')
 
       try {
         await this.peerConnection!.setRemoteDescription(
           new RTCSessionDescription(data.answer)
         )
       } catch (error) {
-        console.error('[WebRTC] Error setting remote description:', error)
+        logger.error('[WebRTC] Error setting remote description:', error)
       }
     })
 
@@ -165,31 +166,31 @@ export class WebRTCConversationService {
           new RTCIceCandidate(data.candidate)
         )
       } catch (error) {
-        console.error('[WebRTC] Error adding ICE candidate:', error)
+        logger.error('[WebRTC] Error adding ICE candidate:', error)
       }
     })
 
     this.socket.on('webrtc-connected', () => {
-      console.log('[WebRTC] Peer connection established')
+      logger.log('[WebRTC] Peer connection established')
       this.updateState('connected')
     })
 
     this.socket.on('avatar-processing', (data: { message: string }) => {
-      console.log('[WebRTC] Processing:', data.message)
+      logger.log('[WebRTC] Processing:', data.message)
       if (this.onProcessingCallback) {
         this.onProcessingCallback(data.message)
       }
     })
 
     this.socket.on('avatar-response', (response: AvatarResponse) => {
-      console.log('[WebRTC] Avatar response received')
+      logger.log('[WebRTC] Avatar response received')
       if (this.onResponseCallback) {
         this.onResponseCallback(response)
       }
     })
 
     this.socket.on('avatar-error', (data: { error: string }) => {
-      console.error('[WebRTC] Avatar error:', data.error)
+      logger.error('[WebRTC] Avatar error:', data.error)
       if (this.onResponseCallback) {
         this.onResponseCallback({
           type: 'text',
@@ -200,11 +201,11 @@ export class WebRTCConversationService {
     })
 
     this.socket.on('conversation-ready', () => {
-      console.log('[WebRTC] Conversation ready')
+      logger.log('[WebRTC] Conversation ready')
     })
 
     this.socket.on('conversation-error', (data: { error: string }) => {
-      console.error('[WebRTC] Conversation error:', data.error)
+      logger.error('[WebRTC] Conversation error:', data.error)
       this.updateState('failed')
     })
   }
@@ -217,7 +218,7 @@ export class WebRTCConversationService {
       throw new Error('WebRTC not initialized')
     }
 
-    console.log('[WebRTC] Sending text message:', text)
+    logger.log('[WebRTC] Sending text message:', text)
     this.socket.emit('text-message', { text })
   }
 
@@ -226,7 +227,7 @@ export class WebRTCConversationService {
    */
   startVoiceRecording(): MediaRecorder | null {
     if (!this.localStream) {
-      console.error('[WebRTC] No local stream available')
+      logger.error('[WebRTC] No local stream available')
       return null
     }
 
@@ -248,7 +249,7 @@ export class WebRTCConversationService {
     }
 
     mediaRecorder.start()
-    console.log('[WebRTC] Started voice recording')
+    logger.log('[WebRTC] Started voice recording')
 
     return mediaRecorder
   }
@@ -261,7 +262,7 @@ export class WebRTCConversationService {
       throw new Error('WebRTC not initialized')
     }
 
-    console.log('[WebRTC] Sending audio message')
+    logger.log('[WebRTC] Sending audio message')
 
     // Convert blob to base64
     const reader = new FileReader()
@@ -328,7 +329,7 @@ export class WebRTCConversationService {
    * Disconnect and cleanup
    */
   disconnect(): void {
-    console.log('[WebRTC] Disconnecting')
+    logger.log('[WebRTC] Disconnecting')
 
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop())

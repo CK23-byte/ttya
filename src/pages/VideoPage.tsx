@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   PhoneOff,
   Mic,
@@ -24,9 +25,12 @@ import {
   Loader
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import { createHeyGenStreamingSession, closeHeyGenStreamSession } from '../utils/heygenAPI'
+import Modal from '../components/Modal'
+import { CREDIT_PRICING } from '../types/database'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
 
@@ -35,6 +39,7 @@ type CallStatus = 'idle' | 'connecting' | 'connected' | 'ended' | 'error'
 export default function VideoPage() {
   const navigate = useNavigate()
   const { isAuthenticated, encryptionKey } = useAuth()
+  const { user, profile: supabaseProfile, refreshCredits } = useSupabaseAuth()
   const [searchParams] = useSearchParams()
 
   const [profile, setProfile] = useState<PersonalityProfile | null>(null)
@@ -45,18 +50,130 @@ export default function VideoPage() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  const [duration, setDuration] = useState(0)
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showModal = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setModal({ isOpen: true, title, message, type })
+  }
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null)
+  const lastCreditDeductionRef = useRef<number>(0)
+  const hasShownLowCreditWarningRef = useRef<boolean>(false)
+  const callStartTimeRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login')
+      navigate('/email-auth')
       return
     }
 
     loadProfile()
   }, [isAuthenticated, encryptionKey, searchParams])
+
+  // Track call duration
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+
+    if (callStatus === 'connected' && callStartTimeRef.current) {
+      interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - callStartTimeRef.current!) / 1000)
+        setDuration(elapsed)
+      }, 1000)
+    } else if (callStatus === 'ended') {
+      setDuration(0)
+      callStartTimeRef.current = null
+    }
+
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [callStatus])
+
+  // Track call duration and deduct credits
+  useEffect(() => {
+    if (!user || !supabaseProfile || callStatus !== 'connected') {
+      return
+    }
+
+    // Deduct credits every minute
+    const currentMinute = Math.floor(duration / 60)
+
+    // If we've entered a new minute, deduct credits
+    if (currentMinute > lastCreditDeductionRef.current && duration > 0) {
+      lastCreditDeductionRef.current = currentMinute
+
+      const creditsToDeduct = CREDIT_PRICING.VIDEO_COST_PER_MINUTE
+
+      // Deduct credits
+      fetch('/api/credits/deduct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          amount: creditsToDeduct,
+          creditType: 'video',
+          description: `Video call with ${profile?.name} (minute ${currentMinute})`
+        })
+      })
+        .then(async (response) => {
+          if (response.ok) {
+            await refreshCredits()
+
+            // Check remaining credits
+            const updatedProfile = await fetch(`/api/credits/check?userId=${user.id}`).then(r => r.json())
+            const remainingCredits = updatedProfile.video_credits || 0
+            const remainingMinutes = Math.floor(remainingCredits / CREDIT_PRICING.VIDEO_COST_PER_MINUTE)
+
+            // Show warning if low on credits (less than 1 minute left)
+            if (remainingMinutes < 1 && !hasShownLowCreditWarningRef.current) {
+              hasShownLowCreditWarningRef.current = true
+              showModal(
+                'Low Video Credits',
+                `You have less than 1 minute of video call time remaining. Your call will end when you run out of credits.`,
+                'warning'
+              )
+            }
+
+            // End call if out of credits
+            if (remainingCredits < CREDIT_PRICING.VIDEO_COST_PER_MINUTE) {
+              showModal(
+                'Credits Exhausted',
+                'Your video credits have been exhausted. The call will now end.',
+                'info'
+              )
+              setTimeout(() => {
+                endCall()
+              }, 3000)
+            }
+          } else if (response.status === 402) {
+            // Insufficient credits
+            showModal(
+              'Credits Exhausted',
+              'Your video credits have been exhausted. The call will now end.',
+              'info'
+            )
+            setTimeout(() => {
+              endCall()
+            }, 3000)
+          }
+        })
+        .catch((error) => {
+          logger.error('Error deducting video credits:', error)
+        })
+    }
+  }, [duration, callStatus, user, supabaseProfile]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadProfile = async () => {
     if (!encryptionKey) return
@@ -81,13 +198,37 @@ export default function VideoPage() {
 
       setProfile(foundProfile)
     } catch (error) {
-      console.error('Error loading profile:', error)
+      logger.error('Error loading profile:', error)
       setError('Failed to load profile')
     }
   }
 
   const startCall = async () => {
     if (!profile) return
+
+    // Check if user has Supabase account and credits
+    if (!user || !supabaseProfile) {
+      showModal(
+        'Account Required',
+        'Please sign in with email to use video call features and track your credits.',
+        'warning'
+      )
+      return
+    }
+
+    // Check if user has enough video credits for at least 12 seconds (1 credit minimum)
+    const videoCredits = supabaseProfile.video_credits || 0
+    const minRequiredCredits = 1 // Minimum 1 credit (12 seconds)
+
+    if (videoCredits < minRequiredCredits) {
+      showModal(
+        'Insufficient Video Credits',
+        `You need at least ${minRequiredCredits} video credit${minRequiredCredits > 1 ? 's' : ''} for a video call.\n\nYou have ${videoCredits} video credit${videoCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue.`,
+        'warning'
+      )
+      setTimeout(() => navigate('/pricing'), 2000)
+      return
+    }
 
     setCallStatus('connecting')
     setError(null)
@@ -97,11 +238,27 @@ export default function VideoPage() {
       // Default to a professional avatar ID (customize in env)
       const avatarId = import.meta.env.VITE_HEYGEN_AVATAR_ID || 'Angela-inblackskirt-20220820'
 
-      console.log('Creating HeyGen streaming session with avatar:', avatarId)
+      logger.log('Creating HeyGen streaming session with avatar:', avatarId)
 
       // Create HeyGen streaming session
       const session = await createHeyGenStreamingSession(avatarId, 'medium')
       setSessionId(session.session_id)
+
+      logger.log('Session offer received:', {
+        hasOffer: !!session.offer,
+        offerType: session.offer?.type,
+        sdpLength: session.offer?.sdp?.length || 0,
+        sdpPreview: session.offer?.sdp?.substring(0, 100) || 'EMPTY'
+      })
+
+      // Validate SDP
+      if (!session.offer || !session.offer.sdp || session.offer.sdp.length === 0) {
+        throw new Error('Invalid SDP received from HeyGen - SDP is empty')
+      }
+
+      if (!session.offer.sdp.startsWith('v=')) {
+        throw new Error(`Invalid SDP format - expected to start with 'v=' but got: ${session.offer.sdp.substring(0, 50)}`)
+      }
 
       // Set up WebRTC peer connection
       const pc = new RTCPeerConnection({
@@ -126,11 +283,12 @@ export default function VideoPage() {
 
       // Send answer back to HeyGen
       // HeyGen handles this automatically via their API
-      console.log('HeyGen session established successfully')
+      logger.log('HeyGen session established successfully')
 
+      callStartTimeRef.current = Date.now()
       setCallStatus('connected')
     } catch (error) {
-      console.error('Error starting call:', error)
+      logger.error('Error starting call:', error)
       setError('Failed to start video call. Please check your HeyGen API configuration.')
       setCallStatus('error')
     }
@@ -141,7 +299,7 @@ export default function VideoPage() {
       try {
         await closeHeyGenStreamSession(sessionId)
       } catch (error) {
-        console.error('Error closing session:', error)
+        logger.error('Error closing session:', error)
       }
     }
 
@@ -214,7 +372,7 @@ export default function VideoPage() {
           </div>
 
           <span className="px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs font-semibold rounded">
-            v2.4.0
+            v2.5.1
           </span>
         </div>
       </div>
@@ -376,7 +534,28 @@ export default function VideoPage() {
             </div>
           </div>
         )}
+
+        {/* Call Duration Display */}
+        {callStatus === 'connected' && (
+          <div className="absolute top-4 right-4">
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-lg px-4 py-2">
+              <p className="text-white text-sm font-mono">
+                {Math.floor(duration / 60).toString().padStart(2, '0')}:
+                {(duration % 60).toString().padStart(2, '0')}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Credit Warning Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+      />
     </div>
   )
 }

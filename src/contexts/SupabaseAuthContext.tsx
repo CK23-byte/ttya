@@ -10,6 +10,7 @@ import { User, Session, AuthError, AuthChangeEvent } from '@supabase/supabase-js
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { Profile, CREDIT_PRICING } from '../types/database'
+import { logger } from '../utils/logger'
 
 interface SupabaseAuthContextType {
   // Auth state
@@ -26,6 +27,7 @@ interface SupabaseAuthContextType {
   // Auth methods
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: AuthError | null }>
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signInWithOAuth: (provider: 'google' | 'apple') => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>
   updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>
@@ -50,24 +52,42 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   // Initialize auth state
   useEffect(() => {
     if (!isConfigured) {
+      logger.log('Supabase not configured, skipping auth initialization')
       setIsLoading(false)
       return
     }
 
+    logger.log('Initializing auth state')
+
+    // Set a safety timeout to prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+      logger.warn('Auth initialization timeout - forcing isLoading to false')
+      setIsLoading(false)
+    }, 5000) // 5 seconds timeout
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      logger.log('Initial session:', session ? 'Found' : 'None')
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id)
+        fetchProfile(session.user.id).finally(() => {
+          clearTimeout(safetyTimeout)
+        })
       } else {
         setIsLoading(false)
+        clearTimeout(safetyTimeout)
       }
+    }).catch((err) => {
+      logger.error('Error getting initial session:', err)
+      setIsLoading(false)
+      clearTimeout(safetyTimeout)
     })
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
+        logger.log('Auth state change:', event, session ? 'Session exists' : 'No session')
         setSession(session)
         setUser(session?.user ?? null)
 
@@ -83,22 +103,29 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             // Check if we're on homepage or auth pages, then redirect to dashboard
             const authPaths = ['/', '/auth', '/email-auth', '/login', '/setup']
             if (authPaths.includes(location.pathname)) {
+              logger.log('Redirecting to dashboard after sign in')
               navigate('/dashboard')
             }
           }
         } else {
           setProfile(null)
           setCredits(0)
+          setIsLoading(false)
         }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(safetyTimeout)
+      subscription.unsubscribe()
+    }
   }, [isConfigured, navigate, location.pathname])
 
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
     try {
+      logger.log('Fetching profile for user:', userId)
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -107,16 +134,26 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         // Profile doesn't exist yet - will be created on signup
-        console.log('Profile not found, might be new user')
+        logger.error('Profile fetch error:', error)
+        logger.log('Profile not found, might be new user')
         setProfile(null)
         setCredits(0)
       } else if (data) {
+        logger.log('Profile loaded successfully:', data)
         setProfile(data as Profile)
         setCredits((data as Profile).credits)
+      } else {
+        // No data and no error - shouldn't happen but handle it
+        logger.warn('No profile data and no error returned')
+        setProfile(null)
+        setCredits(0)
       }
     } catch (err) {
-      console.error('Error fetching profile:', err)
+      logger.error('Exception while fetching profile:', err)
+      setProfile(null)
+      setCredits(0)
     } finally {
+      logger.log('Setting isLoading to false')
       setIsLoading(false)
     }
   }
@@ -165,20 +202,47 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email!,
           display_name: displayName || null,
           credits: CREDIT_PRICING.SIGNUP_BONUS,
+          text_credits: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
+          voice_credits: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
+          video_credits: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
         })
 
       if (profileError) {
-        console.error('Error creating profile:', profileError)
+        logger.error('Error creating profile:', profileError)
       } else {
-        // Record the signup bonus as a transaction
-        await supabase
-          .from('credit_transactions')
-          .insert({
+        // Record the signup bonus transactions
+        const transactions = [
+          {
             user_id: data.user.id,
             amount: CREDIT_PRICING.SIGNUP_BONUS,
-            type: 'bonus',
+            type: 'bonus' as const,
+            credit_type: 'general' as const,
             description: 'Welkomstbonus bij registratie',
-          })
+          },
+          {
+            user_id: data.user.id,
+            amount: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
+            type: 'bonus' as const,
+            credit_type: 'text' as const,
+            description: 'Text credits welkomstbonus',
+          },
+          {
+            user_id: data.user.id,
+            amount: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
+            type: 'bonus' as const,
+            credit_type: 'voice' as const,
+            description: 'Voice credits welkomstbonus',
+          },
+          {
+            user_id: data.user.id,
+            amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
+            type: 'bonus' as const,
+            credit_type: 'video' as const,
+            description: 'Video credits welkomstbonus',
+          },
+        ]
+
+        await supabase.from('credit_transactions').insert(transactions)
       }
     }
 
@@ -194,9 +258,40 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       return { error: { message: 'Supabase niet geconfigureerd' } as AuthError }
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    logger.log('Attempting sign in for:', email)
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        logger.error('Sign in error:', error)
+      } else {
+        logger.log('Sign in successful:', data.user?.id)
+      }
+
+      return { error }
+    } catch (err) {
+      logger.error('Exception during sign in:', err)
+      return { error: { message: 'Er is een fout opgetreden bij het inloggen' } as AuthError }
+    }
+  }
+
+  // Sign in with OAuth (Google, Apple)
+  const signInWithOAuth = async (
+    provider: 'google' | 'apple'
+  ): Promise<{ error: AuthError | null }> => {
+    if (!isConfigured) {
+      return { error: { message: 'Supabase niet geconfigureerd' } as AuthError }
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
     })
 
     return { error }
@@ -253,6 +348,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         refreshCredits,
         signUp,
         signIn,
+        signInWithOAuth,
         signOut,
         resetPassword,
         updatePassword,

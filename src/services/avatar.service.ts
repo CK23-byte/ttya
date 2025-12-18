@@ -8,6 +8,7 @@ import * as ElevenLabs from './elevenlabs.service'
 import * as DID from './did.service'
 import * as Storage from './storage.service'
 import { supabase } from './storage.service'
+import { logger } from '../utils/logger'
 
 export interface AvatarProfile {
   id: string
@@ -52,14 +53,14 @@ export interface AvatarMessageResponse {
 export async function createAvatar(request: CreateAvatarRequest): Promise<AvatarProfile> {
   try {
     // 1. Upload voice files to storage (for backup)
-    console.log('Uploading voice files...')
+    logger.log('Uploading voice files...')
     const voiceUploadPromises = request.voiceFiles.map(file =>
       Storage.uploadVoiceRecording(file, request.userId)
     )
     await Promise.all(voiceUploadPromises)
 
     // 2. Clone voice with ElevenLabs
-    console.log('Cloning voice with ElevenLabs...')
+    logger.log('Cloning voice with ElevenLabs...')
     const voiceClone = await ElevenLabs.cloneVoice({
       name: `${request.name}_voice`,
       description: `Living Legacy voice for ${request.name}`,
@@ -71,18 +72,18 @@ export async function createAvatar(request: CreateAvatarRequest): Promise<Avatar
     })
 
     // 3. Upload presenter image to storage
-    console.log('Uploading presenter image...')
+    logger.log('Uploading presenter image...')
     const presenterUpload = await Storage.uploadVideoRecording(
       request.presenterImage,
       request.userId
     )
 
     // 4. Create D-ID presenter
-    console.log('Creating D-ID presenter...')
+    logger.log('Creating D-ID presenter...')
     const presenter = await DID.createPresenter(presenterUpload.publicUrl)
 
     // 5. Save avatar profile to database
-    console.log('Saving avatar profile...')
+    logger.log('Saving avatar profile...')
     const { data: profile, error } = await supabase
       .from('avatar_profiles')
       .insert({
@@ -106,7 +107,7 @@ export async function createAvatar(request: CreateAvatarRequest): Promise<Avatar
 
     return profile
   } catch (error) {
-    console.error('Error creating avatar:', error)
+    logger.error('Error creating avatar:', error)
     throw error
   }
 }
@@ -135,7 +136,7 @@ export async function generateAvatarMessage(
     }
 
     // 2. Generate speech with ElevenLabs
-    console.log('Generating speech...')
+    logger.log('Generating speech...')
     const audioBlob = await ElevenLabs.textToSpeech({
       text: request.messageText,
       voice_id: avatar.elevenlabs_voice_id,
@@ -152,7 +153,7 @@ export async function generateAvatarMessage(
     const audioUpload = await Storage.uploadVoiceRecording(audioFile, avatar.user_id)
 
     // 4. Generate video with D-ID
-    console.log('Generating avatar video...')
+    logger.log('Generating avatar video...')
     const videoUrl = await DID.generateAvatarVideo(
       avatar.presenter_image_url,
       audioUpload.publicUrl,
@@ -173,7 +174,7 @@ export async function generateAvatarMessage(
     })
 
     if (messageError) {
-      console.error('Failed to save message:', messageError)
+      logger.error('Failed to save message:', messageError)
     }
 
     return {
@@ -183,7 +184,7 @@ export async function generateAvatarMessage(
       status: 'completed',
     }
   } catch (error) {
-    console.error('Error generating avatar message:', error)
+    logger.error('Error generating avatar message:', error)
     throw error
   }
 }
@@ -275,7 +276,7 @@ export async function getAvatar(avatarId: string): Promise<AvatarProfile | null>
     .single()
 
   if (error) {
-    console.error('Error fetching avatar:', error)
+    logger.error('Error fetching avatar:', error)
     return null
   }
 
@@ -293,7 +294,7 @@ export async function getUserAvatars(userId: string): Promise<AvatarProfile[]> {
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching user avatars:', error)
+    logger.error('Error fetching user avatars:', error)
     return []
   }
 
@@ -314,7 +315,7 @@ export async function deleteAvatar(avatarId: string): Promise<void> {
     try {
       await ElevenLabs.deleteVoice(avatar.elevenlabs_voice_id)
     } catch (error) {
-      console.error('Failed to delete ElevenLabs voice:', error)
+      logger.error('Failed to delete ElevenLabs voice:', error)
     }
   }
 
@@ -355,7 +356,7 @@ export async function getAvatarMessages(avatarId: string) {
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching messages:', error)
+    logger.error('Error fetching messages:', error)
     return []
   }
 

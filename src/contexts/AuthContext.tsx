@@ -8,6 +8,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   deriveKeyFromPassword,
   generateSalt,
@@ -68,9 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // For protected routes: redirect to setup if not complete, or login if not authenticated
     if (!setupComplete) {
-      navigate('/setup')
+      navigate('/email-auth')
     } else if (!authState.isAuthenticated) {
-      navigate('/login')
+      navigate('/email-auth')
     }
   }, [])
 
@@ -125,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       navigate('/dashboard')
     } catch (error) {
-      console.error('Error setting up master password:', error)
+      logger.error('Error setting up master password:', error)
       throw new Error('Failed to setup master password')
     }
   }
@@ -202,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       encryptionKey: null,
       lastActivity: Date.now(),
     })
-    navigate('/login')
+    navigate('/email-auth')
   }
 
   /**
@@ -235,7 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsSetupComplete(false)
       setLoginAttempts(0)
       setLockoutEndsAt(null)
-      navigate('/setup')
+      navigate('/email-auth')
     }
   }
 

@@ -2,8 +2,8 @@
  * Pricing Page - Subscription Plans & Credit Packs
  *
  * Features:
- * - 4 subscription tiers (Free, Starter, Pro, Premium)
- * - Voice & Video credit packs
+ * - 4 subscription tiers (Free, Starter, Pro, Premium) for text messaging
+ * - Voice & Video credit packs as add-ons
  * - Monthly/yearly billing toggle
  * - Stripe checkout integration
  */
@@ -42,6 +42,7 @@ import {
   VideoCreditPackType,
   BillingPeriod
 } from '../lib/stripe'
+import { logger } from '../utils/logger'
 import Header from '../components/Header'
 
 export default function PricingPage() {
@@ -55,12 +56,12 @@ export default function PricingPage() {
     setError(null)
 
     if (plan === 'free') {
-      navigate('/auth')
+      navigate('/email-auth')
       return
     }
 
     if (!user) {
-      navigate('/auth')
+      navigate('/email-auth')
       return
     }
 
@@ -81,7 +82,7 @@ export default function PricingPage() {
     try {
       await redirectToCheckout(priceId, user.email || undefined)
     } catch (err) {
-      console.error('Checkout error:', err)
+      logger.error('Checkout error:', err)
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
       setIsLoading(null)
@@ -92,7 +93,7 @@ export default function PricingPage() {
     setError(null)
 
     if (!user) {
-      navigate('/auth')
+      navigate('/email-auth')
       return
     }
 
@@ -101,7 +102,7 @@ export default function PricingPage() {
     try {
       await buyVoiceCredits(pack, user.email || undefined)
     } catch (err) {
-      console.error('Checkout error:', err)
+      logger.error('Checkout error:', err)
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
       setIsLoading(null)
@@ -112,7 +113,7 @@ export default function PricingPage() {
     setError(null)
 
     if (!user) {
-      navigate('/auth')
+      navigate('/email-auth')
       return
     }
 
@@ -121,7 +122,7 @@ export default function PricingPage() {
     try {
       await buyVideoCredits(pack, user.email || undefined)
     } catch (err) {
-      console.error('Checkout error:', err)
+      logger.error('Checkout error:', err)
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
     } finally {
       setIsLoading(null)
@@ -202,7 +203,7 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* Text Chat Plans */}
+      {/* Text Chat Subscriptions */}
       <section className="pb-12 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
@@ -219,7 +220,7 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€0</span>
+                  <span className="text-3xl font-bold text-gray-900">$0</span>
                   <span className="text-gray-500">/month</span>
                 </div>
               </div>
@@ -236,7 +237,7 @@ export default function PricingPage() {
               </ul>
 
               <button
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/email-auth')}
                 className="w-full py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-medium hover:border-gray-300 hover:bg-gray-50 transition"
               >
                 Get Started Free
@@ -253,7 +254,7 @@ export default function PricingPage() {
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-gray-900">
-                    €{billingPeriod === 'monthly'
+                    ${billingPeriod === 'monthly'
                       ? SUBSCRIPTION_PLANS.starter.monthly.price
                       : (SUBSCRIPTION_PLANS.starter.yearly.price / 12).toFixed(2)}
                   </span>
@@ -261,7 +262,7 @@ export default function PricingPage() {
                 </div>
                 {billingPeriod === 'yearly' && (
                   <p className="text-xs text-green-600 mt-1">
-                    Billed €{SUBSCRIPTION_PLANS.starter.yearly.price}/year
+                    Billed ${SUBSCRIPTION_PLANS.starter.yearly.price}/year
                   </p>
                 )}
               </div>
@@ -308,7 +309,7 @@ export default function PricingPage() {
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-white">
-                    €{billingPeriod === 'monthly'
+                    ${billingPeriod === 'monthly'
                       ? SUBSCRIPTION_PLANS.pro.monthly.price
                       : (SUBSCRIPTION_PLANS.pro.yearly.price / 12).toFixed(2)}
                   </span>
@@ -316,7 +317,7 @@ export default function PricingPage() {
                 </div>
                 {billingPeriod === 'yearly' && (
                   <p className="text-xs text-white/80 mt-1">
-                    Billed €{SUBSCRIPTION_PLANS.pro.yearly.price}/year
+                    Billed ${SUBSCRIPTION_PLANS.pro.yearly.price}/year
                   </p>
                 )}
               </div>
@@ -363,7 +364,7 @@ export default function PricingPage() {
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-white">
-                    €{billingPeriod === 'monthly'
+                    ${billingPeriod === 'monthly'
                       ? SUBSCRIPTION_PLANS.premium.monthly.price
                       : (SUBSCRIPTION_PLANS.premium.yearly.price / 12).toFixed(2)}
                   </span>
@@ -371,7 +372,7 @@ export default function PricingPage() {
                 </div>
                 {billingPeriod === 'yearly' && (
                   <p className="text-xs text-amber-400 mt-1">
-                    Billed €{SUBSCRIPTION_PLANS.premium.yearly.price}/year
+                    Billed ${SUBSCRIPTION_PLANS.premium.yearly.price}/year
                   </p>
                 )}
               </div>
@@ -406,7 +407,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Voice Credits */}
+      {/* Voice Credits Add-on */}
       <section className="py-12 px-4 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
@@ -418,7 +419,7 @@ export default function PricingPage() {
               Voice Call Credits
             </h2>
             <p className="text-gray-600 max-w-xl mx-auto">
-              Buy credits for voice calls. 1 credit = 1 minute of voice call time.
+              Buy credits for voice calls. 1 credit = 30 seconds of voice call time.
               Works with any subscription plan.
             </p>
           </div>
@@ -433,17 +434,17 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€{VOICE_CREDIT_PACKS.small.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">${VOICE_CREDIT_PACKS.small.price}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  €{VOICE_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
+                  ${VOICE_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
                 </p>
               </div>
 
               <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4 text-orange-500" />
-                  <span>{VOICE_CREDIT_PACKS.small.credits} minutes</span>
+                  <span>{VOICE_CREDIT_PACKS.small.minutes} minutes</span>
                 </div>
               </div>
 
@@ -470,17 +471,17 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-white">€{VOICE_CREDIT_PACKS.medium.price}</span>
+                  <span className="text-3xl font-bold text-white">${VOICE_CREDIT_PACKS.medium.price}</span>
                 </div>
                 <p className="text-xs text-white/70 mt-1">
-                  €{VOICE_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
+                  ${VOICE_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
                 </p>
               </div>
 
               <div className="flex items-center gap-3 mb-6 text-sm text-white/90">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  <span>{VOICE_CREDIT_PACKS.medium.credits} minutes</span>
+                  <span>{VOICE_CREDIT_PACKS.medium.minutes} minutes</span>
                 </div>
               </div>
 
@@ -506,17 +507,17 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€{VOICE_CREDIT_PACKS.large.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">${VOICE_CREDIT_PACKS.large.price}</span>
                 </div>
                 <p className="text-xs text-green-600 mt-1">
-                  €{VOICE_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 20%!
+                  ${VOICE_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 33%!
                 </p>
               </div>
 
               <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4 text-orange-500" />
-                  <span>{VOICE_CREDIT_PACKS.large.credits} minutes</span>
+                  <span>{VOICE_CREDIT_PACKS.large.minutes} minutes</span>
                 </div>
               </div>
 
@@ -532,7 +533,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Video Credits */}
+      {/* Video Credits Add-on */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
@@ -544,7 +545,7 @@ export default function PricingPage() {
               Video Call Credits
             </h2>
             <p className="text-gray-600 max-w-xl mx-auto">
-              Buy credits for video calls. 1 credit = 1 minute of video call time.
+              Buy credits for video calls. 1 credit = 12 seconds of video call time.
               Works with any subscription plan.
             </p>
           </div>
@@ -559,17 +560,17 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€{VIDEO_CREDIT_PACKS.small.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">${VIDEO_CREDIT_PACKS.small.price}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  €{VIDEO_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
+                  ${VIDEO_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
                 </p>
               </div>
 
               <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4 text-orange-500" />
-                  <span>{VIDEO_CREDIT_PACKS.small.credits} minutes</span>
+                  <span>{VIDEO_CREDIT_PACKS.small.minutes} minutes</span>
                 </div>
               </div>
 
@@ -596,17 +597,17 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-white">€{VIDEO_CREDIT_PACKS.medium.price}</span>
+                  <span className="text-3xl font-bold text-white">${VIDEO_CREDIT_PACKS.medium.price}</span>
                 </div>
                 <p className="text-xs text-white/70 mt-1">
-                  €{VIDEO_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
+                  ${VIDEO_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
                 </p>
               </div>
 
               <div className="flex items-center gap-3 mb-6 text-sm text-white/90">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  <span>{VIDEO_CREDIT_PACKS.medium.credits} minutes</span>
+                  <span>{VIDEO_CREDIT_PACKS.medium.minutes} minutes</span>
                 </div>
               </div>
 
@@ -632,17 +633,17 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">€{VIDEO_CREDIT_PACKS.large.price}</span>
+                  <span className="text-3xl font-bold text-gray-900">${VIDEO_CREDIT_PACKS.large.price}</span>
                 </div>
                 <p className="text-xs text-green-600 mt-1">
-                  €{VIDEO_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 20%!
+                  ${VIDEO_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 25%!
                 </p>
               </div>
 
               <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4 text-orange-500" />
-                  <span>{VIDEO_CREDIT_PACKS.large.credits} minutes</span>
+                  <span>{VIDEO_CREDIT_PACKS.large.minutes} minutes</span>
                 </div>
               </div>
 
@@ -701,7 +702,7 @@ export default function PricingPage() {
               </h3>
               <p className="text-gray-600">
                 Subscriptions give you access to text chat with your AI personalities.
-                Credits are used for voice and video calls - each credit equals 1 minute of call time.
+                Credits are used for voice and video calls - each credit equals specific call time.
               </p>
             </div>
 
@@ -729,7 +730,7 @@ export default function PricingPage() {
                 What happens to my data if I cancel?
               </h3>
               <p className="text-gray-600">
-                Your conversations and AI personalities are stored locally on your device
+                Your conversations and AI personalities are saved in your browser
                 with end-to-end encryption. They remain yours even after cancellation.
               </p>
             </div>
@@ -747,7 +748,7 @@ export default function PricingPage() {
             Start your free trial today. No credit card required.
           </p>
           <button
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate('/email-auth')}
             className="px-8 py-4 bg-white text-orange-600 rounded-xl font-semibold hover:bg-gray-50 transition inline-flex items-center gap-2"
           >
             Start Free Trial

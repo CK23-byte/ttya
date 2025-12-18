@@ -74,7 +74,7 @@ export default function LandingPage() {
     if (user) {
       navigate('/dashboard')
     } else {
-      navigate('/auth')
+      navigate('/email-auth')
     }
   }
 
@@ -142,7 +142,7 @@ export default function LandingPage() {
       {/* Version Badge */}
       <div className="fixed top-4 left-4 z-50">
         <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
-          <span className="text-xs font-semibold text-gray-600">v2.4.0</span>
+          <span className="text-xs font-semibold text-gray-600">v2.5.1</span>
         </div>
       </div>
 
@@ -161,14 +161,7 @@ export default function LandingPage() {
           Pricing
         </button>
         <button
-          onClick={() => navigate('/living-legacy')}
-          className="px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold text-gray-700 hover:text-orange-600 whitespace-nowrap"
-        >
-          <span className="hidden sm:inline">Living Legacy</span>
-          <span className="sm:hidden">Legacy</span>
-        </button>
-        <button
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate('/email-auth')}
           className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
         >
           Sign In
@@ -204,7 +197,7 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-6">
               <button
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/email-auth')}
                 className="group px-6 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
               >
                 Start Free Now
@@ -269,7 +262,7 @@ export default function LandingPage() {
                 <div className="px-4 py-4 bg-gradient-to-r from-orange-50 to-rose-50 border-t border-orange-100 text-center">
                   <p className="text-sm font-medium text-gray-800 mb-2">Want to create your own?</p>
                   <button
-                    onClick={() => navigate('/auth')}
+                    onClick={() => navigate('/email-auth')}
                     className="px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg text-sm font-medium hover:shadow-md transition"
                   >
                     Get Started Free
@@ -513,7 +506,7 @@ export default function LandingPage() {
           {/* CTA */}
           <div className="text-center mt-12">
             <button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/email-auth')}
               className="group px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2"
             >
               Create Your First Memory
@@ -876,7 +869,7 @@ export default function LandingPage() {
               <span className="font-semibold text-gray-900"> Start preserving what matters today.</span>
             </p>
             <button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/email-auth')}
               className="group px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-3"
             >
               Start Preserving Memories Now
@@ -950,14 +943,14 @@ export default function LandingPage() {
           {/* CTA Button */}
           <div className="text-center">
             <button
-              onClick={() => navigate('/living-legacy')}
+              onClick={() => navigate('/email-auth')}
               className="group px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-2xl hover:shadow-orange-500/50 transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-3"
             >
-              Create Your Avatar Now
+              Start Your Journey Now
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </button>
             <p className="text-sm text-purple-200 mt-4">
-              Fine-tune your digital personality • Available for loved ones forever
+              Create your AI companion • Available whenever you need
             </p>
           </div>
         </div>
@@ -1118,7 +1111,7 @@ export default function LandingPage() {
             Start with 10 free credits. No credit card required.
           </p>
           <button
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate('/email-auth')}
             className="group px-10 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-3 mx-auto"
           >
             Create Free Account
@@ -1131,9 +1124,12 @@ export default function LandingPage() {
       <div className="border-t border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Heart className="w-5 h-5 text-rose-500" fill="currentColor" />
               <span className="font-medium text-gray-900">TalkToYouAI</span>
+              <span className="px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200">
+                v2.11.0
+              </span>
             </div>
 
             <div className="flex items-center gap-6 text-sm text-gray-500">

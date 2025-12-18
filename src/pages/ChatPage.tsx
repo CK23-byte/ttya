@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   MoreVertical,
   Search,
@@ -26,6 +27,7 @@ import {
   Palette
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { sendMessageToClaude, generateSystemPrompt } from '../utils/claudeAPI'
 import TypingIndicator from '../components/TypingIndicator'
@@ -33,7 +35,9 @@ import EmojiPicker from '../components/EmojiPicker'
 import AttachmentPicker from '../components/AttachmentPicker'
 import VoiceCallModal from '../components/VoiceCallModal'
 import VideoCallModal from '../components/VideoCallModal'
+import Modal from '../components/Modal'
 import { Message, PersonalityProfile } from '../types'
+import { CREDIT_PRICING } from '../types/database'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
 const PROFILES_STORAGE_KEY = 'personality_profiles'
@@ -105,6 +109,7 @@ interface ChatConversation {
 
 export default function ChatPage() {
   const { isAuthenticated, encryptionKey, updateActivity } = useAuth()
+  const { user, profile, refreshCredits } = useSupabaseAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [conversations, setConversations] = useState<ChatConversation[]>([])
@@ -122,6 +127,21 @@ export default function ChatPage() {
   const [theme, setTheme] = useState<ChatTheme>('whatsapp')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const hasLoadedRef = useRef(false)
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showModal = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setModal({ isOpen: true, title, message, type })
+  }
 
   // Load saved theme
   useEffect(() => {
@@ -144,7 +164,7 @@ export default function ChatPage() {
     // Give auth context time to initialize before redirecting
     const timeoutId = setTimeout(() => {
       if (!isAuthenticated && !encryptionKey) {
-        navigate('/login')
+        navigate('/email-auth')
       }
     }, 100)
 
@@ -205,7 +225,7 @@ export default function ChatPage() {
           hasLoadedRef.current = true
         }
       } catch (error) {
-        console.error('Error loading conversations:', error)
+        logger.error('Error loading conversations:', error)
       } finally {
         setIsLoading(false)
       }
@@ -235,7 +255,7 @@ export default function ChatPage() {
           : c
       ))
     } catch (error) {
-      console.error('Error saving messages:', error)
+      logger.error('Error saving messages:', error)
     }
   }
 
@@ -244,6 +264,30 @@ export default function ChatPage() {
 
     const activeConvo = getActiveConversation()
     if (!activeConvo) return
+
+    // Check if user has Supabase account and credits
+    if (!user || !profile) {
+      showModal(
+        'Account Required',
+        'Please sign in with email to use chat features and track your credits.',
+        'warning'
+      )
+      return
+    }
+
+    // Check if user has enough text credits
+    const textCredits = profile.text_credits || 0
+    const requiredCredits = CREDIT_PRICING.MESSAGE_BASE_COST
+
+    if (textCredits < requiredCredits) {
+      showModal(
+        'Insufficient Credits',
+        `You need ${requiredCredits} text credit${requiredCredits > 1 ? 's' : ''} to send a message.\n\nYou have ${textCredits} text credit${textCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue chatting.`,
+        'warning'
+      )
+      navigate('/pricing')
+      return
+    }
 
     updateActivity()
 
@@ -291,8 +335,33 @@ export default function ChatPage() {
       const finalMessages = [...updatedMessages, aiMessage]
       setCurrentMessages(finalMessages)
       await saveMessages(activeProfileId, finalMessages)
+
+      // Deduct text credits after successful message
+      try {
+        const response = await fetch('/api/credits/deduct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            amount: requiredCredits,
+            creditType: 'text',
+            description: `Chat message to ${activeConvo.profile.name}`
+          })
+        })
+
+        if (response.ok) {
+          // Refresh credits to update UI
+          await refreshCredits()
+        } else {
+          logger.error('Failed to deduct credits:', await response.text())
+        }
+      } catch (creditError) {
+        logger.error('Error deducting credits:', creditError)
+        // Don't show error to user - message was already sent successfully
+      }
+
     } catch (error) {
-      console.error('Error getting AI response:', error)
+      logger.error('Error getting AI response:', error)
 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -344,21 +413,21 @@ export default function ChatPage() {
 
   // Handle file attachments
   const handleAttachmentUpload = (files: File[], type: 'photo' | 'video' | 'text') => {
-    console.log(`Uploading ${files.length} ${type} files:`, files.map(f => f.name))
+    logger.log(`Uploading ${files.length} ${type} files:`, files.map(f => f.name))
     // TODO: Store files locally and attach to profile
     alert(`${files.length} ${type} file(s) uploaded successfully! These will help the AI better understand ${getActiveConversation()?.profile.name}.`)
   }
 
   // Handle voice sample upload
   const handleVoiceSampleUpload = (file: File) => {
-    console.log('Voice sample uploaded:', file.name)
+    logger.log('Voice sample uploaded:', file.name)
     // TODO: Store voice sample with profile
     alert(`Voice sample "${file.name}" uploaded! This will be used to generate voice calls.`)
   }
 
   // Handle media upload for video calls
   const handleMediaUpload = (files: File[], type: 'photo' | 'video' | 'voice') => {
-    console.log(`Uploading ${files.length} ${type} files for video:`, files.map(f => f.name))
+    logger.log(`Uploading ${files.length} ${type} files for video:`, files.map(f => f.name))
     // TODO: Store media with profile
   }
 
@@ -400,7 +469,7 @@ export default function ChatPage() {
               </button>
               <h2 className={`text-xl font-semibold ${currentTheme.text}`}>Chats</h2>
               <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded">
-                v2.4.0
+                v2.5.1
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -730,6 +799,15 @@ export default function ChatPage() {
           theme={theme}
         />
       )}
+
+      {/* Credit Warning Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+      />
     </div>
   )
 }

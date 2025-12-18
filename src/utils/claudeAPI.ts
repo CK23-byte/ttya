@@ -5,6 +5,7 @@
  */
 
 import { Message } from '../types'
+import { logger } from './logger'
 
 // Use Vercel serverless function instead of direct API calls
 const API_ENDPOINT = '/api/chat'
@@ -34,7 +35,7 @@ export async function sendMessageToClaude(
     }))
 
   try {
-    console.log('Sending message to Claude API...', {
+    logger.log('Sending message to Claude API...', {
       messageCount: claudeMessages.length,
       endpoint: API_ENDPOINT
     })
@@ -52,25 +53,25 @@ export async function sendMessageToClaude(
       }),
     })
 
-    console.log('API response status:', response.status)
+    logger.log('API response status:', response.status)
 
     if (!response.ok) {
       const error = await response.json()
-      console.error('API error response:', error)
+      logger.error('API error response:', error)
       throw new Error(error.error || `API error: ${response.status}`)
     }
 
     const data = await response.json()
-    console.log('API response received:', { hasResponse: !!data.response })
+    logger.log('API response received:', { hasResponse: !!data.response })
 
     if (data.response) {
       return data.response
     }
 
-    console.error('Invalid response format:', data)
+    logger.error('Invalid response format:', data)
     throw new Error('Invalid response format from API')
   } catch (error) {
-    console.error('Error calling Claude API:', error)
+    logger.error('Error calling Claude API:', error)
     if (error instanceof Error) {
       throw new Error(`Claude API error: ${error.message}`)
     }

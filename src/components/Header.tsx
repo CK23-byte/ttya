@@ -15,10 +15,10 @@ import {
   Heart,
   User,
   Settings,
-  Key,
   CreditCard,
   LogOut,
   ChevronDown,
+  Zap,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
@@ -77,13 +77,19 @@ export default function Header({ variant = 'default' }: HeaderProps) {
     <nav className={`${headerClassName} sticky top-0 z-50`}>
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
-        <div
-          className="flex items-center gap-2 cursor-pointer group"
-          onClick={() => navigate('/')}
-        >
-          <Heart className="w-6 sm:w-8 h-6 sm:h-8 text-orange-600 group-hover:scale-110 transition-transform" />
-          <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
-            TalkToYouAI
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={() => navigate('/')}
+          >
+            <Heart className="w-6 sm:w-8 h-6 sm:h-8 text-orange-600 group-hover:scale-110 transition-transform" />
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+              TalkToYouAI
+            </span>
+          </div>
+          {/* Version Badge */}
+          <span className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200">
+            v2.11.0
           </span>
         </div>
 
@@ -91,17 +97,26 @@ export default function Header({ variant = 'default' }: HeaderProps) {
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Navigation Links */}
           <button
-            onClick={() => navigate('/living-legacy')}
-            className="text-sm sm:text-base text-gray-600 hover:text-orange-600 font-medium transition-colors px-2 hidden sm:block"
-          >
-            Living Legacy
-          </button>
-          <button
             onClick={() => navigate('/pricing')}
             className="text-sm sm:text-base text-gray-600 hover:text-orange-600 font-medium transition-colors px-2"
           >
             Pricing
           </button>
+
+          {/* Credit Display - Always visible when logged in */}
+          {user && profile && (
+            <div
+              onClick={() => navigate('/account')}
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-200 rounded-full cursor-pointer hover:shadow-sm transition group"
+              title="View your credits"
+            >
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 group-hover:scale-110 transition-transform" />
+              <span className="text-xs sm:text-sm font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+                {profile.credits || 0}
+              </span>
+              <span className="text-xs text-gray-600 hidden sm:inline">credits</span>
+            </div>
+          )}
 
           {/* User Menu or Sign In */}
           {user ? (
@@ -153,17 +168,6 @@ export default function Header({ variant = 'default' }: HeaderProps) {
                   <button
                     onClick={() => {
                       setIsDropdownOpen(false)
-                      navigate('/account#password')
-                    }}
-                    className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-gray-700 transition"
-                  >
-                    <Key className="w-4 h-4" />
-                    <span className="text-sm font-medium">Change Password</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setIsDropdownOpen(false)
                       navigate('/pricing')
                     }}
                     className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-gray-700 transition"
@@ -186,7 +190,7 @@ export default function Header({ variant = 'default' }: HeaderProps) {
             </div>
           ) : (
             <button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/email-auth')}
               className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full shadow-sm hover:shadow-md transition text-xs sm:text-sm font-semibold"
             >
               Sign In

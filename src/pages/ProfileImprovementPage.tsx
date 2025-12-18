@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { logger } from '../utils/logger'
 import {
   ArrowLeft,
   FileText,
@@ -24,21 +25,35 @@ import {
   Trash2,
   Play,
   Pause,
-  Save
+  Save,
+  Edit2,
+  HelpCircle
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
+import Modal from '../components/Modal'
+import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
+import JSZip from 'jszip'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
 
 // Voice configuration
 interface VoiceConfig {
-  type: 'cloned' | 'standard' // cloned = ElevenLabs, standard = OpenAI
-  clonedVoiceId?: string // ElevenLabs voice ID (if type is 'cloned')
-  clonedVoiceName?: string // ElevenLabs voice name
-  standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if type is 'standard')
+  type: 'cloned' | 'standard' // cloned = voice cloning, standard = preset voice
+  clonedVoiceId?: string // Cloned voice ID (if type is 'cloned')
+  clonedVoiceName?: string // Cloned voice name
+  standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // Standard voice (if type is 'standard')
+}
+
+// Avatar configuration
+interface AvatarConfig {
+  type: 'custom' | 'default' // custom = custom uploaded, default = preset avatar
+  customAvatarId?: string // Custom avatar ID (if type is 'custom')
+  customAvatarName?: string // Custom avatar name
+  customAvatarThumbnail?: string // Preview thumbnail URL
+  defaultAvatar?: string // Default avatar ID (if type is 'default')
 }
 
 // Storage interface (what gets saved - with base64)
@@ -48,6 +63,7 @@ interface StoredProfileData {
   photos: { id: string; url: string; name: string }[]
   videos: { id: string; url: string; name: string }[]
   voiceConfig?: VoiceConfig // Voice configuration for calls
+  avatarConfig?: AvatarConfig // Avatar configuration for video calls
 }
 
 // Runtime interface (what we work with - with Blobs)
@@ -57,6 +73,7 @@ interface ProfileData {
   photos: { id: string; url: string; name: string }[]
   videos: { id: string; url: string; name: string }[]
   voiceConfig?: VoiceConfig // Voice configuration for calls
+  avatarConfig?: AvatarConfig // Avatar configuration for video calls
 }
 
 export default function ProfileImprovementPage() {
@@ -74,6 +91,10 @@ export default function ProfileImprovementPage() {
     voiceConfig: {
       type: 'standard',
       standardVoice: 'alloy'
+    },
+    avatarConfig: {
+      type: 'default',
+      defaultAvatar: 'Angela-inblackskirt-20220820'
     }
   })
 
@@ -85,6 +106,28 @@ export default function ProfileImprovementPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isCloningVoice, setIsCloningVoice] = useState(false)
   const [cloneError, setCloneError] = useState<string | null>(null)
+  const [isCreatingAvatar, setIsCreatingAvatar] = useState(false)
+  const [avatarCreationStatus, setAvatarCreationStatus] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'error'>('idle')
+  const [editingItemId, setEditingItemId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
+
+  // Modal state
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showModal = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setModal({ isOpen: true, title, message, type })
+  }
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatFileInputRef = useRef<HTMLInputElement>(null)
@@ -146,7 +189,7 @@ export default function ProfileImprovementPage() {
         navigate('/dashboard')
       }
     } catch (error) {
-      console.error('Error loading profile:', error)
+      logger.error('Error loading profile:', error)
     }
   }
 
@@ -159,7 +202,7 @@ export default function ProfileImprovementPage() {
         encryptionKey
       )
 
-      console.log('Loading profile data:', data)
+      logger.log('Loading profile data:', data)
 
       if (data) {
         // Convert base64 voice samples back to Blobs for runtime use
@@ -175,7 +218,7 @@ export default function ProfileImprovementPage() {
                 name: sample.name
               }
             } catch (error) {
-              console.error('Error converting voice sample:', error)
+              logger.error('Error converting voice sample:', error)
               return null
             }
           })
@@ -192,7 +235,7 @@ export default function ProfileImprovementPage() {
           voiceConfig: data.voiceConfig // ✅ Load voice config
         })
 
-        console.log('Profile data loaded successfully:', {
+        logger.log('Profile data loaded successfully:', {
           textNotes: data.textNotes?.length || 0,
           voiceSamples: validVoiceSamples.length,
           photos: data.photos?.length || 0,
@@ -201,7 +244,7 @@ export default function ProfileImprovementPage() {
         })
       }
     } catch (error) {
-      console.error('Error loading profile data:', error)
+      logger.error('Error loading profile data:', error)
     }
   }
 
@@ -239,7 +282,7 @@ export default function ProfileImprovementPage() {
         voiceConfig: profileData.voiceConfig // ✅ Save voice config
       }
 
-      console.log('Saving profile data:', {
+      logger.log('Saving profile data:', {
         textNotes: dataToStore.textNotes.length,
         voiceSamples: dataToStore.voiceSamples.length,
         photos: dataToStore.photos.length,
@@ -253,7 +296,7 @@ export default function ProfileImprovementPage() {
         encryptionKey
       )
 
-      console.log('Profile data saved successfully')
+      logger.log('Profile data saved successfully')
 
       setSaveSuccess(true)
 
@@ -262,8 +305,8 @@ export default function ProfileImprovementPage() {
         navigate('/dashboard')
       }, 1000)
     } catch (error) {
-      console.error('Error saving profile data:', error)
-      alert('Failed to save changes. Please try again.')
+      logger.error('Error saving profile data:', error)
+      showModal('Save Failed', 'Failed to save changes. Please try again.', 'error')
     } finally {
       setIsSaving(false)
     }
@@ -375,7 +418,7 @@ export default function ProfileImprovementPage() {
 
   const handleChatFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !profile) return
 
     try {
       if (file.name.endsWith('.txt')) {
@@ -388,19 +431,99 @@ export default function ProfileImprovementPage() {
             ...prev,
             textNotes: [...prev.textNotes, ...messages]
           }))
-          alert(`Successfully imported ${messages.length} messages from chat export!`)
+          showModal('Import Successful', `Successfully imported ${messages.length} messages from chat export!`, 'success')
         } else {
-          alert('No messages found in the file. Please check the file format.')
+          showModal('No Messages Found', 'No messages found in the file. Please check the file format.', 'warning')
         }
       } else if (file.name.endsWith('.zip')) {
-        // For ZIP files, we'll need to use a library like jszip
-        alert('ZIP file support coming soon! For now, please extract the ZIP file and upload the .txt file inside.')
+        // Handle ZIP files with text, photos, and videos
+        const zip = new JSZip()
+        const zipContents = await zip.loadAsync(file)
+
+        let textMessages: string[] = []
+        let photoCount = 0
+        let videoCount = 0
+
+        // Process all files in ZIP
+        for (const [filename, zipEntry] of Object.entries(zipContents.files)) {
+          if (zipEntry.dir) continue // Skip directories
+
+          if (filename.endsWith('.txt')) {
+            // Extract and parse text files
+            const text = await zipEntry.async('text')
+            const messages = parseChatFile(text)
+            textMessages = [...textMessages, ...messages]
+          } else if (filename.match(/\.(jpg|jpeg|png|gif|webp|heic)$/i)) {
+            // Extract and upload photos
+            const blob = await zipEntry.async('blob')
+            const photoFile = new File([blob], filename, { type: `image/${filename.split('.').pop()}` })
+
+            try {
+              const { publicUrl, path } = await uploadFileToStorage(
+                photoFile,
+                'user-uploads',
+                `profiles/${profile.id}/photos`
+              )
+
+              const id = `photo_${Date.now()}_${Math.random()}`
+              setProfileData(prev => ({
+                ...prev,
+                photos: [
+                  ...prev.photos,
+                  { id, url: publicUrl, name: filename, storagePath: path }
+                ]
+              }))
+              photoCount++
+            } catch (error) {
+              logger.error('Error uploading photo from ZIP:', error)
+            }
+          } else if (filename.match(/\.(mp4|mov|avi|webm|mkv)$/i)) {
+            // Extract and upload videos
+            const blob = await zipEntry.async('blob')
+            const videoFile = new File([blob], filename, { type: `video/${filename.split('.').pop()}` })
+
+            try {
+              const { publicUrl, path } = await uploadFileToStorage(
+                videoFile,
+                'user-uploads',
+                `profiles/${profile.id}/videos`
+              )
+
+              const id = `video_${Date.now()}_${Math.random()}`
+              setProfileData(prev => ({
+                ...prev,
+                videos: [
+                  ...prev.videos,
+                  { id, url: publicUrl, name: filename, storagePath: path }
+                ]
+              }))
+              videoCount++
+            } catch (error) {
+              logger.error('Error uploading video from ZIP:', error)
+            }
+          }
+        }
+
+        // Update text notes
+        if (textMessages.length > 0) {
+          setProfileData(prev => ({
+            ...prev,
+            textNotes: [...prev.textNotes, ...textMessages]
+          }))
+        }
+
+        // Show summary
+        showModal(
+          'ZIP Import Successful',
+          `Successfully imported from ZIP:\n- ${textMessages.length} text messages\n- ${photoCount} photos\n- ${videoCount} videos`,
+          'success'
+        )
       } else {
-        alert('Please upload a .txt or .zip file')
+        showModal('Invalid File Type', 'Please upload a .txt or .zip file', 'warning')
       }
     } catch (error) {
-      console.error('Error reading chat file:', error)
-      alert('Failed to read chat file. Please try again.')
+      logger.error('Error reading chat file:', error)
+      showModal('File Read Error', 'Failed to read chat file. Please try again.', 'error')
     }
 
     // Reset file input
@@ -410,18 +533,18 @@ export default function ProfileImprovementPage() {
   }
 
   const startRecording = async () => {
-    console.log('🎤 Starting recording...')
+    logger.log('🎤 Starting recording...')
 
     try {
       // Simple audio request - no fancy options
-      console.log('🎤 Requesting microphone access...')
+      logger.log('🎤 Requesting microphone access...')
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      console.log('✅ Microphone access granted!')
+      logger.log('✅ Microphone access granted!')
 
       streamRef.current = stream
 
       // Create recorder with simple webm format
-      console.log('🎤 Creating MediaRecorder...')
+      logger.log('🎤 Creating MediaRecorder...')
 
       // Choose audio format that ElevenLabs supports
       // ElevenLabs supports: MP3, WAV, FLAC, OGG, M4A (but NOT WEBM!)
@@ -434,22 +557,22 @@ export default function ProfileImprovementPage() {
         mimeType = 'audio/ogg'
       }
 
-      console.log('🎵 Using audio format:', mimeType)
+      logger.log('🎵 Using audio format:', mimeType)
       const recorder = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = recorder
       audioChunksRef.current = []
 
       recorder.ondataavailable = (e) => {
-        console.log('📦 Data available:', e.data.size, 'bytes')
+        logger.log('📦 Data available:', e.data.size, 'bytes')
         if (e.data.size > 0) {
           audioChunksRef.current.push(e.data)
         }
       }
 
       recorder.onstop = () => {
-        console.log('⏹️ Recording stopped')
+        logger.log('⏹️ Recording stopped')
         const blob = new Blob(audioChunksRef.current, { type: mimeType })
-        console.log('✅ Created audio blob:', blob.size, 'bytes, type:', mimeType)
+        logger.log('✅ Created audio blob:', blob.size, 'bytes, type:', mimeType)
 
         // IMPORTANT: Capture recordingTime BEFORE resetting
         const capturedDuration = recordingTime
@@ -461,7 +584,7 @@ export default function ProfileImprovementPage() {
           name: `Voice Sample ${profileData.voiceSamples.length + 1}`
         }
 
-        console.log('📝 Saving voice sample:', {
+        logger.log('📝 Saving voice sample:', {
           id: newSample.id,
           blobSize: newSample.blob.size,
           duration: newSample.duration,
@@ -478,7 +601,7 @@ export default function ProfileImprovementPage() {
         // Stop stream tracks
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => {
-            console.log('🛑 Stopping track:', track.kind)
+            logger.log('🛑 Stopping track:', track.kind)
             track.stop()
           })
           streamRef.current = null
@@ -486,10 +609,10 @@ export default function ProfileImprovementPage() {
       }
 
       // Start recording
-      console.log('▶️ Starting MediaRecorder...')
+      logger.log('▶️ Starting MediaRecorder...')
       recorder.start()
       setIsRecording(true)
-      console.log('✅ Recording started!')
+      logger.log('✅ Recording started!')
 
       // Start timer
       const interval = setInterval(() => {
@@ -498,9 +621,9 @@ export default function ProfileImprovementPage() {
       recordingIntervalRef.current = interval
 
     } catch (err: any) {
-      console.error('❌ Microphone error:', err)
-      console.error('Error name:', err.name)
-      console.error('Error message:', err.message)
+      logger.error('❌ Microphone error:', err)
+      logger.error('Error name:', err.name)
+      logger.error('Error message:', err.message)
 
       let errorMsg = 'Could not access microphone.'
 
@@ -514,16 +637,16 @@ export default function ProfileImprovementPage() {
         errorMsg = 'Microphone error: ' + err.message
       }
 
-      alert(errorMsg)
+      showModal('Microphone Error', errorMsg, 'error')
       setIsRecording(false)
     }
   }
 
   const stopRecording = () => {
-    console.log('⏹️ Stop recording requested')
+    logger.log('⏹️ Stop recording requested')
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      console.log('⏹️ Stopping MediaRecorder...')
+      logger.log('⏹️ Stopping MediaRecorder...')
       mediaRecorderRef.current.stop()
     }
 
@@ -556,15 +679,15 @@ export default function ProfileImprovementPage() {
           ]
         }))
 
-        console.log('✅ Voice file uploaded:', {
+        logger.log('✅ Voice file uploaded:', {
           name: file.name,
           size: file.size,
           type: file.type,
           duration: audioDuration
         })
       } catch (error) {
-        console.error('Error reading audio duration:', error)
-        alert('Failed to read audio file. Please try again.')
+        logger.error('Error reading audio duration:', error)
+        showModal('Audio File Error', 'Failed to read audio file. Please try again.', 'error')
       }
     }
   }
@@ -619,44 +742,85 @@ export default function ProfileImprovementPage() {
     }
   }
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
+    if (!profile) return
 
-    files.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const url = event.target?.result as string
+    for (const file of files) {
+      try {
+        logger.log('Uploading photo to Supabase Storage...', {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        })
+
+        // Upload to Supabase Storage
+        const { publicUrl, path } = await uploadFileToStorage(
+          file,
+          'user-uploads',
+          `profiles/${profile.id}/photos`
+        )
+
         const id = `photo_${Date.now()}_${Math.random()}`
 
         setProfileData(prev => ({
           ...prev,
           photos: [
             ...prev.photos,
-            { id, url, name: file.name }
+            {
+              id,
+              url: publicUrl,
+              name: file.name,
+              storagePath: path // Store path for deletion
+            }
           ]
         }))
+
+        logger.log('Photo uploaded successfully:', publicUrl)
+      } catch (error) {
+        logger.error('Error uploading photo:', error)
+        showModal('Upload Failed', `Failed to upload ${file.name}. Please try again.`, 'error')
       }
-      reader.readAsDataURL(file)
-    })
+    }
   }
 
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const url = event.target?.result as string
-        const id = `video_${Date.now()}`
+    if (!file || !profile) return
 
-        setProfileData(prev => ({
-          ...prev,
-          videos: [
-            ...prev.videos,
-            { id, url, name: file.name }
-          ]
-        }))
-      }
-      reader.readAsDataURL(file)
+    try {
+      logger.log('Uploading video to Supabase Storage...', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      })
+
+      // Upload to Supabase Storage
+      const { publicUrl, path } = await uploadFileToStorage(
+        file,
+        'user-uploads',
+        `profiles/${profile.id}/videos`
+      )
+
+      const id = `video_${Date.now()}`
+
+      setProfileData(prev => ({
+        ...prev,
+        videos: [
+          ...prev.videos,
+          {
+            id,
+            url: publicUrl,
+            name: file.name,
+            storagePath: path // Store path for deletion
+          }
+        ]
+      }))
+
+      logger.log('Video uploaded successfully:', publicUrl)
+    } catch (error) {
+      logger.error('Error uploading video:', error)
+      showModal('Upload Failed', 'Failed to upload video. Please try again.', 'error')
     }
   }
 
@@ -674,9 +838,43 @@ export default function ProfileImprovementPage() {
     }))
   }
 
+  // Rename functions
+  const handleRenameVoice = (id: string, newName: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      voiceSamples: prev.voiceSamples.map(v =>
+        v.id === id ? { ...v, name: newName } : v
+      )
+    }))
+    setEditingItemId(null)
+    setEditingName('')
+  }
+
+  const handleRenamePhoto = (id: string, newName: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      photos: prev.photos.map(p =>
+        p.id === id ? { ...p, name: newName } : p
+      )
+    }))
+    setEditingItemId(null)
+    setEditingName('')
+  }
+
+  const handleRenameVideo = (id: string, newName: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      videos: prev.videos.map(v =>
+        v.id === id ? { ...v, name: newName } : v
+      )
+    }))
+    setEditingItemId(null)
+    setEditingName('')
+  }
+
   const handleCloneVoice = async () => {
     if (!profileData.voiceSamples || profileData.voiceSamples.length === 0) {
-      alert('Please record or upload a voice sample first!')
+      showModal('No Voice Sample', 'Please record or upload a voice sample first!', 'warning')
       return
     }
 
@@ -689,7 +887,7 @@ export default function ProfileImprovementPage() {
       // Use the first voice sample for cloning
       const sample = profileData.voiceSamples[0]
 
-      console.log('📋 Sample info:', {
+      logger.log('📋 Sample info:', {
         id: sample.id,
         blobSize: sample.blob.size,
         blobType: sample.blob.type,
@@ -697,23 +895,37 @@ export default function ProfileImprovementPage() {
         name: sample.name
       })
 
-      // Get MIME type from blob
-      const mimeType = sample.blob.type || 'audio/mp4'
+      // Convert blob to File if needed
+      const originalFile = sample.blob instanceof File
+        ? sample.blob
+        : new File([sample.blob], sample.name, { type: sample.blob.type })
 
-      console.log('Cloning voice to ElevenLabs...', {
-        audioSize: sample.blob.size,
+      // Prepare audio for voice cloning (extract audio from video if needed)
+      logger.log('Preparing audio for voice cloning...')
+      const audioFile = await prepareAudioForVoiceCloning(originalFile)
+
+      // Get MIME type from processed audio
+      const mimeType = audioFile.type || 'audio/mp4'
+
+      logger.log('Cloning voice to ElevenLabs...', {
+        audioSize: audioFile.size,
         mimeType,
-        duration: sample.duration
+        duration: sample.duration,
+        wasVideo: originalFile.type.startsWith('video/')
       })
 
       // Validate audio duration (ElevenLabs requires at least 30 seconds, recommends 1+ minute)
       if (!sample.duration || sample.duration < 30) {
-        alert(`Voice sample is too short! Duration: ${sample.duration || 0} seconds. ElevenLabs requires at least 30 seconds of audio. Please record a longer sample.`)
+        showModal(
+          'Voice Sample Too Short',
+          `Duration: ${sample.duration || 0} seconds.\n\nElevenLabs requires at least 30 seconds of audio. Please record a longer sample.`,
+          'warning'
+        )
         setIsCloningVoice(false)
         return
       }
 
-      // Convert blob to base64
+      // Convert audio file to base64
       const reader = new FileReader()
       const base64Promise = new Promise<string>((resolve) => {
         reader.onloadend = () => {
@@ -722,7 +934,7 @@ export default function ProfileImprovementPage() {
           const base64Data = base64.split(',')[1]
           resolve(base64Data)
         }
-        reader.readAsDataURL(sample.blob)
+        reader.readAsDataURL(audioFile) // Use processed audioFile instead of sample.blob
       })
 
       const audioBase64 = await base64Promise
@@ -745,7 +957,7 @@ export default function ProfileImprovementPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        console.error('❌ ElevenLabs API Error:', {
+        logger.error('❌ ElevenLabs API Error:', {
           status: response.status,
           error: error.error,
           details: error.details,
@@ -756,7 +968,7 @@ export default function ProfileImprovementPage() {
       }
 
       const data = await response.json()
-      console.log('Voice cloned successfully:', data)
+      logger.log('Voice cloned successfully:', data)
 
       // Update voice config with cloned voice ID
       setProfileData(prev => ({
@@ -768,13 +980,17 @@ export default function ProfileImprovementPage() {
         }
       }))
 
-      alert(`Voice cloned successfully! Your cloned voice "${data.voiceName}" is ready to use in calls.`)
+      showModal(
+        'Voice Cloned Successfully',
+        `Your cloned voice "${data.voiceName}" is ready to use in voice calls!`,
+        'success'
+      )
 
     } catch (error) {
-      console.error('Voice cloning error:', error)
+      logger.error('Voice cloning error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       setCloneError(errorMsg)
-      alert(`Failed to clone voice: ${errorMsg}`)
+      showModal('Voice Cloning Failed', errorMsg, 'error')
     } finally {
       setIsCloningVoice(false)
     }
@@ -798,6 +1014,134 @@ export default function ProfileImprovementPage() {
         ...prev.voiceConfig,
         type: 'standard',
         standardVoice: voice
+      }
+    }))
+  }
+
+  // Avatar creation handler
+  const handleCreateAvatar = async () => {
+    if (!profileData.videos || profileData.videos.length === 0) {
+      showModal('No Video', 'Please upload a video first! Upload a 2-10 second video with clear frontal face and good lighting.', 'warning')
+      return
+    }
+
+    setIsCreatingAvatar(true)
+    setAvatarCreationStatus('uploading')
+
+    try {
+      // Use the first uploaded video
+      const videoUrl = profileData.videos[0].url
+      logger.log('Creating avatar from video:', videoUrl)
+
+      // Fetch the video from Supabase Storage
+      const videoResponse = await fetch(videoUrl)
+      if (!videoResponse.ok) {
+        throw new Error('Failed to fetch video')
+      }
+
+      const videoBlob = await videoResponse.blob()
+
+      // Convert to base64
+      const reader = new FileReader()
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          const base64 = reader.result as string
+          resolve(base64.split(',')[1]) // Remove data:video/mp4;base64, prefix
+        }
+        reader.readAsDataURL(videoBlob)
+      })
+
+      const videoBase64 = await base64Promise
+      const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
+
+      logger.log('Uploading avatar...', { avatarName, videoSize: videoBlob.size })
+
+      // Upload avatar
+      const response = await fetch('/api/heygen/avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          videoBase64,
+          avatarName
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.details || error.error || 'Failed to create avatar')
+      }
+
+      const data = await response.json()
+      logger.log('Avatar creation response:', data)
+
+      setAvatarCreationStatus('processing')
+
+      // Poll for avatar status
+      const avatarId = data.avatarId
+      let attempts = 0
+      const maxAttempts = 60 // 5 minutes max (5 second intervals)
+
+      const pollStatus = async (): Promise<void> => {
+        if (attempts >= maxAttempts) {
+          throw new Error('Avatar processing timeout. Please try again later.')
+        }
+
+        attempts++
+        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`)
+
+        if (!statusResponse.ok) {
+          throw new Error('Failed to check avatar status')
+        }
+
+        const statusData = await statusResponse.json()
+        logger.log(`Avatar status check ${attempts}:`, statusData)
+
+        if (statusData.status === 'completed' || statusData.status === 'active') {
+          // Avatar is ready
+          setProfileData(prev => ({
+            ...prev,
+            avatarConfig: {
+              type: 'custom',
+              customAvatarId: avatarId,
+              customAvatarName: avatarName,
+              customAvatarThumbnail: statusData.thumbnailUrl
+            }
+          }))
+
+          setAvatarCreationStatus('completed')
+          showModal(
+            'Avatar Created Successfully',
+            `Your custom avatar "${avatarName}" is ready for video calls!`,
+            'success'
+          )
+        } else if (statusData.status === 'error' || statusData.status === 'failed') {
+          throw new Error('Avatar processing failed. Please try with a different video.')
+        } else {
+          // Still processing, wait and check again
+          await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
+          await pollStatus()
+        }
+      }
+
+      await pollStatus()
+
+    } catch (error) {
+      logger.error('Avatar creation error:', error)
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      setAvatarCreationStatus('error')
+      showModal('Avatar Creation Failed', errorMsg, 'error')
+    } finally {
+      setIsCreatingAvatar(false)
+    }
+  }
+
+  const handleAvatarTypeChange = (type: 'custom' | 'default') => {
+    setProfileData(prev => ({
+      ...prev,
+      avatarConfig: {
+        ...prev.avatarConfig,
+        type,
+        ...(type === 'default' && !prev.avatarConfig?.defaultAvatar ? { defaultAvatar: 'Angela-inblackskirt-20220820' } : {})
       }
     }))
   }
@@ -835,9 +1179,17 @@ export default function ProfileImprovementPage() {
         {/* Profile Header */}
         <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center text-white font-semibold text-2xl shadow-lg">
-              {profile.name.charAt(0).toUpperCase()}
-            </div>
+            {profileData.photos.length > 0 ? (
+              <img
+                src={profileData.photos[0].url}
+                alt={profile.name}
+                className="w-20 h-20 rounded-full object-cover shadow-lg border-4 border-white"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center text-white font-semibold text-2xl shadow-lg">
+                {profile.name.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-1">{profile.name}</h1>
               <p className="text-gray-600 capitalize">{profile.relationship}</p>
@@ -868,7 +1220,54 @@ export default function ProfileImprovementPage() {
           <div className="bg-white rounded-2xl p-6 shadow-md">
             <div className="flex items-center gap-3 mb-4">
               <FileText className="w-6 h-6 text-orange-500" />
-              <h2 className="text-xl font-bold text-gray-900">Text Notes & Memories</h2>
+              <h2 className="flex-1 text-xl font-bold text-gray-900">Text Notes & Memories</h2>
+              <div className="relative">
+                <button
+                  onClick={() => setShowTextNotesHelp(!showTextNotesHelp)}
+                  className="p-1 text-gray-400 hover:text-orange-500 transition"
+                  title="How to import chat history"
+                >
+                  <HelpCircle className="w-5 h-5" />
+                </button>
+                {showTextNotesHelp && (
+                  <div className="absolute right-0 top-8 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-10">
+                    <h3 className="font-bold text-gray-900 mb-2">Import Chat History</h3>
+                    <div className="text-sm text-gray-600 space-y-2">
+                      <p><strong>WhatsApp:</strong></p>
+                      <ol className="list-decimal ml-4 space-y-1">
+                        <li>Open chat → Menu (⋮) → More → Export chat</li>
+                        <li>Choose "Without Media" or "Include Media"</li>
+                        <li>Save the .zip or .txt file</li>
+                        <li>Upload here using "Upload Chat File"</li>
+                      </ol>
+
+                      <p className="mt-3"><strong>iMessage:</strong></p>
+                      <ol className="list-decimal ml-4 space-y-1">
+                        <li>Use apps like "iMazing" or "Decipher TextMessage"</li>
+                        <li>Export as TXT or PDF</li>
+                        <li>Save and upload here</li>
+                      </ol>
+
+                      <p className="mt-3"><strong>Telegram:</strong></p>
+                      <ol className="list-decimal ml-4 space-y-1">
+                        <li>Settings → Advanced → Export chat history</li>
+                        <li>Choose format (HTML or JSON)</li>
+                        <li>Upload the exported file</li>
+                      </ol>
+
+                      <p className="mt-3 text-xs text-gray-500">
+                        💡 ZIP files can contain text, photos, and videos - all will be imported automatically!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowTextNotesHelp(false)}
+                      className="mt-3 w-full px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm"
+                    >
+                      Got it!
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -946,7 +1345,7 @@ export default function ProfileImprovementPage() {
             <div className="flex items-center gap-3 mb-4">
               <Mic className="w-6 h-6 text-green-500" />
               <h2 className="text-xl font-bold text-gray-900">Voice Samples</h2>
-              <span className="text-sm text-gray-500">(Required for voice calls)</span>
+              <span className="text-sm text-gray-500">(Required for voice cloning)</span>
             </div>
 
             <div className="space-y-4">
@@ -1007,14 +1406,49 @@ export default function ProfileImprovementPage() {
                         )}
                       </button>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-700">{sample.name}</p>
+                        {editingItemId === sample.id ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRenameVoice(sample.id, editingName)
+                              if (e.key === 'Escape') {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            onBlur={() => {
+                              if (editingName.trim()) handleRenameVoice(sample.id, editingName)
+                              else {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            className="w-full px-2 py-1 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="font-medium text-gray-700">{sample.name}</p>
+                        )}
                         {sample.duration > 0 && (
                           <p className="text-sm text-gray-500">{formatTime(sample.duration)}</p>
                         )}
                       </div>
                       <button
+                        onClick={() => {
+                          setEditingItemId(sample.id)
+                          setEditingName(sample.name)
+                        }}
+                        className="text-gray-500 hover:text-green-600 transition"
+                        title="Rename"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => handleDeleteVoice(sample.id)}
                         className="text-red-500 hover:text-red-700 transition"
+                        title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1051,7 +1485,7 @@ export default function ProfileImprovementPage() {
                     <div className="text-left">
                       <p className="font-semibold text-gray-900">🎭 Cloned Voice</p>
                       <p className="text-xs text-gray-600 mt-1">
-                        Use ElevenLabs to clone the voice sample
+                        Clone the voice for a more personalized experience
                       </p>
                       {profileData.voiceConfig?.type === 'cloned' && profileData.voiceConfig.clonedVoiceName && (
                         <p className="text-xs text-purple-600 mt-2 font-medium">
@@ -1072,7 +1506,7 @@ export default function ProfileImprovementPage() {
                     <div className="text-left">
                       <p className="font-semibold text-gray-900">🔊 Standard Voice</p>
                       <p className="text-xs text-gray-600 mt-1">
-                        Use OpenAI's preset voices
+                        Use preset AI voices
                       </p>
                     </div>
                   </button>
@@ -1085,7 +1519,7 @@ export default function ProfileImprovementPage() {
                   {!profileData.voiceConfig.clonedVoiceId ? (
                     <>
                       <p className="text-sm text-purple-800">
-                        <strong>Voice Cloning:</strong> Upload your voice sample to ElevenLabs to create a cloned voice. This requires at least 1 voice sample.
+                        <strong>Voice Cloning:</strong> Upload your voice sample to create a cloned voice. This requires at least 1 voice sample.
                       </p>
                       <button
                         onClick={handleCloneVoice}
@@ -1104,7 +1538,7 @@ export default function ProfileImprovementPage() {
                         ) : (
                           <>
                             <Upload className="w-5 h-5" />
-                            Clone Voice to ElevenLabs
+                            Clone Voice
                           </>
                         )}
                       </button>
@@ -1139,7 +1573,7 @@ export default function ProfileImprovementPage() {
               {profileData.voiceConfig?.type === 'standard' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
                   <label className="block text-sm font-medium text-gray-700">
-                    Select OpenAI Voice
+                    Select AI Voice
                   </label>
                   <select
                     value={profileData.voiceConfig.standardVoice || 'alloy'}
@@ -1154,7 +1588,159 @@ export default function ProfileImprovementPage() {
                     <option value="shimmer">Shimmer (Soft Female)</option>
                   </select>
                   <p className="text-xs text-blue-700">
-                    💡 These are preset voices from OpenAI. No voice cloning required.
+                    💡 These are preset AI voices. No voice cloning required.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Avatar Configuration */}
+          <div className="bg-white rounded-2xl p-6 shadow-md">
+            <div className="flex items-center gap-3 mb-4">
+              <VideoIcon className="w-6 h-6 text-pink-500" />
+              <h2 className="text-xl font-bold text-gray-900">Avatar Configuration</h2>
+              <span className="text-sm text-gray-500">(For video calls)</span>
+            </div>
+
+            <div className="space-y-4">
+              {/* Avatar Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choose Avatar Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleAvatarTypeChange('custom')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.avatarConfig?.type === 'custom'
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 hover:border-pink-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">👤 Custom Avatar</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Upload your own video to create a personalized avatar
+                      </p>
+                      {profileData.avatarConfig?.type === 'custom' && profileData.avatarConfig.customAvatarName && (
+                        <p className="text-xs text-pink-600 mt-2 font-medium">
+                          ✓ {profileData.avatarConfig.customAvatarName}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleAvatarTypeChange('default')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.avatarConfig?.type === 'default'
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 hover:border-pink-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">🤖 Default Avatar</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Use preset AI avatars
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Avatar Section */}
+              {profileData.avatarConfig?.type === 'custom' && (
+                <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 space-y-3">
+                  {!profileData.avatarConfig.customAvatarId ? (
+                    <>
+                      <p className="text-sm text-pink-800">
+                        <strong>Avatar Creation:</strong> Upload a 2-10 second video with clear frontal face and good lighting. This will be used to create your custom AI avatar.
+                      </p>
+
+                      {/* Avatar Preview */}
+                      {profileData.videos.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-pink-900">Preview (using first video):</p>
+                          <div className="relative rounded-lg overflow-hidden bg-black max-w-xs mx-auto">
+                            <video
+                              src={profileData.videos[0].url}
+                              className="w-full"
+                              controls
+                              muted
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleCreateAvatar}
+                        disabled={isCreatingAvatar || profileData.videos.length === 0}
+                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isCreatingAvatar || profileData.videos.length === 0
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-pink-500 text-white hover:bg-pink-600'
+                        }`}
+                      >
+                        {isCreatingAvatar ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            {avatarCreationStatus === 'uploading' && 'Uploading...'}
+                            {avatarCreationStatus === 'processing' && 'Processing Avatar... (this may take a few minutes)'}
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5" />
+                            Create Avatar from Video
+                          </>
+                        )}
+                      </button>
+                      {profileData.videos.length === 0 && (
+                        <p className="text-xs text-pink-600">
+                          ⚠️ Please upload a video first (scroll down to Videos section)
+                        </p>
+                      )}
+                      <p className="text-xs text-pink-600">
+                        💡 <strong>Tips:</strong> Use a 2-10 second video, face the camera directly, ensure good lighting, and speak clearly.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-6 h-6 text-green-500" />
+                        <div className="flex-1">
+                          <p className="font-medium text-pink-900">
+                            Avatar Created Successfully!
+                          </p>
+                          <p className="text-sm text-pink-700">
+                            Using: {profileData.avatarConfig.customAvatarName}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Avatar Thumbnail Preview */}
+                      {profileData.avatarConfig.customAvatarThumbnail && (
+                        <div className="rounded-lg overflow-hidden max-w-xs mx-auto">
+                          <img
+                            src={profileData.avatarConfig.customAvatarThumbnail}
+                            alt="Avatar Preview"
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Default Avatar Selection */}
+              {profileData.avatarConfig?.type === 'default' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <p className="text-sm text-blue-800">
+                    Using default AI avatar: <strong>Angela</strong>
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    💡 Default avatars are ready to use immediately. No setup required!
                   </p>
                 </div>
               )}
@@ -1194,12 +1780,52 @@ export default function ProfileImprovementPage() {
                         alt={photo.name}
                         className="w-full h-32 object-cover rounded-lg"
                       />
-                      <button
-                        onClick={() => handleDeletePhoto(photo.id)}
-                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg">
+                        {editingItemId === photo.id ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRenamePhoto(photo.id, editingName)
+                              if (e.key === 'Escape') {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            onBlur={() => {
+                              if (editingName.trim()) handleRenamePhoto(photo.id, editingName)
+                              else {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            className="w-full px-2 py-1 text-xs border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="text-xs text-white truncate">{photo.name}</p>
+                        )}
+                      </div>
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <button
+                          onClick={() => {
+                            setEditingItemId(photo.id)
+                            setEditingName(photo.name)
+                          }}
+                          className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition"
+                          title="Rename"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePhoto(photo.id)}
+                          className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition"
+                          title="Delete"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1238,10 +1864,47 @@ export default function ProfileImprovementPage() {
                       className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100"
                     >
                       <VideoIcon className="w-5 h-5 text-purple-500" />
-                      <p className="flex-1 font-medium text-gray-700">{video.name}</p>
+                      <div className="flex-1">
+                        {editingItemId === video.id ? (
+                          <input
+                            type="text"
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRenameVideo(video.id, editingName)
+                              if (e.key === 'Escape') {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            onBlur={() => {
+                              if (editingName.trim()) handleRenameVideo(video.id, editingName)
+                              else {
+                                setEditingItemId(null)
+                                setEditingName('')
+                              }
+                            }}
+                            className="w-full px-2 py-1 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="font-medium text-gray-700">{video.name}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setEditingItemId(video.id)
+                          setEditingName(video.name)
+                        }}
+                        className="text-gray-500 hover:text-purple-600 transition"
+                        title="Rename"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => handleDeleteVideo(video.id)}
                         className="text-red-500 hover:text-red-700 transition"
+                        title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1284,6 +1947,15 @@ export default function ProfileImprovementPage() {
           </button>
         </div>
       </div>
+
+      {/* Custom Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+      />
     </div>
   )
 }
