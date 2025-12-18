@@ -21,25 +21,16 @@ import {
   Shield,
   Zap,
   Crown,
-  Phone,
-  Video,
   Upload,
-  Brain,
-  Clock
+  Brain
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import {
   SUBSCRIPTION_PLANS,
-  VOICE_CREDIT_PACKS,
-  VIDEO_CREDIT_PACKS,
   redirectToCheckout,
-  buyVoiceCredits,
-  buyVideoCredits,
   isStripeConfigured,
   arePaymentLinksConfigured,
   PlanType,
-  VoiceCreditPackType,
-  VideoCreditPackType,
   BillingPeriod
 } from '../lib/stripe'
 import { logger } from '../utils/logger'
@@ -89,45 +80,6 @@ export default function PricingPage() {
     }
   }
 
-  const handleBuyVoiceCredits = async (pack: VoiceCreditPackType) => {
-    setError(null)
-
-    if (!user) {
-      navigate('/email-auth')
-      return
-    }
-
-    setIsLoading(`voice_${pack}`)
-
-    try {
-      await buyVoiceCredits(pack, user.email || undefined)
-    } catch (err) {
-      logger.error('Checkout error:', err)
-      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
-    } finally {
-      setIsLoading(null)
-    }
-  }
-
-  const handleBuyVideoCredits = async (pack: VideoCreditPackType) => {
-    setError(null)
-
-    if (!user) {
-      navigate('/email-auth')
-      return
-    }
-
-    setIsLoading(`video_${pack}`)
-
-    try {
-      await buyVideoCredits(pack, user.email || undefined)
-    } catch (err) {
-      logger.error('Checkout error:', err)
-      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
-    } finally {
-      setIsLoading(null)
-    }
-  }
 
   const getIconForFeature = (feature: string) => {
     if (feature.toLowerCase().includes('message')) return <MessageCircle className="w-4 h-4" />
@@ -407,257 +359,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Voice Credits Add-on */}
-      <section className="py-12 px-4 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-4">
-              <Phone className="w-4 h-4" />
-              Voice Add-on
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              Voice Call Credits
-            </h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              Buy credits for voice calls. 1 credit = 30 seconds of voice call time.
-              Works with any subscription plan.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Voice Small Pack */}
-            <div className="bg-white rounded-2xl border border-orange-200 p-6 flex flex-col hover:shadow-lg transition">
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-gray-900">{VOICE_CREDIT_PACKS.small.name}</h3>
-                <p className="text-gray-500 text-sm">Perfect to try it out</p>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">${VOICE_CREDIT_PACKS.small.price}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  ${VOICE_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-orange-500" />
-                  <span>{VOICE_CREDIT_PACKS.small.minutes} minutes</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleBuyVoiceCredits('small')}
-                disabled={isLoading === 'voice_small'}
-                className="w-full py-3 border-2 border-orange-200 text-orange-700 rounded-xl font-medium hover:bg-orange-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading === 'voice_small' ? 'Processing...' : 'Buy Voice Credits'}
-              </button>
-            </div>
-
-            {/* Voice Medium Pack - Popular */}
-            <div className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl shadow-xl p-6 flex flex-col relative">
-              <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full flex items-center gap-1">
-                <Crown className="w-3 h-3" />
-                Most Popular
-              </div>
-
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-white">{VOICE_CREDIT_PACKS.medium.name}</h3>
-                <p className="text-white/80 text-sm">Best for regular use</p>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-white">${VOICE_CREDIT_PACKS.medium.price}</span>
-                </div>
-                <p className="text-xs text-white/70 mt-1">
-                  ${VOICE_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 mb-6 text-sm text-white/90">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{VOICE_CREDIT_PACKS.medium.minutes} minutes</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleBuyVoiceCredits('medium')}
-                disabled={isLoading === 'voice_medium'}
-                className="w-full py-3 bg-white text-orange-600 rounded-xl font-semibold hover:bg-gray-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading === 'voice_medium' ? 'Processing...' : 'Buy Voice Credits'}
-              </button>
-            </div>
-
-            {/* Voice Large Pack - Best Value */}
-            <div className="bg-white rounded-2xl border-2 border-orange-200 p-6 flex flex-col relative hover:shadow-lg transition">
-              <div className="absolute top-3 right-3 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                Best Value
-              </div>
-
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-gray-900">{VOICE_CREDIT_PACKS.large.name}</h3>
-                <p className="text-gray-500 text-sm">For power users</p>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">${VOICE_CREDIT_PACKS.large.price}</span>
-                </div>
-                <p className="text-xs text-green-600 mt-1">
-                  ${VOICE_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 33%!
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-orange-500" />
-                  <span>{VOICE_CREDIT_PACKS.large.minutes} minutes</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleBuyVoiceCredits('large')}
-                disabled={isLoading === 'voice_large'}
-                className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-rose-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading === 'voice_large' ? 'Processing...' : 'Buy Voice Credits'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Video Credits Add-on */}
-      <section className="py-12 px-4 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-4">
-              <Video className="w-4 h-4" />
-              Video Add-on
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              Video Call Credits
-            </h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              Buy credits for video calls. 1 credit = 12 seconds of video call time.
-              Works with any subscription plan.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Video Small Pack */}
-            <div className="bg-white rounded-2xl border border-orange-200 p-6 flex flex-col hover:shadow-lg transition">
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-gray-900">{VIDEO_CREDIT_PACKS.small.name}</h3>
-                <p className="text-gray-500 text-sm">Perfect to try it out</p>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">${VIDEO_CREDIT_PACKS.small.price}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  ${VIDEO_CREDIT_PACKS.small.pricePerCredit.toFixed(2)} per minute
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-orange-500" />
-                  <span>{VIDEO_CREDIT_PACKS.small.minutes} minutes</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleBuyVideoCredits('small')}
-                disabled={isLoading === 'video_small'}
-                className="w-full py-3 border-2 border-orange-200 text-orange-700 rounded-xl font-medium hover:bg-orange-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading === 'video_small' ? 'Processing...' : 'Buy Video Credits'}
-              </button>
-            </div>
-
-            {/* Video Medium Pack - Popular */}
-            <div className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl shadow-xl p-6 flex flex-col relative">
-              <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full flex items-center gap-1">
-                <Crown className="w-3 h-3" />
-                Most Popular
-              </div>
-
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-white">{VIDEO_CREDIT_PACKS.medium.name}</h3>
-                <p className="text-white/80 text-sm">Best for regular use</p>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-white">${VIDEO_CREDIT_PACKS.medium.price}</span>
-                </div>
-                <p className="text-xs text-white/70 mt-1">
-                  ${VIDEO_CREDIT_PACKS.medium.pricePerCredit.toFixed(2)} per minute
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 mb-6 text-sm text-white/90">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{VIDEO_CREDIT_PACKS.medium.minutes} minutes</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleBuyVideoCredits('medium')}
-                disabled={isLoading === 'video_medium'}
-                className="w-full py-3 bg-white text-orange-600 rounded-xl font-semibold hover:bg-gray-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading === 'video_medium' ? 'Processing...' : 'Buy Video Credits'}
-              </button>
-            </div>
-
-            {/* Video Large Pack - Best Value */}
-            <div className="bg-white rounded-2xl border-2 border-orange-200 p-6 flex flex-col relative hover:shadow-lg transition">
-              <div className="absolute top-3 right-3 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                Best Value
-              </div>
-
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-gray-900">{VIDEO_CREDIT_PACKS.large.name}</h3>
-                <p className="text-gray-500 text-sm">For power users</p>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900">${VIDEO_CREDIT_PACKS.large.price}</span>
-                </div>
-                <p className="text-xs text-green-600 mt-1">
-                  ${VIDEO_CREDIT_PACKS.large.pricePerCredit.toFixed(2)} per minute - Save 25%!
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 mb-6 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-orange-500" />
-                  <span>{VIDEO_CREDIT_PACKS.large.minutes} minutes</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleBuyVideoCredits('large')}
-                disabled={isLoading === 'video_large'}
-                className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-rose-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading === 'video_large' ? 'Processing...' : 'Buy Video Credits'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Trust Badges */}
       <section className="py-12 px-4 border-t border-orange-100">
@@ -698,11 +399,11 @@ export default function PricingPage() {
           <div className="space-y-6">
             <div className="border-b border-gray-200 pb-6">
               <h3 className="font-semibold text-gray-900 mb-2">
-                What's the difference between subscriptions and credits?
+                How do subscriptions work?
               </h3>
               <p className="text-gray-600">
-                Subscriptions give you access to text chat with your AI personalities.
-                Credits are used for voice and video calls - each credit equals specific call time.
+                All plans include unlimited text chat, voice, and video calls with your AI personalities.
+                Higher tiers unlock more profiles and advanced features.
               </p>
             </div>
 
@@ -718,10 +419,11 @@ export default function PricingPage() {
 
             <div className="border-b border-gray-200 pb-6">
               <h3 className="font-semibold text-gray-900 mb-2">
-                Do credits expire?
+                What's included in the free plan?
               </h3>
               <p className="text-gray-600">
-                No, your voice and video credits never expire. Use them whenever you want.
+                The free plan includes 1 personality profile and 100 messages to try out the service.
+                Upgrade anytime to unlock unlimited messaging and more profiles.
               </p>
             </div>
 
@@ -730,8 +432,8 @@ export default function PricingPage() {
                 What happens to my data if I cancel?
               </h3>
               <p className="text-gray-600">
-                Your conversations and AI personalities are saved in your browser
-                with end-to-end encryption. They remain yours even after cancellation.
+                Your conversations and AI personalities are saved securely.
+                They remain yours even after cancellation, and you can export them anytime.
               </p>
             </div>
           </div>

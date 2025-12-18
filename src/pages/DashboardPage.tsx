@@ -130,18 +130,19 @@ export default function DashboardPage() {
   }
 
   const handleCreateProfile = () => {
-    if (!subscription) {
-      navigate('/pricing')
-      return
+    // For Supabase users: allow profile creation, credits will be checked when actually using features
+    // For old password users: check subscription limits
+    if (subscription) {
+      const profileCount = profiles.length
+
+      if (profileCount >= subscription.profileLimit) {
+        navigate('/pricing')
+        return
+      }
     }
 
-    const profileCount = profiles.length
-
-    if (profileCount >= subscription.profileLimit) {
-      navigate('/pricing')
-    } else {
-      navigate('/personality-builder')
-    }
+    // Allow profile creation
+    navigate('/personality-builder')
   }
 
   const formatLastSeen = (timestamp: number | null) => {
