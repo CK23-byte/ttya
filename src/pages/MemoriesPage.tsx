@@ -106,7 +106,7 @@ export default function MemoriesPage() {
       }, 3000)
     } catch (error) {
       logger.error('Error saving memories:', error)
-      alert('Fout bij opslaan. Probeer het opnieuw.')
+      alert('Save failed. Please try again.')
     } finally {
       setIsSaving(false)
     }
@@ -128,9 +128,9 @@ export default function MemoriesPage() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">Herinneringen Uploaden</h1>
+              <h1 className="text-xl font-bold text-gray-800">Upload Memories</h1>
               <p className="text-sm text-gray-600">
-                Voeg berichten, foto's en audio toe
+                Add messages, photos and audio
               </p>
             </div>
           </div>
@@ -142,7 +142,7 @@ export default function MemoriesPage() {
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              {isSaving ? 'Opslaan...' : 'Opslaan'}
+              {isSaving ? 'Saving...' : 'Save'}
             </button>
           )}
         </div>

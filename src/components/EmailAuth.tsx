@@ -144,7 +144,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
         }
       }
     } catch (err) {
-      setError('Er is een fout opgetreden. Probeer het opnieuw.')
+      setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -212,7 +212,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
               <div className="flex gap-3">
                 <Gift className="w-5 h-5 text-green-600 flex-shrink-0" />
                 <div className="text-sm text-green-800">
-                  <p className="font-semibold">Welkomstbonus!</p>
+                  <p className="font-semibold">Welcome Bonus!</p>
                   <p className="text-xs">
                     Ontvang {CREDIT_PRICING.SIGNUP_BONUS} gratis credits bij registratie
                   </p>
@@ -241,7 +241,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
             {mode === 'signup' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Naam (optioneel)
+                  Name (optional)
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -252,7 +252,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                    placeholder="Je naam"
+                    placeholder="Your name"
                   />
                 </div>
               </div>

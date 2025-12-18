@@ -217,28 +217,28 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             amount: CREDIT_PRICING.SIGNUP_BONUS,
             type: 'bonus' as const,
             credit_type: 'general' as const,
-            description: 'Welkomstbonus bij registratie',
+            description: 'Welcome bonus on registration',
           },
           {
             user_id: data.user.id,
             amount: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
             type: 'bonus' as const,
             credit_type: 'text' as const,
-            description: 'Text credits welkomstbonus',
+            description: 'Text credits welcome bonus',
           },
           {
             user_id: data.user.id,
             amount: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
             type: 'bonus' as const,
             credit_type: 'voice' as const,
-            description: 'Voice credits welkomstbonus',
+            description: 'Voice credits welcome bonus',
           },
           {
             user_id: data.user.id,
             amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
             type: 'bonus' as const,
             credit_type: 'video' as const,
-            description: 'Video credits welkomstbonus',
+            description: 'Video credits welcome bonus',
           },
         ]
 
@@ -275,7 +275,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       return { error }
     } catch (err) {
       logger.error('Exception during sign in:', err)
-      return { error: { message: 'Er is een fout opgetreden bij het inloggen' } as AuthError }
+      return { error: { message: 'An error occurred while logging in' } as AuthError }
     }
   }
 

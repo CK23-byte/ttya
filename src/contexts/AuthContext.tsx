@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const remainingMinutes = Math.ceil((lockoutEndsAt - Date.now()) / 60000)
       return {
         success: false,
-        error: `Te veel pogingen. Probeer het over ${remainingMinutes} minuten opnieuw.`,
+        error: `Too many attempts. Try again in ${remainingMinutes} minutes.`,
       }
     }
 
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Get stored salt
       const saltBase64 = localStorage.getItem(SALT_STORAGE_KEY)
       if (!saltBase64) {
-        return { success: false, error: 'Geen gegevens gevonden. Setup opnieuw starten?' }
+        return { success: false, error: 'No data found. Restart setup?' }
       }
 
       const salt = importSalt(saltBase64)
@@ -183,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLockoutEndsAt(lockoutEnd)
         return {
           success: false,
-          error: `Te veel pogingen. Account vergrendeld voor 5 minuten.`,
+          error: `Too many attempts. Account locked for 5 minutes.`,
         }
       }
 
@@ -222,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetAllData = () => {
     if (
       window.confirm(
-        'WAARSCHUWING: Dit verwijdert ALLE gegevens permanent. Deze actie kan niet ongedaan worden gemaakt. Weet je het zeker?'
+        'WARNING: This will permanently delete ALL data. This action cannot be undone. Are you sure?'
       )
     ) {
       clearAllSecure()

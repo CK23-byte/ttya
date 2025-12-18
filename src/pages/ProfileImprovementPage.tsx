@@ -880,10 +880,10 @@ export default function ProfileImprovementPage() {
       setProfile({ ...profile, name: tempProfileName.trim() })
       setIsEditingProfileName(false)
 
-      showModal('Naam Bijgewerkt', 'De profielnaam is succesvol bijgewerkt.', 'success')
+      showModal('Name Updated', 'The profile name has been successfully updated.', 'success')
     } catch (error) {
       logger.error('Error updating profile name:', error)
-      showModal('Update Mislukt', 'Er ging iets mis bij het bijwerken van de naam.', 'error')
+      showModal('Update Failed', 'Something went wrong while updating the name.', 'error')
     }
   }
 
@@ -922,10 +922,10 @@ export default function ProfileImprovementPage() {
       }))
 
       logger.log('Profile photo uploaded successfully:', publicUrl)
-      showModal('Foto Geüpload', 'De profielfoto is succesvol bijgewerkt.', 'success')
+      showModal('Photo Uploaded', 'The profile photo has been successfully updated.', 'success')
     } catch (error) {
       logger.error('Error uploading profile photo:', error)
-      showModal('Upload Mislukt', 'Er ging iets mis bij het uploaden van de foto.', 'error')
+      showModal('Upload Failed', 'Something went wrong while uploading the photo.', 'error')
     }
   }
 
@@ -1219,8 +1219,8 @@ export default function ProfileImprovementPage() {
 
           setAvatarCreationStatus('completed')
           showModal(
-            'Avatar Succesvol Gemaakt',
-            `Je custom avatar "${avatarName}" is klaar voor videogesprekken!`,
+            'Avatar Created Successfully',
+            `Your custom avatar "${avatarName}" is ready for video calls!`,
             'success'
           )
         } else if (statusData.status === 'error' || statusData.status === 'failed') {
@@ -1239,7 +1239,7 @@ export default function ProfileImprovementPage() {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       setAvatarCreationStatus('error')
       setAvatarCreationProgress(0)
-      showModal('Avatar Creatie Mislukt', errorMsg, 'error')
+      showModal('Avatar Creation Failed', errorMsg, 'error')
     } finally {
       setIsCreatingAvatar(false)
     }
@@ -1305,7 +1305,7 @@ export default function ProfileImprovementPage() {
               <button
                 onClick={() => profilePhotoInputRef.current?.click()}
                 className="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition hover:bg-blue-600"
-                title="Wijzig profielfoto"
+                title="Change profile photo"
               >
                 <Edit2 className="w-4 h-4" />
               </button>
@@ -1339,7 +1339,7 @@ export default function ProfileImprovementPage() {
                   <button
                     onClick={handleProfileNameSave}
                     className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-                    title="Opslaan"
+                    title="Save"
                   >
                     <Check className="w-5 h-5" />
                   </button>
@@ -1349,7 +1349,7 @@ export default function ProfileImprovementPage() {
                       setTempProfileName('')
                     }}
                     className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-                    title="Annuleren"
+                    title="Cancel"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1363,7 +1363,7 @@ export default function ProfileImprovementPage() {
                       setTempProfileName(profile.name)
                     }}
                     className="p-1 text-gray-400 opacity-0 group-hover/name:opacity-100 hover:text-blue-500 transition"
-                    title="Naam bewerken"
+                    title="Edit name"
                   >
                     <Edit2 className="w-5 h-5" />
                   </button>
@@ -2000,7 +2000,7 @@ export default function ProfileImprovementPage() {
                   {!profileData.avatarConfig.customAvatarId ? (
                     <>
                       <p className="text-sm text-pink-800">
-                        <strong>Avatar Creatie:</strong> Upload een bestaande video (2-10 seconden) van een geliefd persoon waarin het gezicht duidelijk frontaal te zien is met goede belichting. Deze wordt gebruikt om een custom AI avatar te maken.
+                        <strong>Avatar Creation:</strong> Upload an existing video (2-10 seconds) of a loved one with a clear frontal view of the face and good lighting. This will be used to create your custom AI avatar.
                       </p>
 
                       {/* Avatar Preview */}
@@ -2038,13 +2038,13 @@ export default function ProfileImprovementPage() {
                           {isCreatingAvatar && avatarCreationStatus === 'uploading' && (
                             <>
                               <span className="animate-spin">⏳</span>
-                              Video voorbereiden... {Math.round(avatarCreationProgress)}%
+                              Preparing video... {Math.round(avatarCreationProgress)}%
                             </>
                           )}
                           {isCreatingAvatar && avatarCreationStatus === 'processing' && (
                             <>
                               <span className="animate-pulse">🎬</span>
-                              Avatar verwerken... {Math.round(avatarCreationProgress)}%
+                              Processing avatar... {Math.round(avatarCreationProgress)}%
                             </>
                           )}
                         </button>
@@ -2059,8 +2059,8 @@ export default function ProfileImprovementPage() {
                               />
                             </div>
                             <p className="text-xs text-center text-pink-700">
-                              {avatarCreationStatus === 'uploading' && 'Video uploaden en voorbereiden...'}
-                              {avatarCreationStatus === 'processing' && 'AI verwerkt je avatar (dit kan 2-5 minuten duren)'}
+                              {avatarCreationStatus === 'uploading' && 'Uploading and preparing video...'}
+                              {avatarCreationStatus === 'processing' && 'AI is processing your avatar (this may take 2-5 minutes)'}
                             </p>
                           </div>
                         )}

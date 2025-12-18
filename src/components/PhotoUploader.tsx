@@ -91,7 +91,7 @@ export default function PhotoUploader({ onPhotosLoaded, maxSize = 10 }: PhotoUpl
         })
       } catch (err) {
         logger.error('Error compressing image:', err)
-        setError('Fout bij het verwerken van afbeelding')
+        setError('Error processing image')
       }
     }
 
@@ -120,7 +120,7 @@ export default function PhotoUploader({ onPhotosLoaded, maxSize = 10 }: PhotoUpl
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-2">
         <ImageIcon className="w-5 h-5 text-pink-600" />
-        <h3 className="text-lg font-semibold text-gray-800">Foto's</h3>
+        <h3 className="text-lg font-semibold text-gray-800">Photos</h3>
       </div>
 
       {/* Upload Area */}
@@ -139,13 +139,13 @@ export default function PhotoUploader({ onPhotosLoaded, maxSize = 10 }: PhotoUpl
       >
         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-600 mb-2">
-          Sleep foto's hier of klik om te uploaden
+          Drag photos here or click to upload
         </p>
         <p className="text-xs text-gray-500 mb-4">
-          JPG, PNG, WebP - Max {maxSize}MB per foto
+          JPG, PNG, WebP - Max {maxSize}MB per photo
         </p>
         <label className="inline-block px-4 py-2 bg-pink-600 text-white rounded-lg cursor-pointer hover:bg-pink-700 transition">
-          Foto's Kiezen
+          Choose Photos
           <input
             type="file"
             accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -167,7 +167,7 @@ export default function PhotoUploader({ onPhotosLoaded, maxSize = 10 }: PhotoUpl
       {/* Photo Grid */}
       {photos.length > 0 && (
         <div>
-          <p className="text-sm text-gray-600 mb-3">{photos.length} foto('s) geüpload</p>
+          <p className="text-sm text-gray-600 mb-3">{photos.length} photo(s) uploaded</p>
           <div className="grid grid-cols-3 gap-3">
             {photos.map((photo) => (
               <div key={photo.id} className="relative group">

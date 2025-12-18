@@ -107,7 +107,7 @@ export default function AccountPage() {
 
       if (uploadError) {
         logger.error('Upload error:', uploadError)
-        alert('Er ging iets mis bij het uploaden. Please try again.')
+        alert('Something went wrong with uploading. Please try again.')
         setIsUploadingAvatar(false)
         return
       }
@@ -125,7 +125,7 @@ export default function AccountPage() {
 
       if (updateError) {
         logger.error('Error updating profile:', updateError)
-        alert('Er ging iets mis bij het opslaan. Please try again.')
+        alert('Something went wrong with saving. Please try again.')
         setIsUploadingAvatar(false)
         return
       }
@@ -134,7 +134,7 @@ export default function AccountPage() {
       window.location.reload()
     } catch (error) {
       logger.error('Error uploading avatar:', error)
-      alert('Er ging iets mis. Please try again.')
+      alert('Something went wrong. Please try again.')
       setIsUploadingAvatar(false)
     }
   }
@@ -178,7 +178,7 @@ export default function AccountPage() {
       }, 2000)
     } catch (error) {
       logger.error('Error changing password:', error)
-      setPasswordError('Er ging iets mis. Please try again.')
+      setPasswordError('Something went wrong. Please try again.')
     }
   }
 
@@ -253,7 +253,7 @@ export default function AccountPage() {
                   <button
                     onClick={() => avatarInputRef.current?.click()}
                     className="absolute bottom-0 right-0 p-1.5 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition shadow-lg"
-                    title="Foto uploaden"
+                    title="Upload photo"
                   >
                     <Camera className="w-4 h-4" />
                   </button>
@@ -457,7 +457,7 @@ export default function AccountPage() {
                 Upgrade to Pro
               </button>
               <button
-                onClick={() => alert('Abonnement annuleren komt binnenkort!')}
+                onClick={() => alert('Cancel subscription coming soon!')}
                 className="px-4 py-3 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition font-medium"
               >
                 Cancel

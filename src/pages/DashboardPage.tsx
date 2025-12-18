@@ -194,8 +194,8 @@ export default function DashboardPage() {
   const handleDeleteProfile = async (profileId: string, profileName: string) => {
     // Confirm deletion
     showModal(
-      'Profiel Verwijderen',
-      `Weet je zeker dat je het profiel van "${profileName}" wilt verwijderen? Dit verwijdert ook alle gesprekken en gegevens. Deze actie kan niet ongedaan gemaakt worden.`,
+      'Delete Profile',
+      `Are you sure you want to delete "${profileName}"? This will delete all conversations and data. This action cannot be undone.`,
       'warning',
       async () => {
         try {
@@ -226,15 +226,15 @@ export default function DashboardPage() {
           await loadProfiles()
 
           showModal(
-            'Profiel Verwijderd',
-            `Het profiel van "${profileName}" is succesvol verwijderd.`,
+            'Profile Deleted',
+            `The profile "${profileName}" has been successfully deleted.`,
             'success'
           )
         } catch (error) {
           logger.error('Error deleting profile:', error)
           showModal(
-            'Verwijderen Mislukt',
-            'Er ging iets mis bij het verwijderen van het profiel. Probeer het opnieuw.',
+            'Delete Failed',
+            'Something went wrong while deleting the profile. Please try again.',
             'error'
           )
         }
@@ -480,7 +480,7 @@ export default function DashboardPage() {
                       title="Delete this profile permanently"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Verwijder Profiel
+                      Delete Profile
                     </button>
                   </div>
                 </div>
