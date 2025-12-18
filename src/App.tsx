@@ -37,8 +37,8 @@ const PageLoader = () => (
 function App() {
   // Log app version on load (dev only)
   useEffect(() => {
-    logger.info('🚀 TalkToYouAI v2.6.2 - Auth & RLS Fix Edition')
-    logger.info('📋 Features: Logger bug fix, RLS policies, Profile auto-creation trigger')
+    logger.info('🚀 TalkToYouAI v2.11.0 - Production Ready Edition')
+    logger.info('📋 Features: Full auth system, RLS security, Auto-profile creation')
     logger.info('⏰ Deployed:', new Date().toISOString())
     logger.info('🔧 Branch: claude/setup-react-vite-encryption-01RczCBBui9fkreqGXQU4MNk')
   }, [])

@@ -77,13 +77,19 @@ export default function Header({ variant = 'default' }: HeaderProps) {
     <nav className={`${headerClassName} sticky top-0 z-50`}>
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
-        <div
-          className="flex items-center gap-2 cursor-pointer group"
-          onClick={() => navigate('/')}
-        >
-          <Heart className="w-6 sm:w-8 h-6 sm:h-8 text-orange-600 group-hover:scale-110 transition-transform" />
-          <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
-            TalkToYouAI
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={() => navigate('/')}
+          >
+            <Heart className="w-6 sm:w-8 h-6 sm:h-8 text-orange-600 group-hover:scale-110 transition-transform" />
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
+              TalkToYouAI
+            </span>
+          </div>
+          {/* Version Badge */}
+          <span className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200">
+            v2.11.0
           </span>
         </div>
 
