@@ -82,26 +82,36 @@ export default function DashboardPage() {
 
   const loadProfiles = async () => {
     try {
-      // If no encryption key, show empty state (for Supabase email auth users)
-      if (!encryptionKey) {
-        logger.log('No encryption key - showing empty profile state')
-        setProfiles([])
-        setIsLoading(false)
-        return
-      }
+      let savedProfiles: PersonalityProfile[] = []
 
-      const savedProfiles = await getSecure<PersonalityProfile[]>(
-        PROFILES_STORAGE_KEY,
-        encryptionKey
-      ) || []
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        savedProfiles = await getSecure<PersonalityProfile[]>(
+          PROFILES_STORAGE_KEY,
+          encryptionKey
+        ) || []
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+        savedProfiles = stored ? JSON.parse(stored) : []
+        logger.log('Loaded profiles for Supabase user:', savedProfiles.length)
+      }
 
       // Load message stats for each profile
       const profilesWithStats = await Promise.all(
         savedProfiles.map(async (profile) => {
-          const messages = await getSecure<Message[]>(
-            `${MESSAGES_STORAGE_PREFIX}${profile.id}`,
-            encryptionKey
-          ) || []
+          let messages: Message[] = []
+
+          if (encryptionKey) {
+            messages = await getSecure<Message[]>(
+              `${MESSAGES_STORAGE_PREFIX}${profile.id}`,
+              encryptionKey
+            ) || []
+          } else {
+            // Load from plain localStorage for Supabase users
+            const stored = localStorage.getItem(`${MESSAGES_STORAGE_PREFIX}${profile.id}`)
+            messages = stored ? JSON.parse(stored) : []
+          }
 
           const lastMessage = messages[messages.length - 1]
 
@@ -124,6 +134,7 @@ export default function DashboardPage() {
       setProfiles(profilesWithStats)
     } catch (error) {
       logger.error('Error loading profiles:', error)
+      setProfiles([])
     } finally {
       setIsLoading(false)
     }

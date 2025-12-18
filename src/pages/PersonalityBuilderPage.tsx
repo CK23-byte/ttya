@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload, User, Check, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { setSecure, getSecure } from '../utils/secureStorage'
 import { parseWhatsAppExport, getUniqueSenders, filterBySender } from '../utils/whatsappParser'
 import { PersonalityProfile, WhatsAppMessage } from '../types'
@@ -19,7 +20,11 @@ type Step = 'upload' | 'select' | 'photo' | 'done'
 
 export default function PersonalityBuilderPage() {
   const { isAuthenticated, encryptionKey } = useAuth()
+  const { user, isLoading: supabaseLoading, isConfigured } = useSupabaseAuth()
   const navigate = useNavigate()
+
+  // Check auth: Support both old password-based and new Supabase email auth
+  const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
 
   // State
   const [step, setStep] = useState<Step>('upload')
@@ -33,10 +38,18 @@ export default function PersonalityBuilderPage() {
   const [error, setError] = useState<string>('')
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for Supabase auth to finish loading
+    if (isConfigured && supabaseLoading) {
+      logger.log('Waiting for Supabase auth to load...')
+      return
+    }
+
+    // Redirect to login if not authenticated
+    if (!isUserAuthenticated) {
+      logger.log('User not authenticated, redirecting to email-auth')
       navigate('/email-auth')
     }
-  }, [isAuthenticated, navigate])
+  }, [isUserAuthenticated, supabaseLoading, navigate, isConfigured])
 
   // Step 1: Upload WhatsApp export
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,8 +121,6 @@ export default function PersonalityBuilderPage() {
   }
 
   const handleCreateProfile = async () => {
-    if (!encryptionKey) return
-
     setIsProcessing(true)
     setError('')
 
@@ -141,16 +152,32 @@ export default function PersonalityBuilderPage() {
       }
 
       // Load existing profiles and add new one
-      const existingProfiles = await getSecure<PersonalityProfile[]>(
-        PERSONALITY_STORAGE_KEY,
-        encryptionKey
-      ) || []
+      let existingProfiles: PersonalityProfile[] = []
+
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        existingProfiles = await getSecure<PersonalityProfile[]>(
+          PERSONALITY_STORAGE_KEY,
+          encryptionKey
+        ) || []
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(PERSONALITY_STORAGE_KEY)
+        existingProfiles = stored ? JSON.parse(stored) : []
+      }
 
       const updatedProfiles = [...existingProfiles, profile]
 
-      // Save encrypted profiles array
-      await setSecure(PERSONALITY_STORAGE_KEY, updatedProfiles, encryptionKey)
+      // Save profiles
+      if (encryptionKey) {
+        // Save encrypted
+        await setSecure(PERSONALITY_STORAGE_KEY, updatedProfiles, encryptionKey)
+      } else {
+        // Save to plain localStorage for Supabase users
+        localStorage.setItem(PERSONALITY_STORAGE_KEY, JSON.stringify(updatedProfiles))
+      }
 
+      logger.log('Profile created successfully:', profile.name)
       setStep('done')
 
       // Redirect to chat with new profile after 2 seconds
