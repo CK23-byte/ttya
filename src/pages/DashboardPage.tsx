@@ -78,12 +78,18 @@ export default function DashboardPage() {
 
     logger.log('User authenticated, loading profiles')
     loadProfiles()
-  }, [isUserAuthenticated, supabaseLoading, encryptionKey])
+  }, [isUserAuthenticated, supabaseLoading])
 
   const loadProfiles = async () => {
-    if (!encryptionKey) return
-
     try {
+      // If no encryption key, show empty state (for Supabase email auth users)
+      if (!encryptionKey) {
+        logger.log('No encryption key - showing empty profile state')
+        setProfiles([])
+        setIsLoading(false)
+        return
+      }
+
       const savedProfiles = await getSecure<PersonalityProfile[]>(
         PROFILES_STORAGE_KEY,
         encryptionKey
