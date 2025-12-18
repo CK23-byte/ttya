@@ -17,6 +17,7 @@ import {
   Upload,
   CreditCard,
   Crown,
+  Trash2,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
@@ -188,6 +189,57 @@ export default function DashboardPage() {
     if (diffHours < 24) return `${diffHours}h ago`
     if (diffDays < 7) return `${diffDays}d ago`
     return messageDate.toLocaleDateString()
+  }
+
+  const handleDeleteProfile = async (profileId: string, profileName: string) => {
+    // Confirm deletion
+    showModal(
+      'Profiel Verwijderen',
+      `Weet je zeker dat je het profiel van "${profileName}" wilt verwijderen? Dit verwijdert ook alle gesprekken en gegevens. Deze actie kan niet ongedaan gemaakt worden.`,
+      'warning',
+      async () => {
+        try {
+          if (encryptionKey) {
+            // Delete from encrypted storage
+            const profiles = await getSecure<PersonalityProfile[]>(PROFILES_STORAGE_KEY, encryptionKey) || []
+            const updatedProfiles = profiles.filter(p => p.id !== profileId)
+            await import('../utils/secureStorage').then(({ setSecure }) =>
+              setSecure(PROFILES_STORAGE_KEY, updatedProfiles, encryptionKey)
+            )
+            // Delete messages
+            localStorage.removeItem(`${MESSAGES_STORAGE_PREFIX}${profileId}`)
+            // Delete profile data
+            localStorage.removeItem(`profile_data_${profileId}`)
+          } else {
+            // Delete from plain localStorage (Supabase users)
+            const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+            const profiles: PersonalityProfile[] = stored ? JSON.parse(stored) : []
+            const updatedProfiles = profiles.filter(p => p.id !== profileId)
+            localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(updatedProfiles))
+            // Delete messages
+            localStorage.removeItem(`${MESSAGES_STORAGE_PREFIX}${profileId}`)
+            // Delete profile data
+            localStorage.removeItem(`profile_data_${profileId}`)
+          }
+
+          // Reload profiles
+          await loadProfiles()
+
+          showModal(
+            'Profiel Verwijderd',
+            `Het profiel van "${profileName}" is succesvol verwijderd.`,
+            'success'
+          )
+        } catch (error) {
+          logger.error('Error deleting profile:', error)
+          showModal(
+            'Verwijderen Mislukt',
+            'Er ging iets mis bij het verwijderen van het profiel. Probeer het opnieuw.',
+            'error'
+          )
+        }
+      }
+    )
   }
 
   const handleStartCall = async (profile: ProfileWithStats) => {
@@ -419,6 +471,16 @@ export default function DashboardPage() {
                     >
                       <Upload className="w-4 h-4" />
                       Improve Profile
+                    </button>
+
+                    {/* Delete Profile */}
+                    <button
+                      onClick={() => handleDeleteProfile(profile.id, profile.name)}
+                      className="w-full px-3 py-2 bg-red-50 text-red-700 rounded-lg font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 border border-red-200 text-sm"
+                      title="Delete this profile permanently"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Verwijder Profiel
                     </button>
                   </div>
                 </div>

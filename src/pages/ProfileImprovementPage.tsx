@@ -110,9 +110,12 @@ export default function ProfileImprovementPage() {
   const [cloneError, setCloneError] = useState<string | null>(null)
   const [isCreatingAvatar, setIsCreatingAvatar] = useState(false)
   const [avatarCreationStatus, setAvatarCreationStatus] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'error'>('idle')
+  const [avatarCreationProgress, setAvatarCreationProgress] = useState(0)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
+  const [isEditingProfileName, setIsEditingProfileName] = useState(false)
+  const [tempProfileName, setTempProfileName] = useState('')
 
   // Modal state
   const [modal, setModal] = useState<{
@@ -134,6 +137,7 @@ export default function ProfileImprovementPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatFileInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const voiceSectionRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -848,6 +852,83 @@ export default function ProfileImprovementPage() {
     }
   }
 
+  const handleProfileNameSave = async () => {
+    if (!tempProfileName.trim() || !profile) return
+
+    try {
+      // Update profile in storage
+      let profiles: PersonalityProfile[] = []
+
+      if (encryptionKey) {
+        profiles = await getSecure<PersonalityProfile[]>(PROFILES_STORAGE_KEY, encryptionKey) || []
+      } else {
+        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+        profiles = stored ? JSON.parse(stored) : []
+      }
+
+      const updatedProfiles = profiles.map(p =>
+        p.id === profile.id ? { ...p, name: tempProfileName.trim() } : p
+      )
+
+      if (encryptionKey) {
+        await setSecure(PROFILES_STORAGE_KEY, updatedProfiles, encryptionKey)
+      } else {
+        localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(updatedProfiles))
+      }
+
+      // Update local state
+      setProfile({ ...profile, name: tempProfileName.trim() })
+      setIsEditingProfileName(false)
+
+      showModal('Naam Bijgewerkt', 'De profielnaam is succesvol bijgewerkt.', 'success')
+    } catch (error) {
+      logger.error('Error updating profile name:', error)
+      showModal('Update Mislukt', 'Er ging iets mis bij het bijwerken van de naam.', 'error')
+    }
+  }
+
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !profile) return
+
+    try {
+      logger.log('Uploading profile photo...', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      })
+
+      // Upload to Supabase Storage
+      const { publicUrl, path } = await uploadFileToStorage(
+        file,
+        'user-uploads',
+        `profiles/${profile.id}/photos`
+      )
+
+      const id = `photo_${Date.now()}_profile`
+
+      // Insert at the beginning (make it the profile photo)
+      setProfileData(prev => ({
+        ...prev,
+        photos: [
+          {
+            id,
+            url: publicUrl,
+            name: 'Profile Photo',
+            storagePath: path
+          },
+          ...prev.photos
+        ]
+      }))
+
+      logger.log('Profile photo uploaded successfully:', publicUrl)
+      showModal('Foto Geüpload', 'De profielfoto is succesvol bijgewerkt.', 'success')
+    } catch (error) {
+      logger.error('Error uploading profile photo:', error)
+      showModal('Upload Mislukt', 'Er ging iets mis bij het uploaden van de foto.', 'error')
+    }
+  }
+
   const handleDeletePhoto = (id: string) => {
     setProfileData(prev => ({
       ...prev,
@@ -1051,6 +1132,7 @@ export default function ProfileImprovementPage() {
 
     setIsCreatingAvatar(true)
     setAvatarCreationStatus('uploading')
+    setAvatarCreationProgress(10) // Initial progress
 
     try {
       // Get the first uploaded video
@@ -1065,6 +1147,7 @@ export default function ProfileImprovementPage() {
 
       // Generate a signed URL (valid for 1 hour) if we have storagePath
       let videoUrl = firstVideo.url
+      setAvatarCreationProgress(20) // URL generation progress
       if (firstVideo.storagePath) {
         try {
           videoUrl = await getSignedUrl(firstVideo.storagePath, 'user-uploads', 3600)
@@ -1075,6 +1158,7 @@ export default function ProfileImprovementPage() {
         }
       }
 
+      setAvatarCreationProgress(30) // Before API call
       // Send video URL to API (API will download it)
       const response = await fetch('/api/heygen/avatar', {
         method: 'POST',
@@ -1094,6 +1178,7 @@ export default function ProfileImprovementPage() {
       logger.log('Avatar creation response:', data)
 
       setAvatarCreationStatus('processing')
+      setAvatarCreationProgress(40) // Upload complete, processing started
 
       // Poll for avatar status
       const avatarId = data.avatarId
@@ -1106,6 +1191,10 @@ export default function ProfileImprovementPage() {
         }
 
         attempts++
+        // Update progress incrementally (40% to 95%)
+        const progressIncrement = 55 / maxAttempts
+        setAvatarCreationProgress(prev => Math.min(95, prev + progressIncrement))
+
         const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`)
 
         if (!statusResponse.ok) {
@@ -1113,10 +1202,11 @@ export default function ProfileImprovementPage() {
         }
 
         const statusData = await statusResponse.json()
-        logger.log(`Avatar status check ${attempts}:`, statusData)
+        logger.log(`Avatar status check ${attempts}/${maxAttempts}:`, statusData)
 
         if (statusData.status === 'completed' || statusData.status === 'active') {
           // Avatar is ready
+          setAvatarCreationProgress(100)
           setProfileData(prev => ({
             ...prev,
             avatarConfig: {
@@ -1129,8 +1219,8 @@ export default function ProfileImprovementPage() {
 
           setAvatarCreationStatus('completed')
           showModal(
-            'Avatar Created Successfully',
-            `Your custom avatar "${avatarName}" is ready for video calls!`,
+            'Avatar Succesvol Gemaakt',
+            `Je custom avatar "${avatarName}" is klaar voor videogesprekken!`,
             'success'
           )
         } else if (statusData.status === 'error' || statusData.status === 'failed') {
@@ -1148,7 +1238,8 @@ export default function ProfileImprovementPage() {
       logger.error('Avatar creation error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       setAvatarCreationStatus('error')
-      showModal('Avatar Creation Failed', errorMsg, 'error')
+      setAvatarCreationProgress(0)
+      showModal('Avatar Creatie Mislukt', errorMsg, 'error')
     } finally {
       setIsCreatingAvatar(false)
     }
@@ -1198,19 +1289,86 @@ export default function ProfileImprovementPage() {
         {/* Profile Header */}
         <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
           <div className="flex items-start gap-4 mb-6">
-            {profileData.photos.length > 0 ? (
-              <img
-                src={profileData.photos[0].url}
-                alt={profile.name}
-                className="w-20 h-20 rounded-full object-cover shadow-lg border-4 border-white"
+            {/* Profile Photo with Edit Button */}
+            <div className="relative group">
+              {profileData.photos.length > 0 ? (
+                <img
+                  src={profileData.photos[0].url}
+                  alt={profile.name}
+                  className="w-20 h-20 rounded-full object-cover shadow-lg border-4 border-white"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center text-white font-semibold text-2xl shadow-lg">
+                  {profile.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <button
+                onClick={() => profilePhotoInputRef.current?.click()}
+                className="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition hover:bg-blue-600"
+                title="Wijzig profielfoto"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <input
+                ref={profilePhotoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePhotoUpload}
+                className="hidden"
               />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center text-white font-semibold text-2xl shadow-lg">
-                {profile.name.charAt(0).toUpperCase()}
-              </div>
-            )}
+            </div>
+
+            {/* Profile Name with Edit */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">{profile.name}</h1>
+              {isEditingProfileName ? (
+                <div className="flex items-center gap-2 mb-1">
+                  <input
+                    type="text"
+                    value={tempProfileName}
+                    onChange={(e) => setTempProfileName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleProfileNameSave()
+                      if (e.key === 'Escape') {
+                        setIsEditingProfileName(false)
+                        setTempProfileName('')
+                      }
+                    }}
+                    className="flex-1 text-3xl font-bold text-gray-900 px-3 py-1 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleProfileNameSave}
+                    className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    title="Opslaan"
+                  >
+                    <Check className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingProfileName(false)
+                      setTempProfileName('')
+                    }}
+                    className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                    title="Annuleren"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mb-1 group/name">
+                  <h1 className="text-3xl font-bold text-gray-900">{profile.name}</h1>
+                  <button
+                    onClick={() => {
+                      setIsEditingProfileName(true)
+                      setTempProfileName(profile.name)
+                    }}
+                    className="p-1 text-gray-400 opacity-0 group-hover/name:opacity-100 hover:text-blue-500 transition"
+                    title="Naam bewerken"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
               <p className="text-gray-600 capitalize">{profile.relationship}</p>
             </div>
           </div>
@@ -1842,7 +2000,7 @@ export default function ProfileImprovementPage() {
                   {!profileData.avatarConfig.customAvatarId ? (
                     <>
                       <p className="text-sm text-pink-800">
-                        <strong>Avatar Creation:</strong> Upload a 2-10 second video with clear frontal face and good lighting. This will be used to create your custom AI avatar.
+                        <strong>Avatar Creatie:</strong> Upload een bestaande video (2-10 seconden) van een geliefd persoon waarin het gezicht duidelijk frontaal te zien is met goede belichting. Deze wordt gebruikt om een custom AI avatar te maken.
                       </p>
 
                       {/* Avatar Preview */}
@@ -1860,35 +2018,60 @@ export default function ProfileImprovementPage() {
                         </div>
                       )}
 
-                      <button
-                        onClick={handleCreateAvatar}
-                        disabled={isCreatingAvatar || profileData.videos.length === 0}
-                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                          isCreatingAvatar || profileData.videos.length === 0
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-pink-500 text-white hover:bg-pink-600'
-                        }`}
-                      >
-                        {isCreatingAvatar ? (
-                          <>
-                            <span className="animate-spin">⏳</span>
-                            {avatarCreationStatus === 'uploading' && 'Uploading...'}
-                            {avatarCreationStatus === 'processing' && 'Processing Avatar... (this may take a few minutes)'}
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-5 h-5" />
-                            Create Avatar from Video
-                          </>
+                      {/* Avatar Creation Button with Progress */}
+                      <div className="space-y-2">
+                        <button
+                          onClick={handleCreateAvatar}
+                          disabled={isCreatingAvatar || profileData.videos.length === 0}
+                          className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                            isCreatingAvatar || profileData.videos.length === 0
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-pink-500 text-white hover:bg-pink-600'
+                          }`}
+                        >
+                          {!isCreatingAvatar && (
+                            <>
+                              <Upload className="w-5 h-5" />
+                              Maak Avatar van Video
+                            </>
+                          )}
+                          {isCreatingAvatar && avatarCreationStatus === 'uploading' && (
+                            <>
+                              <span className="animate-spin">⏳</span>
+                              Video voorbereiden... {Math.round(avatarCreationProgress)}%
+                            </>
+                          )}
+                          {isCreatingAvatar && avatarCreationStatus === 'processing' && (
+                            <>
+                              <span className="animate-pulse">🎬</span>
+                              Avatar verwerken... {Math.round(avatarCreationProgress)}%
+                            </>
+                          )}
+                        </button>
+
+                        {/* Progress Bar */}
+                        {isCreatingAvatar && (
+                          <div className="space-y-1">
+                            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500 ease-out"
+                                style={{ width: `${avatarCreationProgress}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-center text-pink-700">
+                              {avatarCreationStatus === 'uploading' && 'Video uploaden en voorbereiden...'}
+                              {avatarCreationStatus === 'processing' && 'AI verwerkt je avatar (dit kan 2-5 minuten duren)'}
+                            </p>
+                          </div>
                         )}
-                      </button>
+                      </div>
                       {profileData.videos.length === 0 && (
                         <p className="text-xs text-pink-600">
                           ⚠️ Please upload a video first (see Videos section above)
                         </p>
                       )}
                       <p className="text-xs text-pink-600">
-                        💡 <strong>Tips:</strong> Use a 2-10 second video, face the camera directly, ensure good lighting, and speak clearly.
+                        💡 <strong>Tips:</strong> Upload een bestaande video (2-10 seconden) waarin het gezicht duidelijk te zien is met goede belichting. Dit kan een oude video zijn van een geliefd persoon.
                       </p>
                     </>
                   ) : (
