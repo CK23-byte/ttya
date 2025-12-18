@@ -433,29 +433,13 @@ export default function DashboardPage() {
         isOpen={modal.isOpen}
         onClose={() => setModal({ ...modal, isOpen: false })}
         title={modal.title}
+        message={modal.message}
         type={modal.type}
-      >
-        <p className="text-gray-600 whitespace-pre-line">{modal.message}</p>
-        {modal.onConfirm && (
-          <div className="mt-6 flex gap-3">
-            <button
-              onClick={() => {
-                setModal({ ...modal, isOpen: false })
-                modal.onConfirm?.()
-              }}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-rose-600 transition"
-            >
-              Yes, Add Voice Sample
-            </button>
-            <button
-              onClick={() => setModal({ ...modal, isOpen: false })}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
-            >
-              Not Now
-            </button>
-          </div>
-        )}
-      </Modal>
+        confirmText={modal.onConfirm ? "Yes, Add Voice Sample" : "OK"}
+        cancelText="Not Now"
+        showCancel={!!modal.onConfirm}
+        onConfirm={modal.onConfirm}
+      />
     </div>
   )
 }

@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/types/database'
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY!
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!
 
 interface DeductCreditsRequest {
   userId: string
