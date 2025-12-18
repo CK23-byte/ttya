@@ -1,9 +1,7 @@
 /**
  * Secure Logger Utility
- * Logs errors always, debug info only in development
+ * TEMPORARY: All logs enabled for production debugging
  */
-
-const isDevelopment = import.meta.env.MODE === 'development'
 
 export const logger = {
   log: (...args: any[]) => {
