@@ -30,6 +30,7 @@ import {
   HelpCircle
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
@@ -81,6 +82,7 @@ export default function ProfileImprovementPage() {
   const [searchParams] = useSearchParams()
   const profileId = searchParams.get('profileId')
   const { encryptionKey } = useAuth()
+  const { user, isConfigured } = useSupabaseAuth()
 
   const [profile, setProfile] = useState<PersonalityProfile | null>(null)
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -143,14 +145,17 @@ export default function ProfileImprovementPage() {
   const focusParam = searchParams.get('focus')
 
   useEffect(() => {
-    if (!profileId || !encryptionKey) {
+    // Check auth: either encryptionKey (password auth) or Supabase user
+    const isAuthenticated = encryptionKey || (isConfigured && user)
+
+    if (!profileId || !isAuthenticated) {
       navigate('/dashboard')
       return
     }
 
     loadProfile()
     loadProfileData()
-  }, [profileId, encryptionKey])
+  }, [profileId, encryptionKey, user, isConfigured])
 
   // Scroll to focused section if focus parameter is provided
   useEffect(() => {
@@ -174,13 +179,19 @@ export default function ProfileImprovementPage() {
   }, [])
 
   const loadProfile = async () => {
-    if (!encryptionKey) return
-
     try {
-      const profiles = await getSecure<PersonalityProfile[]>(
-        PROFILES_STORAGE_KEY,
-        encryptionKey
-      ) || []
+      let profiles: PersonalityProfile[] = []
+
+      if (encryptionKey) {
+        profiles = await getSecure<PersonalityProfile[]>(
+          PROFILES_STORAGE_KEY,
+          encryptionKey
+        ) || []
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+        profiles = stored ? JSON.parse(stored) : []
+      }
 
       const foundProfile = profiles.find(p => p.id === profileId)
       if (foundProfile) {
@@ -194,13 +205,21 @@ export default function ProfileImprovementPage() {
   }
 
   const loadProfileData = async () => {
-    if (!encryptionKey || !profileId) return
+    if (!profileId) return
 
     try {
-      const data = await getSecure<StoredProfileData>(
-        `profile_data_${profileId}`,
-        encryptionKey
-      )
+      let data: StoredProfileData | null = null
+
+      if (encryptionKey) {
+        data = await getSecure<StoredProfileData>(
+          `profile_data_${profileId}`,
+          encryptionKey
+        )
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(`profile_data_${profileId}`)
+        data = stored ? JSON.parse(stored) : null
+      }
 
       logger.log('Loading profile data:', data)
 
@@ -249,7 +268,7 @@ export default function ProfileImprovementPage() {
   }
 
   const saveProfileData = async () => {
-    if (!encryptionKey || !profileId) return
+    if (!profileId) return
 
     setIsSaving(true)
     setSaveSuccess(false)
@@ -290,11 +309,16 @@ export default function ProfileImprovementPage() {
         voiceConfig: dataToStore.voiceConfig ? `${dataToStore.voiceConfig.type}` : 'none'
       })
 
-      await setSecure(
-        `profile_data_${profileId}`,
-        dataToStore,
-        encryptionKey
-      )
+      if (encryptionKey) {
+        await setSecure(
+          `profile_data_${profileId}`,
+          dataToStore,
+          encryptionKey
+        )
+      } else {
+        // Supabase users: use plain localStorage
+        localStorage.setItem(`profile_data_${profileId}`, JSON.stringify(dataToStore))
+      }
 
       logger.log('Profile data saved successfully')
 
