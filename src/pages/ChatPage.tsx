@@ -109,9 +109,12 @@ interface ChatConversation {
 
 export default function ChatPage() {
   const { isAuthenticated, encryptionKey, updateActivity } = useAuth()
-  const { user, profile, refreshCredits } = useSupabaseAuth()
+  const { user, profile: supabaseProfile, refreshCredits, isLoading: supabaseLoading, isConfigured } = useSupabaseAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+
+  // Check auth: Support both old password-based and new Supabase email auth
+  const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
   const [conversations, setConversations] = useState<ChatConversation[]>([])
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null)
   const [currentMessages, setCurrentMessages] = useState<Message[]>([])
@@ -161,38 +164,50 @@ export default function ChatPage() {
 
   // Redirect if not authenticated (but wait for initial auth check)
   useEffect(() => {
-    // Give auth context time to initialize before redirecting
-    const timeoutId = setTimeout(() => {
-      if (!isAuthenticated && !encryptionKey) {
-        navigate('/email-auth')
-      }
-    }, 100)
+    // Wait for Supabase auth to finish loading
+    if (isConfigured && supabaseLoading) {
+      return
+    }
 
-    return () => clearTimeout(timeoutId)
-  }, [isAuthenticated, encryptionKey, navigate])
+    // Redirect to login if not authenticated
+    if (!isUserAuthenticated) {
+      navigate('/email-auth')
+    }
+  }, [isUserAuthenticated, supabaseLoading, navigate, isConfigured])
 
   // Load all personality profiles and their conversations
   useEffect(() => {
     const loadConversations = async () => {
-      if (!encryptionKey) {
-        setIsLoading(false)
-        return
-      }
-
       try {
-        // Load all profiles
-        const profiles = await getSecure<PersonalityProfile[]>(
-          PROFILES_STORAGE_KEY,
-          encryptionKey
-        ) || []
+        let profiles: PersonalityProfile[] = []
+
+        if (encryptionKey) {
+          // Old password-based auth: use encrypted storage
+          profiles = await getSecure<PersonalityProfile[]>(
+            PROFILES_STORAGE_KEY,
+            encryptionKey
+          ) || []
+        } else {
+          // Supabase users: use plain localStorage
+          const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+          profiles = stored ? JSON.parse(stored) : []
+        }
 
         // Load messages for each profile
         const convos: ChatConversation[] = await Promise.all(
           profiles.map(async (profile) => {
-            const messages = await getSecure<Message[]>(
-              `${MESSAGES_STORAGE_PREFIX}${profile.id}`,
-              encryptionKey
-            ) || []
+            let messages: Message[] = []
+
+            if (encryptionKey) {
+              messages = await getSecure<Message[]>(
+                `${MESSAGES_STORAGE_PREFIX}${profile.id}`,
+                encryptionKey
+              ) || []
+            } else {
+              // Load from plain localStorage for Supabase users
+              const stored = localStorage.getItem(`${MESSAGES_STORAGE_PREFIX}${profile.id}`)
+              messages = stored ? JSON.parse(stored) : []
+            }
 
             return {
               profileId: profile.id,
@@ -244,9 +259,14 @@ export default function ChatPage() {
   }
 
   const saveMessages = async (profileId: string, messages: Message[]) => {
-    if (!encryptionKey) return
     try {
-      await setSecure(`${MESSAGES_STORAGE_PREFIX}${profileId}`, messages, encryptionKey)
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        await setSecure(`${MESSAGES_STORAGE_PREFIX}${profileId}`, messages, encryptionKey)
+      } else {
+        // Supabase users: use plain localStorage
+        localStorage.setItem(`${MESSAGES_STORAGE_PREFIX}${profileId}`, JSON.stringify(messages))
+      }
 
       // Update conversations list
       setConversations(prev => prev.map(c =>
@@ -260,13 +280,13 @@ export default function ChatPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !activeProfileId || !encryptionKey) return
+    if (!messageInput.trim() || !activeProfileId) return
 
     const activeConvo = getActiveConversation()
     if (!activeConvo) return
 
     // Check if user has Supabase account and credits
-    if (!user || !profile) {
+    if (!user || !supabaseProfile) {
       showModal(
         'Account Required',
         'Please sign in with email to use chat features and track your credits.',
@@ -276,7 +296,7 @@ export default function ChatPage() {
     }
 
     // Check if user has enough text credits
-    const textCredits = profile.text_credits || 0
+    const textCredits = supabaseProfile.text_credits || 0
     const requiredCredits = CREDIT_PRICING.MESSAGE_BASE_COST
 
     if (textCredits < requiredCredits) {

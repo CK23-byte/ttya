@@ -39,8 +39,11 @@ type CallStatus = 'idle' | 'connecting' | 'connected' | 'ended' | 'error'
 export default function VideoPage() {
   const navigate = useNavigate()
   const { isAuthenticated, encryptionKey } = useAuth()
-  const { user, profile: supabaseProfile, refreshCredits } = useSupabaseAuth()
+  const { user, profile: supabaseProfile, refreshCredits, isLoading: supabaseLoading, isConfigured } = useSupabaseAuth()
   const [searchParams] = useSearchParams()
+
+  // Check auth: Support both old password-based and new Supabase email auth
+  const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
 
   const [profile, setProfile] = useState<PersonalityProfile | null>(null)
   const [callStatus, setCallStatus] = useState<CallStatus>('idle')
@@ -74,13 +77,19 @@ export default function VideoPage() {
   const callStartTimeRef = useRef<number | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for Supabase auth to finish loading
+    if (isConfigured && supabaseLoading) {
+      return
+    }
+
+    // Redirect to login if not authenticated
+    if (!isUserAuthenticated) {
       navigate('/email-auth')
       return
     }
 
     loadProfile()
-  }, [isAuthenticated, encryptionKey, searchParams])
+  }, [isUserAuthenticated, supabaseLoading, encryptionKey, searchParams, navigate, isConfigured])
 
   // Track call duration
   useEffect(() => {
@@ -176,8 +185,6 @@ export default function VideoPage() {
   }, [duration, callStatus, user, supabaseProfile]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadProfile = async () => {
-    if (!encryptionKey) return
-
     const profileId = searchParams.get('profile')
     if (!profileId) {
       navigate('/dashboard')
@@ -185,10 +192,19 @@ export default function VideoPage() {
     }
 
     try {
-      const profiles = await getSecure<PersonalityProfile[]>(
-        PROFILES_STORAGE_KEY,
-        encryptionKey
-      ) || []
+      let profiles: PersonalityProfile[] = []
+
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        profiles = await getSecure<PersonalityProfile[]>(
+          PROFILES_STORAGE_KEY,
+          encryptionKey
+        ) || []
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+        profiles = stored ? JSON.parse(stored) : []
+      }
 
       const foundProfile = profiles.find(p => p.id === profileId)
       if (!foundProfile) {

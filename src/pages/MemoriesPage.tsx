@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { setSecure, getSecure } from '../utils/secureStorage'
 import WhatsAppUploader from '../components/WhatsAppUploader'
 import PhotoUploader from '../components/PhotoUploader'
@@ -19,7 +20,12 @@ const MEMORIES_STORAGE_KEY = 'memory_collection'
 
 export default function MemoriesPage() {
   const { isAuthenticated, encryptionKey } = useAuth()
+  const { user, isLoading: supabaseLoading, isConfigured } = useSupabaseAuth()
   const navigate = useNavigate()
+
+  // Check auth: Support both old password-based and new Supabase email auth
+  const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
+
   const [whatsappMessages, setWhatsappMessages] = useState<WhatsAppMessage[]>([])
   const [photos, setPhotos] = useState<PhotoMemory[]>([])
   const [audioClips, setAudioClips] = useState<AudioMemory[]>([])
@@ -28,21 +34,34 @@ export default function MemoriesPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for Supabase auth to finish loading
+    if (isConfigured && supabaseLoading) {
+      return
+    }
+
+    // Redirect to login if not authenticated
+    if (!isUserAuthenticated) {
       navigate('/email-auth')
     }
-  }, [isAuthenticated, navigate])
+  }, [isUserAuthenticated, supabaseLoading, navigate, isConfigured])
 
   // Load existing memories
   useEffect(() => {
     const loadMemories = async () => {
-      if (!encryptionKey) return
-
       try {
-        const saved = await getSecure<MemoryCollection>(
-          MEMORIES_STORAGE_KEY,
-          encryptionKey
-        )
+        let saved: MemoryCollection | null = null
+
+        if (encryptionKey) {
+          // Old password-based auth: use encrypted storage
+          saved = await getSecure<MemoryCollection>(
+            MEMORIES_STORAGE_KEY,
+            encryptionKey
+          )
+        } else {
+          // Supabase users: use plain localStorage
+          const stored = localStorage.getItem(MEMORIES_STORAGE_KEY)
+          saved = stored ? JSON.parse(stored) : null
+        }
 
         if (saved) {
           setWhatsappMessages(saved.whatsappMessages || [])
@@ -62,8 +81,6 @@ export default function MemoriesPage() {
   }
 
   const handleSave = async () => {
-    if (!encryptionKey) return
-
     setIsSaving(true)
     setSaveSuccess(false)
 
@@ -74,7 +91,14 @@ export default function MemoriesPage() {
         audioClips,
       }
 
-      await setSecure(MEMORIES_STORAGE_KEY, collection, encryptionKey)
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        await setSecure(MEMORIES_STORAGE_KEY, collection, encryptionKey)
+      } else {
+        // Supabase users: use plain localStorage
+        localStorage.setItem(MEMORIES_STORAGE_KEY, JSON.stringify(collection))
+      }
+
       setSaveSuccess(true)
 
       setTimeout(() => {
