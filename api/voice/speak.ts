@@ -71,10 +71,35 @@ export default async function handler(
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('ElevenLabs API error:', error)
+      console.error('ElevenLabs API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error
+      })
+
+      // Parse error message
+      let errorMessage = error
+      try {
+        const errorJson = JSON.parse(error)
+        errorMessage = errorJson.detail?.message || errorJson.message || JSON.stringify(errorJson)
+      } catch (e) {
+        // Not JSON, use raw error
+      }
+
+      // Provide specific guidance based on status code
+      let hint = ''
+      if (response.status === 401) {
+        hint = 'ElevenLabs API key is invalid or expired. Check ELEVENLABS_API_KEY in environment variables. Visit https://elevenlabs.io/app/settings/api-keys'
+      } else if (response.status === 429) {
+        hint = 'Rate limit exceeded. Too many requests to ElevenLabs. Wait a moment and try again.'
+      } else if (response.status === 402) {
+        hint = 'Insufficient credits. Your ElevenLabs account is out of credits. Visit https://elevenlabs.io/app/settings/billing'
+      }
+
       return res.status(response.status).json({
         error: 'Failed to generate speech',
-        details: error
+        details: errorMessage,
+        hint
       })
     }
 
