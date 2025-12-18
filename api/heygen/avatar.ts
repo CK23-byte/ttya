@@ -5,7 +5,8 @@
  * - create: Upload video and create custom avatar (POST)
  * - status: Check avatar processing status (GET)
  *
- * Uses HeyGen v2 API: https://api.heygen.com/v2/video_avatar
+ * Uses HeyGen v1 API: https://api.heygen.com/v1/photo_avatar
+ * Note: This endpoint creates a "talking photo" avatar from uploaded video
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -91,9 +92,10 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
   })
   formData.append('avatar_name', avatarName)
 
-  // Upload to HeyGen - Using v2 API endpoint
-  console.log('Uploading to HeyGen v2/video_avatar...')
-  const response = await fetch('https://api.heygen.com/v2/video_avatar', {
+  // Upload to HeyGen - Using v1 photo_avatar endpoint (talking_photo endpoint)
+  // The v1/photo_avatar endpoint is for creating custom avatars from video
+  console.log('Uploading to HeyGen v1/photo_avatar...')
+  const response = await fetch('https://api.heygen.com/v1/photo_avatar', {
     method: 'POST',
     headers: {
       'X-Api-Key': HEYGEN_API_KEY!,
@@ -104,42 +106,53 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
 
   if (!response.ok) {
     const error = await response.text()
-    const errorMessage = error.substring(0, 500)
     console.error('HeyGen create avatar error:', {
       status: response.status,
       statusText: response.statusText,
-      error: errorMessage
+      rawError: error
     })
 
-    // Try to parse JSON error
-    let parsedError = errorMessage
+    // Try to parse JSON error and stringify properly
+    let parsedError = error
     try {
       const errorJson = JSON.parse(error)
-      parsedError = errorJson.message || errorJson.error || errorMessage
+      // Properly stringify the error object
+      parsedError = errorJson.message || errorJson.error || JSON.stringify(errorJson, null, 2)
+      console.error('Parsed HeyGen error:', errorJson)
     } catch (e) {
       // Not JSON, use raw error
+      console.error('Error is not JSON:', error)
+    }
+
+    // Provide specific guidance based on status code
+    let hint = 'Check that your video meets HeyGen requirements (frontal face, good lighting, 2-10 seconds, max 50MB)'
+    if (response.status === 403) {
+      hint = 'Access Forbidden: Your HeyGen API key may not have access to the Photo Avatar (Talking Photo) API. This is a premium feature. Please check: 1) Your HeyGen account has credits/active plan, 2) Your API key has the correct permissions, 3) Visit https://app.heygen.com/billing to verify your account status.'
+    } else if (response.status === 404) {
+      hint = 'The HeyGen API endpoint was not found. The v1/photo_avatar endpoint may not be available with your API key or plan level.'
+    } else if (response.status === 401) {
+      hint = 'Unauthorized: Your HeyGen API key is invalid. Please verify your HEYGEN_API_KEY environment variable.'
     }
 
     return res.status(response.status).json({
       error: 'Failed to create avatar',
       details: `HeyGen API (${response.status}): ${parsedError}`,
-      hint: response.status === 404
-        ? 'The HeyGen API endpoint might not be available with your API key. Check that you have access to the Video Avatar API.'
-        : 'Check that your video meets HeyGen requirements (frontal face, good lighting, 2-10 seconds, max 50MB)'
+      hint
     })
   }
 
   const data = await response.json()
 
   console.log('HeyGen avatar created:', {
-    id: data.data?.video_avatar_id || data.data?.avatar_id || data.data?.id,
-    status: data.data?.status
+    id: data.data?.photo_id || data.data?.talking_photo_id || data.data?.avatar_id || data.data?.id,
+    status: data.data?.status,
+    fullResponse: JSON.stringify(data)
   })
 
   return res.status(200).json({
     success: true,
-    avatarId: data.data?.video_avatar_id || data.data?.avatar_id || data.data?.id,
-    avatarName: data.data?.avatar_name || avatarName,
+    avatarId: data.data?.photo_id || data.data?.talking_photo_id || data.data?.avatar_id || data.data?.id,
+    avatarName: data.data?.photo_name || data.data?.talking_photo_name || avatarName,
     status: data.data?.status || 'processing',
     message: 'Avatar is being processed. This may take a few minutes.'
   })
@@ -161,8 +174,8 @@ async function handleGetStatus(req: VercelRequest, res: VercelResponse) {
 
   console.log('Checking HeyGen avatar status:', { avatarId })
 
-  // Use v2 API endpoint for getting avatar status
-  const response = await fetch(`https://api.heygen.com/v2/video_avatar/${avatarId}`, {
+  // Use v1 API endpoint for getting photo avatar status
+  const response = await fetch(`https://api.heygen.com/v1/photo_avatar/${avatarId}`, {
     method: 'GET',
     headers: {
       'X-Api-Key': HEYGEN_API_KEY!,
@@ -183,9 +196,9 @@ async function handleGetStatus(req: VercelRequest, res: VercelResponse) {
 
   return res.status(200).json({
     success: true,
-    avatarId: data.data?.video_avatar_id || data.data?.avatar_id || avatarId,
+    avatarId: data.data?.photo_id || data.data?.talking_photo_id || data.data?.avatar_id || avatarId,
     status: data.data?.status || 'unknown',
-    thumbnailUrl: data.data?.thumbnail_url || data.data?.preview_image_url,
+    thumbnailUrl: data.data?.thumbnail_url || data.data?.preview_image_url || data.data?.preview_url,
     videoUrl: data.data?.video_url
   })
 }
