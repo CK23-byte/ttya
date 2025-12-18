@@ -22,15 +22,19 @@ import {
   Zap,
   Crown,
   Upload,
-  Brain
+  Brain,
+  Coins
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import {
   SUBSCRIPTION_PLANS,
+  UNIVERSAL_CREDIT_PACKS,
   redirectToCheckout,
+  buyUniversalCredits,
   isStripeConfigured,
   arePaymentLinksConfigured,
   PlanType,
+  UniversalCreditPackType,
   BillingPeriod
 } from '../lib/stripe'
 import { logger } from '../utils/logger'
@@ -80,6 +84,35 @@ export default function PricingPage() {
     }
   }
 
+  const handleBuyCredits = async (packType: UniversalCreditPackType) => {
+    setError(null)
+
+    if (!user) {
+      navigate('/email-auth')
+      return
+    }
+
+    if (!isStripeConfigured()) {
+      setError('Stripe is not configured yet. Add your VITE_STRIPE_PUBLISHABLE_KEY to .env')
+      return
+    }
+
+    if (!arePaymentLinksConfigured()) {
+      setError('Payment Links not configured yet. Create Payment Links in your Stripe Dashboard and add the URLs to .env')
+      return
+    }
+
+    setIsLoading(packType)
+
+    try {
+      await buyUniversalCredits(packType, user.email || undefined)
+    } catch (err) {
+      logger.error('Checkout error:', err)
+      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
+    } finally {
+      setIsLoading(null)
+    }
+  }
 
   const getIconForFeature = (feature: string) => {
     if (feature.toLowerCase().includes('message')) return <MessageCircle className="w-4 h-4" />
@@ -359,6 +392,143 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* Universal Credit Packs */}
+      <section className="py-16 px-4 bg-white border-y border-orange-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-sm font-medium mb-4">
+              <Coins className="w-4 h-4" />
+              Universal Credits
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Buy Credits On-Demand
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              No subscription? No problem. Purchase universal credits that work for <strong>text chat, voice calls, AND video calls</strong>. Credits never expire.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Object.entries(UNIVERSAL_CREDIT_PACKS).map(([key, pack]) => (
+              <div
+                key={key}
+                className={`rounded-2xl shadow-lg p-6 flex flex-col relative transition-all hover:shadow-xl ${
+                  pack.popular
+                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 scale-105'
+                    : pack.bestValue
+                    ? 'bg-gradient-to-br from-amber-500 to-orange-500'
+                    : 'bg-white border border-gray-200'
+                }`}
+              >
+                {pack.popular && (
+                  <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full flex items-center gap-1">
+                    <Crown className="w-3 h-3" />
+                    Popular
+                  </div>
+                )}
+                {pack.bestValue && (
+                  <div className="absolute top-3 right-3 px-2 py-1 bg-white/20 text-white text-xs font-semibold rounded-full flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Best Value
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <h3 className={`text-xl font-bold mb-1 ${pack.popular || pack.bestValue ? 'text-white' : 'text-gray-900'}`}>
+                    {pack.name}
+                  </h3>
+                  <p className={`text-sm ${pack.popular || pack.bestValue ? 'text-white/80' : 'text-gray-600'}`}>
+                    {pack.description}
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-3xl font-bold ${pack.popular || pack.bestValue ? 'text-white' : 'text-gray-900'}`}>
+                      ${pack.price}
+                    </span>
+                  </div>
+                  <p className={`text-xs mt-1 ${pack.popular || pack.bestValue ? 'text-white/70' : 'text-gray-500'}`}>
+                    ${pack.pricePerCredit.toFixed(2)} per credit
+                  </p>
+                </div>
+
+                <ul className="space-y-2 mb-6 flex-1 text-sm">
+                  <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'
+                    }`}>
+                      <Check className="w-3 h-3" />
+                    </div>
+                    <span>{pack.credits} universal credits</span>
+                  </li>
+                  <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'
+                    }`}>
+                      <MessageCircle className="w-3 h-3" />
+                    </div>
+                    <span>Works for text chat</span>
+                  </li>
+                  <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-green-100 text-green-600'
+                    }`}>
+                      <Zap className="w-3 h-3" />
+                    </div>
+                    <span>Works for voice calls</span>
+                  </li>
+                  <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-pink-100 text-pink-600'
+                    }`}>
+                      <Crown className="w-3 h-3" />
+                    </div>
+                    <span>Works for video calls</span>
+                  </li>
+                  <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      <Shield className="w-3 h-3" />
+                    </div>
+                    <span>Never expires</span>
+                  </li>
+                </ul>
+
+                <button
+                  onClick={() => handleBuyCredits(key as UniversalCreditPackType)}
+                  disabled={isLoading === key}
+                  className={`w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                    pack.popular
+                      ? 'bg-white text-purple-600 hover:bg-gray-50'
+                      : pack.bestValue
+                      ? 'bg-white text-orange-600 hover:bg-gray-50'
+                      : 'bg-gray-900 text-white hover:bg-gray-800'
+                  }`}
+                >
+                  {isLoading === key ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-400/30 border-t-gray-700 rounded-full animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Buy Credits <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-600">
+              💡 <strong>Tip:</strong> Credits can be used across all features. 1 credit = 1 text message, ~12 seconds of voice, or ~12 seconds of video.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Trust Badges */}
       <section className="py-12 px-4 border-t border-orange-100">
