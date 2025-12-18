@@ -1053,39 +1053,18 @@ export default function ProfileImprovementPage() {
     setAvatarCreationStatus('uploading')
 
     try {
-      // Use the first uploaded video
+      // Use the first uploaded video URL
       const videoUrl = profileData.videos[0].url
-      logger.log('Creating avatar from video:', videoUrl)
-
-      // Fetch the video from Supabase Storage
-      const videoResponse = await fetch(videoUrl)
-      if (!videoResponse.ok) {
-        throw new Error('Failed to fetch video')
-      }
-
-      const videoBlob = await videoResponse.blob()
-
-      // Convert to base64
-      const reader = new FileReader()
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onloadend = () => {
-          const base64 = reader.result as string
-          resolve(base64.split(',')[1]) // Remove data:video/mp4;base64, prefix
-        }
-        reader.readAsDataURL(videoBlob)
-      })
-
-      const videoBase64 = await base64Promise
       const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
 
-      logger.log('Uploading avatar...', { avatarName, videoSize: videoBlob.size })
+      logger.log('Creating avatar from video:', { videoUrl, avatarName })
 
-      // Upload avatar
+      // Send video URL to API (API will download it)
       const response = await fetch('/api/heygen/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          videoBase64,
+          videoUrl,
           avatarName
         })
       })
@@ -1619,158 +1598,6 @@ export default function ProfileImprovementPage() {
             </div>
           </div>
 
-          {/* Avatar Configuration */}
-          <div className="bg-white rounded-2xl p-6 shadow-md">
-            <div className="flex items-center gap-3 mb-4">
-              <VideoIcon className="w-6 h-6 text-pink-500" />
-              <h2 className="text-xl font-bold text-gray-900">Avatar Configuration</h2>
-              <span className="text-sm text-gray-500">(For video calls)</span>
-            </div>
-
-            <div className="space-y-4">
-              {/* Avatar Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Choose Avatar Type
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => handleAvatarTypeChange('custom')}
-                    className={`p-4 rounded-lg border-2 transition ${
-                      profileData.avatarConfig?.type === 'custom'
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 hover:border-pink-200'
-                    }`}
-                  >
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-900">👤 Custom Avatar</p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Upload your own video to create a personalized avatar
-                      </p>
-                      {profileData.avatarConfig?.type === 'custom' && profileData.avatarConfig.customAvatarName && (
-                        <p className="text-xs text-pink-600 mt-2 font-medium">
-                          ✓ {profileData.avatarConfig.customAvatarName}
-                        </p>
-                      )}
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleAvatarTypeChange('default')}
-                    className={`p-4 rounded-lg border-2 transition ${
-                      profileData.avatarConfig?.type === 'default'
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 hover:border-pink-200'
-                    }`}
-                  >
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-900">🤖 Default Avatar</p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Use preset AI avatars
-                      </p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Custom Avatar Section */}
-              {profileData.avatarConfig?.type === 'custom' && (
-                <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 space-y-3">
-                  {!profileData.avatarConfig.customAvatarId ? (
-                    <>
-                      <p className="text-sm text-pink-800">
-                        <strong>Avatar Creation:</strong> Upload a 2-10 second video with clear frontal face and good lighting. This will be used to create your custom AI avatar.
-                      </p>
-
-                      {/* Avatar Preview */}
-                      {profileData.videos.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-pink-900">Preview (using first video):</p>
-                          <div className="relative rounded-lg overflow-hidden bg-black max-w-xs mx-auto">
-                            <video
-                              src={profileData.videos[0].url}
-                              className="w-full"
-                              controls
-                              muted
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      <button
-                        onClick={handleCreateAvatar}
-                        disabled={isCreatingAvatar || profileData.videos.length === 0}
-                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                          isCreatingAvatar || profileData.videos.length === 0
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-pink-500 text-white hover:bg-pink-600'
-                        }`}
-                      >
-                        {isCreatingAvatar ? (
-                          <>
-                            <span className="animate-spin">⏳</span>
-                            {avatarCreationStatus === 'uploading' && 'Uploading...'}
-                            {avatarCreationStatus === 'processing' && 'Processing Avatar... (this may take a few minutes)'}
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-5 h-5" />
-                            Create Avatar from Video
-                          </>
-                        )}
-                      </button>
-                      {profileData.videos.length === 0 && (
-                        <p className="text-xs text-pink-600">
-                          ⚠️ Please upload a video first (scroll down to Videos section)
-                        </p>
-                      )}
-                      <p className="text-xs text-pink-600">
-                        💡 <strong>Tips:</strong> Use a 2-10 second video, face the camera directly, ensure good lighting, and speak clearly.
-                      </p>
-                    </>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Check className="w-6 h-6 text-green-500" />
-                        <div className="flex-1">
-                          <p className="font-medium text-pink-900">
-                            Avatar Created Successfully!
-                          </p>
-                          <p className="text-sm text-pink-700">
-                            Using: {profileData.avatarConfig.customAvatarName}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Avatar Thumbnail Preview */}
-                      {profileData.avatarConfig.customAvatarThumbnail && (
-                        <div className="rounded-lg overflow-hidden max-w-xs mx-auto">
-                          <img
-                            src={profileData.avatarConfig.customAvatarThumbnail}
-                            alt="Avatar Preview"
-                            className="w-full"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Default Avatar Selection */}
-              {profileData.avatarConfig?.type === 'default' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <p className="text-sm text-blue-800">
-                    Using default AI avatar: <strong>Angela</strong>
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    💡 Default avatars are ready to use immediately. No setup required!
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Photos */}
           <div className="bg-white rounded-2xl p-6 shadow-md">
             <div className="flex items-center gap-3 mb-4">
@@ -1934,6 +1761,158 @@ export default function ProfileImprovementPage() {
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Avatar Configuration */}
+          <div className="bg-white rounded-2xl p-6 shadow-md">
+            <div className="flex items-center gap-3 mb-4">
+              <VideoIcon className="w-6 h-6 text-pink-500" />
+              <h2 className="text-xl font-bold text-gray-900">Avatar Configuration</h2>
+              <span className="text-sm text-gray-500">(For video calls)</span>
+            </div>
+
+            <div className="space-y-4">
+              {/* Avatar Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choose Avatar Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleAvatarTypeChange('custom')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.avatarConfig?.type === 'custom'
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 hover:border-pink-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">👤 Custom Avatar</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Upload your own video to create a personalized avatar
+                      </p>
+                      {profileData.avatarConfig?.type === 'custom' && profileData.avatarConfig.customAvatarName && (
+                        <p className="text-xs text-pink-600 mt-2 font-medium">
+                          ✓ {profileData.avatarConfig.customAvatarName}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleAvatarTypeChange('default')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.avatarConfig?.type === 'default'
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 hover:border-pink-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">🤖 Default Avatar</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Use preset AI avatars
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Avatar Section */}
+              {profileData.avatarConfig?.type === 'custom' && (
+                <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 space-y-3">
+                  {!profileData.avatarConfig.customAvatarId ? (
+                    <>
+                      <p className="text-sm text-pink-800">
+                        <strong>Avatar Creation:</strong> Upload a 2-10 second video with clear frontal face and good lighting. This will be used to create your custom AI avatar.
+                      </p>
+
+                      {/* Avatar Preview */}
+                      {profileData.videos.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-pink-900">Preview (using first video):</p>
+                          <div className="relative rounded-lg overflow-hidden bg-black max-w-xs mx-auto">
+                            <video
+                              src={profileData.videos[0].url}
+                              className="w-full"
+                              controls
+                              muted
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleCreateAvatar}
+                        disabled={isCreatingAvatar || profileData.videos.length === 0}
+                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isCreatingAvatar || profileData.videos.length === 0
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-pink-500 text-white hover:bg-pink-600'
+                        }`}
+                      >
+                        {isCreatingAvatar ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            {avatarCreationStatus === 'uploading' && 'Uploading...'}
+                            {avatarCreationStatus === 'processing' && 'Processing Avatar... (this may take a few minutes)'}
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5" />
+                            Create Avatar from Video
+                          </>
+                        )}
+                      </button>
+                      {profileData.videos.length === 0 && (
+                        <p className="text-xs text-pink-600">
+                          ⚠️ Please upload a video first (see Videos section above)
+                        </p>
+                      )}
+                      <p className="text-xs text-pink-600">
+                        💡 <strong>Tips:</strong> Use a 2-10 second video, face the camera directly, ensure good lighting, and speak clearly.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-6 h-6 text-green-500" />
+                        <div className="flex-1">
+                          <p className="font-medium text-pink-900">
+                            Avatar Created Successfully!
+                          </p>
+                          <p className="text-sm text-pink-700">
+                            Using: {profileData.avatarConfig.customAvatarName}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Avatar Thumbnail Preview */}
+                      {profileData.avatarConfig.customAvatarThumbnail && (
+                        <div className="rounded-lg overflow-hidden max-w-xs mx-auto">
+                          <img
+                            src={profileData.avatarConfig.customAvatarThumbnail}
+                            alt="Avatar Preview"
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Default Avatar Selection */}
+              {profileData.avatarConfig?.type === 'default' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <p className="text-sm text-blue-800">
+                    Using default AI avatar: <strong>Angela</strong>
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    💡 Default avatars are ready to use immediately. No setup required!
+                  </p>
                 </div>
               )}
             </div>

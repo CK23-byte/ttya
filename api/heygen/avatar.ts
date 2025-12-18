@@ -47,18 +47,27 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { videoBase64, avatarName } = req.body
+  const { videoUrl, avatarName } = req.body
 
-  if (!videoBase64 || !avatarName) {
+  if (!videoUrl || !avatarName) {
     return res.status(400).json({
-      error: 'Missing required fields: videoBase64, avatarName'
+      error: 'Missing required fields: videoUrl, avatarName'
     })
   }
 
-  console.log('Creating HeyGen avatar:', { avatarName })
+  console.log('Creating HeyGen avatar:', { avatarName, videoUrl })
 
-  // Convert base64 to buffer
-  const videoBuffer = Buffer.from(videoBase64, 'base64')
+  // Download video from URL
+  const videoResponse = await fetch(videoUrl)
+  if (!videoResponse.ok) {
+    return res.status(400).json({
+      error: 'Failed to download video from URL',
+      details: `HTTP ${videoResponse.status}: ${videoResponse.statusText}`
+    })
+  }
+
+  const videoBuffer = Buffer.from(await videoResponse.arrayBuffer())
+  console.log('Video downloaded:', { size: videoBuffer.length })
 
   // HeyGen expects multipart/form-data
   const FormData = (await import('form-data')).default
