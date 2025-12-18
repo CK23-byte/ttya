@@ -24,6 +24,7 @@ import { usePayment } from '../contexts/PaymentContext'
 import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile, Message } from '../types'
 import Header from '../components/Header'
+import Modal from '../components/Modal'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
 const PROFILES_STORAGE_KEY = 'personality_profiles'
@@ -58,6 +59,22 @@ export default function DashboardPage() {
   const { subscription } = usePayment()
   const [profiles, setProfiles] = useState<ProfileWithStats[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+    onConfirm?: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showModal = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', onConfirm?: () => void) => {
+    setModal({ isOpen: true, title, message, type, onConfirm })
+  }
 
   // Check auth: Support both old password-based and new Supabase email auth
   const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
@@ -191,9 +208,13 @@ export default function DashboardPage() {
       }
 
       if (!profileData || !profileData.voiceSamples || profileData.voiceSamples.length === 0) {
-        // No voice samples - redirect to improvement page
-        alert('Please add a voice sample first to enable voice calls!')
-        navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+        // No voice samples - show modal and redirect to improvement page
+        showModal(
+          'Voice Sample Required',
+          `To enable voice calls with ${profile.name}, you need to add a voice sample first. This allows us to clone their voice for realistic conversations.\n\nWould you like to add a voice sample now?`,
+          'info',
+          () => navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+        )
         return
       }
 
@@ -218,9 +239,13 @@ export default function DashboardPage() {
       navigate(`/voice-call?${params.toString()}`)
     } catch (error) {
       logger.error('Error checking voice samples:', error)
-      // On error, show improvement page to be safe
-      alert('Please add a voice sample to enable voice calls!')
-      navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+      // On error, show modal and redirect to improvement page
+      showModal(
+        'Voice Sample Required',
+        `To enable voice calls with ${profile.name}, you need to add a voice sample first.\n\nWould you like to add one now?`,
+        'warning',
+        () => navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+      )
     }
   }
 
@@ -402,6 +427,35 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        type={modal.type}
+      >
+        <p className="text-gray-600 whitespace-pre-line">{modal.message}</p>
+        {modal.onConfirm && (
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => {
+                setModal({ ...modal, isOpen: false })
+                modal.onConfirm?.()
+              }}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-rose-600 transition"
+            >
+              Yes, Add Voice Sample
+            </button>
+            <button
+              onClick={() => setModal({ ...modal, isOpen: false })}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+            >
+              Not Now
+            </button>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

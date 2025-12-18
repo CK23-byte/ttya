@@ -34,7 +34,6 @@ import TypingIndicator from '../components/TypingIndicator'
 import EmojiPicker from '../components/EmojiPicker'
 import AttachmentPicker from '../components/AttachmentPicker'
 import VoiceCallModal from '../components/VoiceCallModal'
-import VideoCallModal from '../components/VideoCallModal'
 import Modal from '../components/Modal'
 import { Message, PersonalityProfile } from '../types'
 import { CREDIT_PRICING } from '../types/database'
@@ -126,7 +125,6 @@ export default function ChatPage() {
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [showAttachmentPicker, setShowAttachmentPicker] = useState(false)
   const [showVoiceCallModal, setShowVoiceCallModal] = useState(false)
-  const [showVideoCallModal, setShowVideoCallModal] = useState(false)
   const [theme, setTheme] = useState<ChatTheme>('whatsapp')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const hasLoadedRef = useRef(false)
@@ -445,21 +443,10 @@ export default function ChatPage() {
     alert(`Voice sample "${file.name}" uploaded! This will be used to generate voice calls.`)
   }
 
-  // Handle media upload for video calls
-  const handleMediaUpload = (files: File[], type: 'photo' | 'video' | 'voice') => {
-    logger.log(`Uploading ${files.length} ${type} files for video:`, files.map(f => f.name))
-    // TODO: Store media with profile
-  }
-
   // Handle buy credits
   const handleBuyVoiceCredits = () => {
     alert('Voice credits purchase coming soon! This will redirect to Stripe checkout.')
     setShowVoiceCallModal(false)
-  }
-
-  const handleBuyVideoCredits = () => {
-    alert('Video credits purchase coming soon! This will redirect to Stripe checkout.')
-    setShowVideoCallModal(false)
   }
 
   if (isLoading) {
@@ -648,11 +635,11 @@ export default function ChatPage() {
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowVideoCallModal(true)}
-                  className="p-2 hover:bg-black/10 rounded-full transition"
-                  title="Video Call - Buy Credits"
+                  onClick={() => navigate(`/video?profile=${activeConvo.profileId}`)}
+                  className="p-2 hover:bg-purple-500/20 rounded-full transition group"
+                  title="Start Video Call"
                 >
-                  <Video className={`w-5 h-5 ${currentTheme.textMuted}`} />
+                  <Video className={`w-5 h-5 ${currentTheme.textMuted} group-hover:text-purple-500 transition`} />
                 </button>
                 <button
                   onClick={() => {
@@ -804,18 +791,6 @@ export default function ChatPage() {
           hasVoiceSample={false}
           onUploadVoiceSample={handleVoiceSampleUpload}
           onBuyCredits={handleBuyVoiceCredits}
-          theme={theme}
-        />
-      )}
-
-      {showVideoCallModal && activeConvo && (
-        <VideoCallModal
-          onClose={() => setShowVideoCallModal(false)}
-          profileName={activeConvo.profile.name}
-          hasVoiceSample={false}
-          hasVisualMedia={!!(activeConvo.profile.photoUrl || activeConvo.profile.photoUrls?.length)}
-          onUploadMedia={handleMediaUpload}
-          onBuyCredits={handleBuyVideoCredits}
           theme={theme}
         />
       )}
