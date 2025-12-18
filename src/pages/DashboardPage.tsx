@@ -174,14 +174,21 @@ export default function DashboardPage() {
   }
 
   const handleStartCall = async (profile: ProfileWithStats) => {
-    if (!encryptionKey) return
-
     try {
-      // Check if voice samples exist for this profile
-      const profileData = await getSecure<StoredProfileData>(
-        `profile_data_${profile.id}`,
-        encryptionKey
-      )
+      // Load profile data from storage
+      let profileData: StoredProfileData | null = null
+
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        profileData = await getSecure<StoredProfileData>(
+          `profile_data_${profile.id}`,
+          encryptionKey
+        )
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(`profile_data_${profile.id}`)
+        profileData = stored ? JSON.parse(stored) : null
+      }
 
       if (!profileData || !profileData.voiceSamples || profileData.voiceSamples.length === 0) {
         // No voice samples - redirect to improvement page
