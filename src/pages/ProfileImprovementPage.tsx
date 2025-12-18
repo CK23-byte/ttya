@@ -35,7 +35,7 @@ import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
-import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
+import { uploadFileToStorage, prepareAudioForVoiceCloning, getSignedUrl } from '../utils/supabaseStorage'
 import JSZip from 'jszip'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
@@ -61,8 +61,8 @@ interface AvatarConfig {
 interface StoredProfileData {
   textNotes: string[]
   voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
-  photos: { id: string; url: string; name: string }[]
-  videos: { id: string; url: string; name: string }[]
+  photos: { id: string; url: string; name: string; storagePath?: string }[]
+  videos: { id: string; url: string; name: string; storagePath?: string }[]
   voiceConfig?: VoiceConfig // Voice configuration for calls
   avatarConfig?: AvatarConfig // Avatar configuration for video calls
 }
@@ -71,8 +71,8 @@ interface StoredProfileData {
 interface ProfileData {
   textNotes: string[]
   voiceSamples: { id: string; blob: Blob; duration: number; name: string }[]
-  photos: { id: string; url: string; name: string }[]
-  videos: { id: string; url: string; name: string }[]
+  photos: { id: string; url: string; name: string; storagePath?: string }[]
+  videos: { id: string; url: string; name: string; storagePath?: string }[]
   voiceConfig?: VoiceConfig // Voice configuration for calls
   avatarConfig?: AvatarConfig // Avatar configuration for video calls
 }
@@ -1053,11 +1053,27 @@ export default function ProfileImprovementPage() {
     setAvatarCreationStatus('uploading')
 
     try {
-      // Use the first uploaded video URL
-      const videoUrl = profileData.videos[0].url
+      // Get the first uploaded video
+      const firstVideo = profileData.videos[0]
       const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
 
-      logger.log('Creating avatar from video:', { videoUrl, avatarName })
+      logger.log('Creating avatar from video:', {
+        videoPath: firstVideo.storagePath || 'unknown',
+        videoUrl: firstVideo.url,
+        avatarName
+      })
+
+      // Generate a signed URL (valid for 1 hour) if we have storagePath
+      let videoUrl = firstVideo.url
+      if (firstVideo.storagePath) {
+        try {
+          videoUrl = await getSignedUrl(firstVideo.storagePath, 'user-uploads', 3600)
+          logger.log('Generated signed URL for HeyGen:', videoUrl.substring(0, 100) + '...')
+        } catch (error) {
+          logger.warn('Failed to generate signed URL, falling back to public URL:', error)
+          // Fall back to public URL
+        }
+      }
 
       // Send video URL to API (API will download it)
       const response = await fetch('/api/heygen/avatar', {
