@@ -60,48 +60,42 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
 
   console.log('Creating HeyGen avatar:', { avatarName, videoUrl })
 
-  // Download video from URL
-  console.log('Downloading video from URL...', { url: videoUrl.substring(0, 100) + '...' })
-  const videoResponse = await fetch(videoUrl)
-  console.log('Video download response:', {
-    status: videoResponse.status,
-    statusText: videoResponse.statusText,
-    contentType: videoResponse.headers.get('content-type')
+  // Download image/video from URL
+  console.log('Downloading media from URL...', { url: videoUrl.substring(0, 100) + '...' })
+  const mediaResponse = await fetch(videoUrl)
+  console.log('Media download response:', {
+    status: mediaResponse.status,
+    statusText: mediaResponse.statusText,
+    contentType: mediaResponse.headers.get('content-type')
   })
 
-  if (!videoResponse.ok) {
+  if (!mediaResponse.ok) {
     return res.status(400).json({
-      error: 'Failed to download video from URL',
-      details: `HTTP ${videoResponse.status}: ${videoResponse.statusText}`,
-      hint: 'Make sure the video file exists and the URL is accessible'
+      error: 'Failed to download media from URL',
+      details: `HTTP ${mediaResponse.status}: ${mediaResponse.statusText}`,
+      hint: 'Make sure the file exists and the URL is accessible'
     })
   }
 
-  const videoBuffer = Buffer.from(await videoResponse.arrayBuffer())
-  console.log('Video downloaded successfully:', {
-    size: videoBuffer.length,
-    sizeInMB: (videoBuffer.length / (1024 * 1024)).toFixed(2)
+  const mediaBuffer = Buffer.from(await mediaResponse.arrayBuffer())
+  const contentType = mediaResponse.headers.get('content-type') || 'image/jpeg'
+  console.log('Media downloaded successfully:', {
+    size: mediaBuffer.length,
+    sizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2),
+    contentType
   })
 
-  // HeyGen expects multipart/form-data
-  const FormData = (await import('form-data')).default
-  const formData = new FormData()
-  formData.append('file', videoBuffer, {
-    filename: 'avatar.mp4',
-    contentType: 'video/mp4'
-  })
-  formData.append('avatar_name', avatarName)
-
-  // Upload to HeyGen - Using upload.heygen.com domain for talking photos
-  // Documentation: https://docs.heygen.com/docs/photo-avatars-api
+  // HeyGen expects binary data with image content-type
+  // Documentation: https://docs.heygen.com/reference/upload-talking-photo
   console.log('Uploading to HeyGen upload.heygen.com/v1/talking_photo...')
   const response = await fetch('https://upload.heygen.com/v1/talking_photo', {
     method: 'POST',
     headers: {
       'X-Api-Key': HEYGEN_API_KEY!,
-      ...formData.getHeaders()
+      'Content-Type': contentType.startsWith('image/') ? contentType : 'image/jpeg',
+      'Accept': 'application/json'
     },
-    body: formData as any
+    body: mediaBuffer
   })
 
   if (!response.ok) {
@@ -125,15 +119,17 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
     }
 
     // Provide specific guidance based on status code
-    let hint = 'Check that your video meets HeyGen requirements (frontal face, good lighting, 2-10 seconds, max 50MB)'
-    if (response.status === 403) {
+    let hint = 'Check that your photo meets HeyGen requirements (frontal face, good lighting, clear image)'
+    if (response.status === 400) {
+      hint = 'Bad Request: The photo data format is incorrect. Make sure you are uploading a valid image file (JPG, PNG). HeyGen requires a photo showing a clear frontal face.'
+    } else if (response.status === 403) {
       hint = 'Access Forbidden: Your HeyGen account may not have access to Talking Photo uploads. Free plan has 3 photo avatars available. Please check: 1) Your HeyGen account has credits, 2) Visit https://app.heygen.com/billing to verify your plan.'
     } else if (response.status === 404) {
       hint = 'The HeyGen upload endpoint was not found. Please verify the API is accessible and your account has the Photo Avatar feature enabled.'
     } else if (response.status === 401) {
       hint = 'Unauthorized: Your HeyGen API key is invalid. Please verify your HEYGEN_API_KEY environment variable.'
     } else if (response.status === 413) {
-      hint = 'File too large. HeyGen has a maximum file size limit (typically 50MB). Try compressing your video or using a shorter clip.'
+      hint = 'File too large. HeyGen has a maximum file size limit. Try using a smaller or compressed image.'
     }
 
     return res.status(response.status).json({
