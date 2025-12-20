@@ -1145,18 +1145,12 @@ export default function ProfileImprovementPage() {
         avatarName
       })
 
-      // Generate a signed URL (valid for 1 hour) if we have storagePath
+      // Use public URL directly since bucket is public
+      // Signed URLs are returning multipart form data instead of the image
       let photoUrl = firstPhoto.url
       setAvatarCreationProgress(20) // URL generation progress
-      if (firstPhoto.storagePath) {
-        try {
-          photoUrl = await getSignedUrl(firstPhoto.storagePath, 'user-uploads', 3600)
-          logger.log('Generated signed URL for HeyGen:', photoUrl.substring(0, 100) + '...')
-        } catch (error) {
-          logger.warn('Failed to generate signed URL, falling back to public URL:', error)
-          // Fall back to public URL
-        }
-      }
+
+      logger.log('Using public URL for HeyGen:', photoUrl.substring(0, 100) + '...')
 
       setAvatarCreationProgress(30) // Before API call
       // Send photo URL to API (API will download and convert it to JPG if needed)
