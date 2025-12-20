@@ -1125,8 +1125,8 @@ export default function ProfileImprovementPage() {
 
   // Avatar creation handler
   const handleCreateAvatar = async () => {
-    if (!profileData.videos || profileData.videos.length === 0) {
-      showModal('No Video', 'Please upload a video first! Upload a 2-10 second video with clear frontal face and good lighting.', 'warning')
+    if (!profileData.photos || profileData.photos.length === 0) {
+      showModal('No Photo', 'Please upload a photo first! Upload a clear photo showing frontal face with good lighting.', 'warning')
       return
     }
 
@@ -1135,23 +1135,23 @@ export default function ProfileImprovementPage() {
     setAvatarCreationProgress(10) // Initial progress
 
     try {
-      // Get the first uploaded video
-      const firstVideo = profileData.videos[0]
+      // Get the first uploaded photo
+      const firstPhoto = profileData.photos[0]
       const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
 
-      logger.log('Creating avatar from video:', {
-        videoPath: firstVideo.storagePath || 'unknown',
-        videoUrl: firstVideo.url,
+      logger.log('Creating avatar from photo:', {
+        photoPath: firstPhoto.storagePath || 'unknown',
+        photoUrl: firstPhoto.url,
         avatarName
       })
 
       // Generate a signed URL (valid for 1 hour) if we have storagePath
-      let videoUrl = firstVideo.url
+      let photoUrl = firstPhoto.url
       setAvatarCreationProgress(20) // URL generation progress
-      if (firstVideo.storagePath) {
+      if (firstPhoto.storagePath) {
         try {
-          videoUrl = await getSignedUrl(firstVideo.storagePath, 'user-uploads', 3600)
-          logger.log('Generated signed URL for HeyGen:', videoUrl.substring(0, 100) + '...')
+          photoUrl = await getSignedUrl(firstPhoto.storagePath, 'user-uploads', 3600)
+          logger.log('Generated signed URL for HeyGen:', photoUrl.substring(0, 100) + '...')
         } catch (error) {
           logger.warn('Failed to generate signed URL, falling back to public URL:', error)
           // Fall back to public URL
@@ -1159,12 +1159,12 @@ export default function ProfileImprovementPage() {
       }
 
       setAvatarCreationProgress(30) // Before API call
-      // Send video URL to API (API will download it)
+      // Send photo URL to API (API will download and convert it to JPG if needed)
       const response = await fetch('/api/heygen/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          videoUrl,
+          videoUrl: photoUrl, // Keep param name for compatibility
           avatarName
         })
       })
@@ -2000,19 +2000,18 @@ export default function ProfileImprovementPage() {
                   {!profileData.avatarConfig.customAvatarId ? (
                     <>
                       <p className="text-sm text-pink-800">
-                        <strong>Avatar Creation:</strong> Upload an existing video (2-10 seconds) of a loved one with a clear frontal view of the face and good lighting. This will be used to create your custom AI avatar.
+                        <strong>Avatar Creation:</strong> Upload a clear photo of your loved one showing a frontal view of the face with good lighting. This will be used to create your custom talking AI avatar. JPG/JPEG format recommended.
                       </p>
 
                       {/* Avatar Preview */}
-                      {profileData.videos.length > 0 && (
+                      {profileData.photos.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-xs font-medium text-pink-900">Preview (using first video):</p>
-                          <div className="relative rounded-lg overflow-hidden bg-black max-w-xs mx-auto">
-                            <video
-                              src={profileData.videos[0].url}
-                              className="w-full"
-                              controls
-                              muted
+                          <p className="text-xs font-medium text-pink-900">Preview (using first photo):</p>
+                          <div className="relative rounded-lg overflow-hidden bg-gray-100 max-w-xs mx-auto">
+                            <img
+                              src={profileData.photos[0].url}
+                              alt="Avatar preview"
+                              className="w-full object-contain"
                             />
                           </div>
                         </div>
@@ -2022,9 +2021,9 @@ export default function ProfileImprovementPage() {
                       <div className="space-y-2">
                         <button
                           onClick={handleCreateAvatar}
-                          disabled={isCreatingAvatar || profileData.videos.length === 0}
+                          disabled={isCreatingAvatar || profileData.photos.length === 0}
                           className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                            isCreatingAvatar || profileData.videos.length === 0
+                            isCreatingAvatar || profileData.photos.length === 0
                               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                               : 'bg-pink-500 text-white hover:bg-pink-600'
                           }`}
@@ -2032,7 +2031,7 @@ export default function ProfileImprovementPage() {
                           {!isCreatingAvatar && (
                             <>
                               <Upload className="w-5 h-5" />
-                              Maak Avatar van Video
+                              Create Avatar from Photo
                             </>
                           )}
                           {isCreatingAvatar && avatarCreationStatus === 'uploading' && (

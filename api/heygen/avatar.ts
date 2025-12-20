@@ -77,13 +77,35 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
     })
   }
 
-  const mediaBuffer = Buffer.from(await mediaResponse.arrayBuffer())
+  let mediaBuffer = Buffer.from(await mediaResponse.arrayBuffer())
   const contentType = mediaResponse.headers.get('content-type') || 'image/jpeg'
   console.log('Media downloaded successfully:', {
     size: mediaBuffer.length,
     sizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2),
     contentType
   })
+
+  // Convert image to JPG if it's not already (HeyGen only accepts JPG/JPEG)
+  let finalContentType = 'image/jpeg'
+  if (contentType && !contentType.includes('jpeg') && !contentType.includes('jpg')) {
+    console.log('Converting image to JPEG format for HeyGen compatibility...')
+    try {
+      // Use sharp library to convert to JPG
+      const sharp = (await import('sharp')).default
+      mediaBuffer = await sharp(mediaBuffer)
+        .jpeg({ quality: 95 }) // High quality JPG
+        .toBuffer()
+      console.log('Image converted to JPEG:', {
+        originalFormat: contentType,
+        newSize: mediaBuffer.length,
+        newSizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2)
+      })
+    } catch (convertError) {
+      console.warn('Image conversion failed, using original:', convertError)
+      // If conversion fails, try with original format
+      finalContentType = contentType.startsWith('image/') ? contentType : 'image/jpeg'
+    }
+  }
 
   // HeyGen expects binary data with image content-type
   // Documentation: https://docs.heygen.com/reference/upload-talking-photo
@@ -92,7 +114,7 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
     method: 'POST',
     headers: {
       'X-Api-Key': HEYGEN_API_KEY!,
-      'Content-Type': contentType.startsWith('image/') ? contentType : 'image/jpeg',
+      'Content-Type': finalContentType,
       'Accept': 'application/json'
     },
     body: mediaBuffer
