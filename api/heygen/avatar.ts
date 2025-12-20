@@ -77,8 +77,30 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
     })
   }
 
-  let mediaBuffer = Buffer.from(await mediaResponse.arrayBuffer())
   const contentType = mediaResponse.headers.get('content-type') || 'image/jpeg'
+
+  // Check if we got JSON instead of an image (common Supabase Storage error)
+  if (contentType.includes('application/json')) {
+    const errorText = await mediaResponse.text()
+    console.error('❌ Received JSON instead of image from URL:', {
+      url: videoUrl.substring(0, 100) + '...',
+      contentType,
+      response: errorText
+    })
+
+    return res.status(400).json({
+      error: 'Storage URL returned JSON instead of image',
+      details: 'The photo URL is not accessible. This usually means Supabase Storage is not configured correctly.',
+      hint: 'Check that the "user-uploads" bucket exists in Supabase Storage and has the correct RLS policies to allow public reads.',
+      technicalDetails: {
+        contentType,
+        url: videoUrl.substring(0, 100) + '...',
+        response: errorText
+      }
+    })
+  }
+
+  let mediaBuffer = Buffer.from(await mediaResponse.arrayBuffer())
   console.log('Media downloaded successfully:', {
     size: mediaBuffer.length,
     sizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2),

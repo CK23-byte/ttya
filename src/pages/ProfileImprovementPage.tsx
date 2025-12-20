@@ -489,7 +489,7 @@ export default function ProfileImprovementPage() {
             try {
               const { publicUrl, path } = await uploadFileToStorage(
                 photoFile,
-                'user-uploads',
+                'living-legacy',
                 `profiles/${profile.id}/photos`
               )
 
@@ -513,7 +513,7 @@ export default function ProfileImprovementPage() {
             try {
               const { publicUrl, path } = await uploadFileToStorage(
                 videoFile,
-                'user-uploads',
+                'living-legacy',
                 `profiles/${profile.id}/videos`
               )
 
@@ -785,7 +785,7 @@ export default function ProfileImprovementPage() {
         // Upload to Supabase Storage
         const { publicUrl, path } = await uploadFileToStorage(
           file,
-          'user-uploads',
+          'living-legacy',
           `profiles/${profile.id}/photos`
         )
 
@@ -826,7 +826,7 @@ export default function ProfileImprovementPage() {
       // Upload to Supabase Storage
       const { publicUrl, path } = await uploadFileToStorage(
         file,
-        'user-uploads',
+        'living-legacy',
         `profiles/${profile.id}/videos`
       )
 
@@ -901,7 +901,7 @@ export default function ProfileImprovementPage() {
       // Upload to Supabase Storage
       const { publicUrl, path } = await uploadFileToStorage(
         file,
-        'user-uploads',
+        'living-legacy',
         `profiles/${profile.id}/photos`
       )
 
@@ -1150,7 +1150,7 @@ export default function ProfileImprovementPage() {
       setAvatarCreationProgress(20) // URL generation progress
       if (firstPhoto.storagePath) {
         try {
-          photoUrl = await getSignedUrl(firstPhoto.storagePath, 'user-uploads', 3600)
+          photoUrl = await getSignedUrl(firstPhoto.storagePath, 'living-legacy', 3600)
           logger.log('Generated signed URL for HeyGen:', photoUrl.substring(0, 100) + '...')
         } catch (error) {
           logger.warn('Failed to generate signed URL, falling back to public URL:', error)
