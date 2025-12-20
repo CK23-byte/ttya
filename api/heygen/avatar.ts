@@ -87,25 +87,61 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
 
   // Convert image to JPG if it's not already (HeyGen only accepts JPG/JPEG)
   let finalContentType = 'image/jpeg'
+  let conversionAttempted = false
+  let conversionSuccess = false
+
   if (contentType && !contentType.includes('jpeg') && !contentType.includes('jpg')) {
+    console.log('⚠️ Non-JPEG format detected:', contentType)
     console.log('Converting image to JPEG format for HeyGen compatibility...')
+    conversionAttempted = true
+
     try {
       // Use sharp library to convert to JPG
       const sharp = (await import('sharp')).default
+      console.log('✓ Sharp library loaded successfully')
+
+      const originalSize = mediaBuffer.length
       mediaBuffer = await sharp(mediaBuffer)
         .jpeg({ quality: 95 }) // High quality JPG
         .toBuffer()
-      console.log('Image converted to JPEG:', {
+
+      conversionSuccess = true
+      console.log('✓ Image converted to JPEG successfully:', {
         originalFormat: contentType,
+        originalSize: originalSize,
         newSize: mediaBuffer.length,
+        originalSizeInMB: (originalSize / (1024 * 1024)).toFixed(2),
         newSizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2)
       })
-    } catch (convertError) {
-      console.warn('Image conversion failed, using original:', convertError)
-      // If conversion fails, try with original format
-      finalContentType = contentType.startsWith('image/') ? contentType : 'image/jpeg'
+    } catch (convertError: any) {
+      console.error('❌ Image conversion failed:', {
+        error: convertError.message,
+        stack: convertError.stack,
+        contentType: contentType
+      })
+
+      // Return error to user with helpful message
+      return res.status(400).json({
+        error: 'Image format conversion failed',
+        details: `Failed to convert ${contentType} to JPEG: ${convertError.message}`,
+        hint: 'Please upload a JPG/JPEG image directly, or try a different photo. HeyGen only accepts JPEG format.',
+        technicalDetails: {
+          originalFormat: contentType,
+          convertError: convertError.message
+        }
+      })
     }
+  } else {
+    console.log('✓ Image is already in JPEG format:', contentType)
   }
+
+  console.log('Final upload details:', {
+    contentType: finalContentType,
+    bufferSize: mediaBuffer.length,
+    sizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2),
+    conversionAttempted,
+    conversionSuccess
+  })
 
   // HeyGen expects binary data with image content-type
   // Documentation: https://docs.heygen.com/reference/upload-talking-photo
