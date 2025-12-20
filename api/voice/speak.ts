@@ -26,11 +26,15 @@ export default async function handler(
 
   // Check required environment variables
   if (!ELEVENLABS_API_KEY) {
-    console.error('ElevenLabs API key not configured')
+    console.error('❌ ElevenLabs API key not configured in environment variables')
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('ELEVEN')))
     return res.status(500).json({
-      error: 'ElevenLabs API key not configured'
+      error: 'ElevenLabs API key not configured',
+      hint: 'Set ELEVENLABS_API_KEY in Vercel environment variables. Go to Project Settings > Environment Variables and add ELEVENLABS_API_KEY with your API key from https://elevenlabs.io/app/settings/api-keys'
     })
   }
+
+  console.log('✓ ElevenLabs API key found, length:', ELEVENLABS_API_KEY.length)
 
   try {
     const body = req.body as RequestBody
