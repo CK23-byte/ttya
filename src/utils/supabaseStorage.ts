@@ -42,12 +42,17 @@ export async function uploadFileToStorage(
       path: filePath
     })
 
-    // Upload file
+    // Convert File to Blob to avoid multipart form data wrapper
+    // This ensures raw file content is uploaded, not form metadata
+    const blob = new Blob([file], { type: file.type })
+
+    // Upload blob (raw file content)
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, {
+      .upload(filePath, blob, {
         cacheControl: '3600',
-        upsert: false
+        upsert: false,
+        contentType: file.type // Explicitly set content type
       })
 
     if (error) {
