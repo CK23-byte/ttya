@@ -831,10 +831,6 @@ export default function ProfileImprovementPage() {
       }
     }
 
-    // Auto-save after photo upload
-    console.log('💾 Auto-saving profile data after photo upload...')
-    await saveProfileData()
-
     // Reset file input to allow re-uploading same file
     e.target.value = ''
   }
@@ -1903,12 +1899,21 @@ export default function ProfileImprovementPage() {
 
               {profileData.photos.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {profileData.photos.map((photo) => (
+                  {profileData.photos.map((photo) => {
+                    console.log('🖼️ Rendering photo:', photo.url)
+                    return (
                     <div key={photo.id} className="relative group">
                       <img
                         src={photo.url}
                         alt={photo.name}
                         className="w-full h-32 object-cover rounded-lg"
+                        onError={(e) => {
+                          console.error('❌ Failed to load photo:', photo.url)
+                          e.currentTarget.style.border = '2px solid red'
+                        }}
+                        onLoad={() => {
+                          console.log('✅ Photo loaded successfully:', photo.url)
+                        }}
                       />
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg">
                         {editingItemId === photo.id ? (
@@ -1957,7 +1962,8 @@ export default function ProfileImprovementPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
