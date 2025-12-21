@@ -116,6 +116,8 @@ export default function ProfileImprovementPage() {
   const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
   const [isEditingProfileName, setIsEditingProfileName] = useState(false)
   const [tempProfileName, setTempProfileName] = useState('')
+  const [isEditingRelationship, setIsEditingRelationship] = useState(false)
+  const [tempRelationship, setTempRelationship] = useState('')
 
   // Modal state
   const [modal, setModal] = useState<{
@@ -829,6 +831,10 @@ export default function ProfileImprovementPage() {
       }
     }
 
+    // Auto-save after photo upload
+    console.log('💾 Auto-saving profile data after photo upload...')
+    await saveProfileData()
+
     // Reset file input to allow re-uploading same file
     e.target.value = ''
   }
@@ -905,6 +911,41 @@ export default function ProfileImprovementPage() {
     } catch (error) {
       logger.error('Error updating profile name:', error)
       showModal('Update Failed', 'Something went wrong while updating the name.', 'error')
+    }
+  }
+
+  const handleRelationshipSave = async () => {
+    if (!tempRelationship.trim() || !profile) return
+
+    try {
+      // Update profile in storage
+      let profiles: PersonalityProfile[] = []
+
+      if (encryptionKey) {
+        profiles = await getSecure<PersonalityProfile[]>(PROFILES_STORAGE_KEY, encryptionKey) || []
+      } else {
+        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+        profiles = stored ? JSON.parse(stored) : []
+      }
+
+      const updatedProfiles = profiles.map(p =>
+        p.id === profile.id ? { ...p, relationship: tempRelationship.trim() } : p
+      )
+
+      if (encryptionKey) {
+        await setSecure(PROFILES_STORAGE_KEY, updatedProfiles, encryptionKey)
+      } else {
+        localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(updatedProfiles))
+      }
+
+      // Update local state
+      setProfile({ ...profile, relationship: tempRelationship.trim() })
+      setIsEditingRelationship(false)
+
+      showModal('Relationship Updated', 'The relationship has been successfully updated.', 'success')
+    } catch (error) {
+      logger.error('Error updating relationship:', error)
+      showModal('Update Failed', 'Something went wrong while updating the relationship.', 'error')
     }
   }
 
@@ -1384,7 +1425,56 @@ export default function ProfileImprovementPage() {
                   </button>
                 </div>
               )}
-              <p className="text-gray-600 capitalize">{profile.relationship}</p>
+              {isEditingRelationship ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={tempRelationship}
+                    onChange={(e) => setTempRelationship(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRelationshipSave()
+                      if (e.key === 'Escape') {
+                        setIsEditingRelationship(false)
+                        setTempRelationship('')
+                      }
+                    }}
+                    className="flex-1 px-3 py-1 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                    placeholder="e.g., mother, friend, grandmother"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleRelationshipSave}
+                    className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    title="Save"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingRelationship(false)
+                      setTempRelationship('')
+                    }}
+                    className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 group/relationship">
+                  <p className="text-gray-600 capitalize">{profile.relationship}</p>
+                  <button
+                    onClick={() => {
+                      setIsEditingRelationship(true)
+                      setTempRelationship(profile.relationship)
+                    }}
+                    className="p-1 text-gray-400 opacity-0 group-hover/relationship:opacity-100 hover:text-blue-500 transition"
+                    title="Edit relationship"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
