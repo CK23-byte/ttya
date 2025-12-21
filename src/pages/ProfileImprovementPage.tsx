@@ -35,7 +35,7 @@ import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
-import { uploadFileToStorage, prepareAudioForVoiceCloning, getSignedUrl } from '../utils/supabaseStorage'
+import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
 import JSZip from 'jszip'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
