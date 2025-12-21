@@ -38,9 +38,9 @@ interface ProfileWithStats extends PersonalityProfile {
 
 // Voice configuration interface
 interface VoiceConfig {
-  type: 'cloned' | 'standard' // cloned = ElevenLabs, standard = OpenAI
-  clonedVoiceId?: string // ElevenLabs voice ID (if type is 'cloned')
-  clonedVoiceName?: string // ElevenLabs voice name
+  type: 'cloned' | 'standard' // cloned = voice AI service, standard = OpenAI
+  clonedVoiceId?: string // voice AI service voice ID (if type is 'cloned')
+  clonedVoiceName?: string // voice AI service voice name
   standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if type is 'standard')
 }
 

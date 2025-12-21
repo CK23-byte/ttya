@@ -33,7 +33,7 @@ export default function VoiceCallPage() {
 
   // Get voice config from URL params
   const voiceType = searchParams.get('voiceType') as 'cloned' | 'standard' | null
-  const voiceId = searchParams.get('voiceId') // ElevenLabs voice ID (if cloned)
+  const voiceId = searchParams.get('voiceId') // voice AI service voice ID (if cloned)
   const voice = searchParams.get('voice') as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' | null // OpenAI voice (if standard)
 
   const [isMuted, setIsMuted] = useState(false)

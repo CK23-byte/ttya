@@ -574,8 +574,8 @@ export default function ProfileImprovementPage() {
       // Create recorder with simple webm format
       logger.log('🎤 Creating MediaRecorder...')
 
-      // Choose audio format that ElevenLabs supports
-      // ElevenLabs supports: MP3, WAV, FLAC, OGG, M4A (but NOT WEBM!)
+      // Choose audio format that voice AI service supports
+      // voice AI service supports: MP3, WAV, FLAC, OGG, M4A (but NOT WEBM!)
       let mimeType = 'audio/webm' // fallback
       if (MediaRecorder.isTypeSupported('audio/mp4')) {
         mimeType = 'audio/mp4'
@@ -1012,18 +1012,18 @@ export default function ProfileImprovementPage() {
       // Get MIME type from processed audio
       const mimeType = audioFile.type || 'audio/mp4'
 
-      logger.log('Cloning voice to ElevenLabs...', {
+      logger.log('Cloning voice to voice AI service...', {
         audioSize: audioFile.size,
         mimeType,
         duration: sample.duration,
         wasVideo: originalFile.type.startsWith('video/')
       })
 
-      // Validate audio duration (ElevenLabs requires at least 30 seconds, recommends 1+ minute)
+      // Validate audio duration (voice AI service requires at least 30 seconds, recommends 1+ minute)
       if (!sample.duration || sample.duration < 30) {
         showModal(
           'Voice Sample Too Short',
-          `Duration: ${sample.duration || 0} seconds.\n\nElevenLabs requires at least 30 seconds of audio. Please record a longer sample.`,
+          `Duration: ${sample.duration || 0} seconds.\n\nvoice AI service requires at least 30 seconds of audio. Please record a longer sample.`,
           'warning'
         )
         setIsCloningVoice(false)
@@ -1062,7 +1062,7 @@ export default function ProfileImprovementPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        logger.error('❌ ElevenLabs API Error:', {
+        logger.error('❌ voice AI service API Error:', {
           status: response.status,
           error: error.error,
           details: error.details,
@@ -1150,7 +1150,7 @@ export default function ProfileImprovementPage() {
       let photoUrl = firstPhoto.url
       setAvatarCreationProgress(20) // URL generation progress
 
-      logger.log('Using public URL for HeyGen:', photoUrl.substring(0, 100) + '...')
+      logger.log('Using public URL for video service:', photoUrl.substring(0, 100) + '...')
 
       setAvatarCreationProgress(30) // Before API call
       // Send photo URL to API (API will download and convert it to JPG if needed)
