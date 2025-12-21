@@ -17,8 +17,6 @@ import {
   Video,
   Lock,
   Shield,
-  Crown,
-  Zap,
   Check,
   Mail,
   Globe,
