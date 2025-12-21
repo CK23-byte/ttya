@@ -771,11 +771,25 @@ export default function ProfileImprovementPage() {
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('📸 Photo upload triggered')
+
     const files = Array.from(e.target.files || [])
-    if (!profile) return
+    console.log('📸 Files selected:', files.length, files)
+
+    if (!profile) {
+      console.error('❌ No profile found, cannot upload photos')
+      showModal('Upload Error', 'Profile not loaded. Please refresh the page and try again.', 'error')
+      return
+    }
+
+    if (files.length === 0) {
+      console.log('⚠️ No files selected')
+      return
+    }
 
     for (const file of files) {
       try {
+        console.log('📤 Uploading photo:', file.name, file.type, file.size)
         logger.log('Uploading photo to Supabase Storage...', {
           name: file.name,
           size: file.size,
@@ -791,6 +805,8 @@ export default function ProfileImprovementPage() {
 
         const id = `photo_${Date.now()}_${Math.random()}`
 
+        console.log('✅ Photo uploaded, adding to state:', id, publicUrl)
+
         setProfileData(prev => ({
           ...prev,
           photos: [
@@ -805,11 +821,16 @@ export default function ProfileImprovementPage() {
         }))
 
         logger.log('Photo uploaded successfully:', publicUrl)
+        showModal('Upload Success', `${file.name} uploaded successfully!`, 'success')
       } catch (error) {
+        console.error('❌ Error uploading photo:', error)
         logger.error('Error uploading photo:', error)
         showModal('Upload Failed', `Failed to upload ${file.name}. Please try again.`, 'error')
       }
     }
+
+    // Reset file input to allow re-uploading same file
+    e.target.value = ''
   }
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2058,14 +2079,6 @@ export default function ProfileImprovementPage() {
                           </div>
                         )}
                       </div>
-                      {profileData.videos.length === 0 && (
-                        <p className="text-xs text-pink-600">
-                          ⚠️ Please upload a video first (see Videos section above)
-                        </p>
-                      )}
-                      <p className="text-xs text-pink-600">
-                        💡 <strong>Tips:</strong> Upload een bestaande video (2-10 seconden) waarin het gezicht duidelijk te zien is met goede belichting. Dit kan een oude video zijn van een geliefd persoon.
-                      </p>
                     </>
                   ) : (
                     <div className="space-y-3">

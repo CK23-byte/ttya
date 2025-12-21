@@ -57,17 +57,17 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
               <Mail className="w-8 h-8 text-gray-400" />
             </div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">
-              E-mail login niet beschikbaar
+              Email login not available
             </h2>
             <p className="text-gray-600 text-sm mb-6">
-              Supabase is niet geconfigureerd. Neem contact op met de beheerder.
+              Supabase is not configured. Please contact the administrator.
             </p>
             {onBack && (
               <button
                 onClick={onBack}
                 className="text-orange-600 hover:text-orange-700 font-medium"
               >
-                Terug
+                Back
               </button>
             )}
           </div>
@@ -99,7 +99,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
 
     if (mode === 'signup') {
       if (password !== confirmPassword) {
-        setError('Wachtwoorden komen niet overeen')
+        setError('Passwords do not match')
         return
       }
 
@@ -119,7 +119,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
         const { error } = await signIn(email, password)
         if (error) {
           setError(error.message === 'Invalid login credentials'
-            ? 'Ongeldige inloggegevens'
+            ? 'Invalid login credentials'
             : error.message)
         } else {
           onSuccess?.()
@@ -128,19 +128,19 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
         const { error } = await signUp(email, password, displayName)
         if (error) {
           if (error.message.includes('already registered')) {
-            setError('Dit e-mailadres is al geregistreerd')
+            setError('This email address is already registered')
           } else {
             setError(error.message)
           }
         } else {
-          setMessage('Check je e-mail om je account te bevestigen!')
+          setMessage('Check your email to confirm your account!')
         }
       } else if (mode === 'reset') {
         const { error } = await resetPassword(email)
         if (error) {
           setError(error.message)
         } else {
-          setMessage('Check je e-mail voor een wachtwoord reset link')
+          setMessage('Check your email for a password reset link')
         }
       }
     } catch (err) {
@@ -185,7 +185,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
               className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm">Terug</span>
+              <span className="text-sm">Back</span>
             </button>
           )}
 
@@ -195,14 +195,14 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
               <Heart className="w-8 h-8 text-rose-500" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              {mode === 'signin' && 'Inloggen'}
-              {mode === 'signup' && 'Account aanmaken'}
-              {mode === 'reset' && 'Wachtwoord resetten'}
+              {mode === 'signin' && 'Sign In'}
+              {mode === 'signup' && 'Create Account'}
+              {mode === 'reset' && 'Reset Password'}
             </h1>
             <p className="text-gray-600 text-sm">
-              {mode === 'signin' && 'Log in met je e-mailadres'}
-              {mode === 'signup' && 'Maak een gratis account aan'}
-              {mode === 'reset' && 'We sturen je een reset link'}
+              {mode === 'signin' && 'Log in with your email address'}
+              {mode === 'signup' && 'Create a free account'}
+              {mode === 'reset' && 'We will send you a reset link'}
             </p>
           </div>
 
@@ -214,7 +214,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                 <div className="text-sm text-green-800">
                   <p className="font-semibold">Welcome Bonus!</p>
                   <p className="text-xs">
-                    Ontvang {CREDIT_PRICING.SIGNUP_BONUS} gratis credits bij registratie
+                    Get {CREDIT_PRICING.SIGNUP_BONUS} free credits upon registration
                   </p>
                 </div>
               </div>
@@ -261,7 +261,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                E-mailadres
+                Email Address
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -272,7 +272,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                  placeholder="jouw@email.com"
+                  placeholder="your@email.com"
                   required
                   disabled={isLoading}
                 />
@@ -283,7 +283,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
             {mode !== 'reset' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Wachtwoord
+                  Password
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -294,7 +294,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                     value={password}
                     onChange={(e) => handlePasswordChange(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                    placeholder={mode === 'signup' ? 'Minimaal 12 tekens' : 'Je wachtwoord'}
+                    placeholder={mode === 'signup' ? 'Minimum 12 characters' : 'Your password'}
                     required
                     disabled={isLoading}
                   />
@@ -326,9 +326,9 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                           passwordStrength === 'medium' ? 'text-yellow-600' :
                           'text-green-600'
                         }`}>
-                          {passwordStrength === 'weak' ? 'Zwak' :
-                           passwordStrength === 'medium' ? 'Gemiddeld' :
-                           'Sterk'}
+                          {passwordStrength === 'weak' ? 'Weak' :
+                           passwordStrength === 'medium' ? 'Medium' :
+                           'Strong'}
                         </span>
                       </div>
                     )}
@@ -353,7 +353,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
             {mode === 'signup' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bevestig wachtwoord
+                  Confirm Password
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -364,7 +364,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                    placeholder="Herhaal je wachtwoord"
+                    placeholder="Repeat your password"
                     required
                     disabled={isLoading}
                   />
@@ -381,13 +381,13 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Bezig...
+                  Loading...
                 </span>
               ) : (
                 <>
-                  {mode === 'signin' && 'Inloggen'}
-                  {mode === 'signup' && 'Account aanmaken'}
-                  {mode === 'reset' && 'Reset link versturen'}
+                  {mode === 'signin' && 'Sign In'}
+                  {mode === 'signup' && 'Create Account'}
+                  {mode === 'reset' && 'Send Reset Link'}
                 </>
               )}
             </button>
@@ -401,7 +401,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Of</span>
+                  <span className="px-2 bg-white text-gray-500">Or</span>
                 </div>
               </div>
 
@@ -439,13 +439,13 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                   onClick={() => { resetForm(); setMode('signup') }}
                   className="w-full text-sm text-gray-600 hover:text-orange-600 transition"
                 >
-                  Nog geen account? <span className="font-medium">Registreren</span>
+                  Don't have an account? <span className="font-medium">Sign Up</span>
                 </button>
                 <button
                   onClick={() => { resetForm(); setMode('reset') }}
                   className="w-full text-sm text-gray-500 hover:text-gray-700 transition"
                 >
-                  Wachtwoord vergeten?
+                  Forgot password?
                 </button>
               </>
             )}
@@ -455,7 +455,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                 onClick={() => { resetForm(); setMode('signin') }}
                 className="w-full text-sm text-gray-600 hover:text-orange-600 transition"
               >
-                Al een account? <span className="font-medium">Inloggen</span>
+                Already have an account? <span className="font-medium">Sign In</span>
               </button>
             )}
 
@@ -464,7 +464,7 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                 onClick={() => { resetForm(); setMode('signin') }}
                 className="w-full text-sm text-gray-600 hover:text-orange-600 transition"
               >
-                Terug naar inloggen
+                Back to sign in
               </button>
             )}
           </div>
@@ -472,8 +472,8 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
           {/* Credits Info */}
           {mode === 'signup' && (
             <div className="mt-6 text-xs text-gray-500 text-center">
-              <p>Credits worden gebruikt voor AI-gesprekken.</p>
-              <p>Je kunt later meer credits kopen.</p>
+              <p>Credits are used for AI conversations.</p>
+              <p>You can purchase more credits later.</p>
             </div>
           )}
         </div>
