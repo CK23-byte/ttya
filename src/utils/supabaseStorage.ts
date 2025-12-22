@@ -42,11 +42,18 @@ export async function uploadFileToStorage(
       path: filePath
     })
 
-    // Convert File to Blob to avoid multipart form data wrapper
-    // This ensures raw file content is uploaded, not form metadata
-    const blob = new Blob([file], { type: file.type })
+    // Read file as ArrayBuffer to get raw binary data
+    // This strips any multipart form wrappers and ensures pure binary upload
+    const arrayBuffer = await file.arrayBuffer()
+    const blob = new Blob([arrayBuffer], { type: file.type })
 
-    // Upload blob (raw file content)
+    logger.log('File converted to blob:', {
+      blobSize: blob.size,
+      blobType: blob.type,
+      originalSize: file.size
+    })
+
+    // Upload blob (raw binary content only)
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, blob, {
