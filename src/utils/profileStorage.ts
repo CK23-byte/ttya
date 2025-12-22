@@ -17,7 +17,7 @@ const PROFILES_STORAGE_KEY = 'personality_profiles'
  * Load all personality profiles for current user
  */
 export async function loadPersonalityProfiles(
-  encryptionKey: string | null
+  encryptionKey: CryptoKey | null
 ): Promise<PersonalityProfile[]> {
   try {
     if (encryptionKey) {
@@ -50,7 +50,22 @@ export async function loadPersonalityProfiles(
         id: row.profile_id,
         name: row.name,
         relationship: row.relationship,
-        description: row.description || ''
+        // Required fields with defaults
+        typicalPhrases: [],
+        hobbies: [],
+        habits: [],
+        humorStyle: 'Friendly and conversational',
+        traits: [],
+        tone: 'informal' as const,
+        emojiUsage: 'medium' as const,
+        systemPrompt: `You are ${row.name}, speaking in a natural, conversational way.`,
+        createdAt: new Date(row.created_at).getTime(),
+        updatedAt: new Date(row.updated_at).getTime(),
+        // Optional fields
+        photoUrl: undefined,
+        photoUrls: undefined,
+        birthDate: undefined,
+        dateSince: undefined
       }))
 
       logger.log('Loaded profiles from Supabase:', profiles.length)
@@ -71,7 +86,7 @@ export async function loadPersonalityProfiles(
  */
 export async function savePersonalityProfiles(
   profiles: PersonalityProfile[],
-  encryptionKey: string | null
+  encryptionKey: CryptoKey | null
 ): Promise<void> {
   try {
     if (encryptionKey) {
@@ -99,7 +114,7 @@ export async function savePersonalityProfiles(
           profile_id: profile.id,
           name: profile.name,
           relationship: profile.relationship,
-          description: profile.description || null
+          description: null // Not storing description separately
         }))
 
         const { error } = await supabase
@@ -130,7 +145,7 @@ export async function savePersonalityProfiles(
  */
 export async function loadProfileData<T = any>(
   profileId: string,
-  encryptionKey: string | null
+  encryptionKey: CryptoKey | null
 ): Promise<T | null> {
   try {
     const key = `profile_data_${profileId}`
@@ -178,7 +193,7 @@ export async function loadProfileData<T = any>(
 export async function saveProfileData(
   profileId: string,
   data: any,
-  encryptionKey: string | null
+  encryptionKey: CryptoKey | null
 ): Promise<void> {
   try {
     const key = `profile_data_${profileId}`
@@ -224,7 +239,7 @@ export async function saveProfileData(
  */
 export async function deletePersonalityProfile(
   profileId: string,
-  encryptionKey: string | null
+  encryptionKey: CryptoKey | null
 ): Promise<void> {
   try {
     if (encryptionKey) {

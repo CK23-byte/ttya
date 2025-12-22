@@ -29,7 +29,6 @@ import Modal from '../components/Modal'
 import { loadPersonalityProfiles, deletePersonalityProfile } from '../utils/profileStorage'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
-const PROFILES_STORAGE_KEY = 'personality_profiles'
 
 interface ProfileWithStats extends PersonalityProfile {
   messageCount: number

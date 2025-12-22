@@ -9,13 +9,10 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload, User, Check, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { setSecure, getSecure } from '../utils/secureStorage'
 import { parseWhatsAppExport, getUniqueSenders, filterBySender } from '../utils/whatsappParser'
 import { PersonalityProfile, WhatsAppMessage } from '../types'
 import { logger } from '../utils/logger'
 import { loadPersonalityProfiles, savePersonalityProfiles } from '../utils/profileStorage'
-
-const PERSONALITY_STORAGE_KEY = 'personality_profiles'
 
 type Step = 'upload' | 'select' | 'photo' | 'done'
 
