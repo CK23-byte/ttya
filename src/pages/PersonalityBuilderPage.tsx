@@ -13,6 +13,7 @@ import { setSecure, getSecure } from '../utils/secureStorage'
 import { parseWhatsAppExport, getUniqueSenders, filterBySender } from '../utils/whatsappParser'
 import { PersonalityProfile, WhatsAppMessage } from '../types'
 import { logger } from '../utils/logger'
+import { loadPersonalityProfiles, savePersonalityProfiles } from '../utils/profileStorage'
 
 const PERSONALITY_STORAGE_KEY = 'personality_profiles'
 
@@ -152,30 +153,11 @@ export default function PersonalityBuilderPage() {
       }
 
       // Load existing profiles and add new one
-      let existingProfiles: PersonalityProfile[] = []
-
-      if (encryptionKey) {
-        // Old password-based auth: use encrypted storage
-        existingProfiles = await getSecure<PersonalityProfile[]>(
-          PERSONALITY_STORAGE_KEY,
-          encryptionKey
-        ) || []
-      } else {
-        // Supabase users: use plain localStorage
-        const stored = localStorage.getItem(PERSONALITY_STORAGE_KEY)
-        existingProfiles = stored ? JSON.parse(stored) : []
-      }
-
+      const existingProfiles = await loadPersonalityProfiles(encryptionKey)
       const updatedProfiles = [...existingProfiles, profile]
 
-      // Save profiles
-      if (encryptionKey) {
-        // Save encrypted
-        await setSecure(PERSONALITY_STORAGE_KEY, updatedProfiles, encryptionKey)
-      } else {
-        // Save to plain localStorage for Supabase users
-        localStorage.setItem(PERSONALITY_STORAGE_KEY, JSON.stringify(updatedProfiles))
-      }
+      // Save profiles using centralized utility (handles both encrypted and Supabase database)
+      await savePersonalityProfiles(updatedProfiles, encryptionKey)
 
       logger.log('Profile created successfully:', profile.name)
       setStep('done')

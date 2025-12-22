@@ -36,6 +36,7 @@ import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
 import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
+import { loadProfileData as loadProfileDataFromStorage, saveProfileData as saveProfileDataToStorage } from '../utils/profileStorage'
 import JSZip from 'jszip'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
@@ -214,18 +215,8 @@ export default function ProfileImprovementPage() {
     if (!profileId) return
 
     try {
-      let data: StoredProfileData | null = null
-
-      if (encryptionKey) {
-        data = await getSecure<StoredProfileData>(
-          `profile_data_${profileId}`,
-          encryptionKey
-        )
-      } else {
-        // Supabase users: use plain localStorage
-        const stored = localStorage.getItem(`profile_data_${profileId}`)
-        data = stored ? JSON.parse(stored) : null
-      }
+      // Use centralized storage utility (handles both encrypted and Supabase)
+      const data = await loadProfileDataFromStorage<StoredProfileData>(profileId, encryptionKey)
 
       logger.log('Loading profile data:', data)
 
@@ -315,16 +306,8 @@ export default function ProfileImprovementPage() {
         voiceConfig: dataToStore.voiceConfig ? `${dataToStore.voiceConfig.type}` : 'none'
       })
 
-      if (encryptionKey) {
-        await setSecure(
-          `profile_data_${profileId}`,
-          dataToStore,
-          encryptionKey
-        )
-      } else {
-        // Supabase users: use plain localStorage
-        localStorage.setItem(`profile_data_${profileId}`, JSON.stringify(dataToStore))
-      }
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      await saveProfileDataToStorage(profileId, dataToStore, encryptionKey)
 
       logger.log('Profile data saved successfully')
 

@@ -26,6 +26,7 @@ import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile, Message } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
+import { loadPersonalityProfiles, deletePersonalityProfile } from '../utils/profileStorage'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
 const PROFILES_STORAGE_KEY = 'personality_profiles'
@@ -100,20 +101,9 @@ export default function DashboardPage() {
 
   const loadProfiles = async () => {
     try {
-      let savedProfiles: PersonalityProfile[] = []
-
-      if (encryptionKey) {
-        // Old password-based auth: use encrypted storage
-        savedProfiles = await getSecure<PersonalityProfile[]>(
-          PROFILES_STORAGE_KEY,
-          encryptionKey
-        ) || []
-      } else {
-        // Supabase users: use plain localStorage
-        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
-        savedProfiles = stored ? JSON.parse(stored) : []
-        logger.log('Loaded profiles for Supabase user:', savedProfiles.length)
-      }
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      const savedProfiles = await loadPersonalityProfiles(encryptionKey)
+      logger.log('Loaded profiles:', savedProfiles.length)
 
       // Load message stats for each profile
       const profilesWithStats = await Promise.all(
@@ -199,28 +189,8 @@ export default function DashboardPage() {
       'warning',
       async () => {
         try {
-          if (encryptionKey) {
-            // Delete from encrypted storage
-            const profiles = await getSecure<PersonalityProfile[]>(PROFILES_STORAGE_KEY, encryptionKey) || []
-            const updatedProfiles = profiles.filter(p => p.id !== profileId)
-            await import('../utils/secureStorage').then(({ setSecure }) =>
-              setSecure(PROFILES_STORAGE_KEY, updatedProfiles, encryptionKey)
-            )
-            // Delete messages
-            localStorage.removeItem(`${MESSAGES_STORAGE_PREFIX}${profileId}`)
-            // Delete profile data
-            localStorage.removeItem(`profile_data_${profileId}`)
-          } else {
-            // Delete from plain localStorage (Supabase users)
-            const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
-            const profiles: PersonalityProfile[] = stored ? JSON.parse(stored) : []
-            const updatedProfiles = profiles.filter(p => p.id !== profileId)
-            localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(updatedProfiles))
-            // Delete messages
-            localStorage.removeItem(`${MESSAGES_STORAGE_PREFIX}${profileId}`)
-            // Delete profile data
-            localStorage.removeItem(`profile_data_${profileId}`)
-          }
+          // Use centralized delete utility (handles both encrypted and Supabase database)
+          await deletePersonalityProfile(profileId, encryptionKey)
 
           // Reload profiles
           await loadProfiles()
