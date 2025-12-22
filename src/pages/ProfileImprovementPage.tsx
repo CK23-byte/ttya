@@ -36,7 +36,7 @@ import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
 import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
-import { loadProfileData as loadProfileDataFromStorage, saveProfileData as saveProfileDataToStorage, loadPersonalityProfiles } from '../utils/profileStorage'
+import { loadProfileData as loadProfileDataFromStorage, saveProfileData as saveProfileDataToStorage, loadPersonalityProfiles, savePersonalityProfiles } from '../utils/profileStorage'
 import JSZip from 'jszip'
 
 // Voice configuration
@@ -852,25 +852,16 @@ export default function ProfileImprovementPage() {
     if (!tempProfileName.trim() || !profile) return
 
     try {
-      // Update profile in storage
-      let profiles: PersonalityProfile[] = []
+      // Load profiles from database/storage
+      const profiles = await loadPersonalityProfiles(encryptionKey)
 
-      if (encryptionKey) {
-        profiles = await getSecure<PersonalityProfile[]>(PROFILES_STORAGE_KEY, encryptionKey) || []
-      } else {
-        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
-        profiles = stored ? JSON.parse(stored) : []
-      }
-
+      // Update profile name
       const updatedProfiles = profiles.map(p =>
         p.id === profile.id ? { ...p, name: tempProfileName.trim() } : p
       )
 
-      if (encryptionKey) {
-        await setSecure(PROFILES_STORAGE_KEY, updatedProfiles, encryptionKey)
-      } else {
-        localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(updatedProfiles))
-      }
+      // Save profiles back to database/storage
+      await savePersonalityProfiles(updatedProfiles, encryptionKey)
 
       // Update local state
       setProfile({ ...profile, name: tempProfileName.trim() })
@@ -887,25 +878,16 @@ export default function ProfileImprovementPage() {
     if (!tempRelationship.trim() || !profile) return
 
     try {
-      // Update profile in storage
-      let profiles: PersonalityProfile[] = []
+      // Load profiles from database/storage
+      const profiles = await loadPersonalityProfiles(encryptionKey)
 
-      if (encryptionKey) {
-        profiles = await getSecure<PersonalityProfile[]>(PROFILES_STORAGE_KEY, encryptionKey) || []
-      } else {
-        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
-        profiles = stored ? JSON.parse(stored) : []
-      }
-
+      // Update relationship
       const updatedProfiles = profiles.map(p =>
         p.id === profile.id ? { ...p, relationship: tempRelationship.trim() } : p
       )
 
-      if (encryptionKey) {
-        await setSecure(PROFILES_STORAGE_KEY, updatedProfiles, encryptionKey)
-      } else {
-        localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(updatedProfiles))
-      }
+      // Save profiles back to database/storage
+      await savePersonalityProfiles(updatedProfiles, encryptionKey)
 
       // Update local state
       setProfile({ ...profile, relationship: tempRelationship.trim() })
