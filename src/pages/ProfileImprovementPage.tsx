@@ -36,10 +36,8 @@ import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
 import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
-import { loadProfileData as loadProfileDataFromStorage, saveProfileData as saveProfileDataToStorage } from '../utils/profileStorage'
+import { loadProfileData as loadProfileDataFromStorage, saveProfileData as saveProfileDataToStorage, loadPersonalityProfiles } from '../utils/profileStorage'
 import JSZip from 'jszip'
-
-const PROFILES_STORAGE_KEY = 'personality_profiles'
 
 // Voice configuration
 interface VoiceConfig {
@@ -187,27 +185,19 @@ export default function ProfileImprovementPage() {
 
   const loadProfile = async () => {
     try {
-      let profiles: PersonalityProfile[] = []
-
-      if (encryptionKey) {
-        profiles = await getSecure<PersonalityProfile[]>(
-          PROFILES_STORAGE_KEY,
-          encryptionKey
-        ) || []
-      } else {
-        // Supabase users: use plain localStorage
-        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
-        profiles = stored ? JSON.parse(stored) : []
-      }
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      const profiles = await loadPersonalityProfiles(encryptionKey)
 
       const foundProfile = profiles.find(p => p.id === profileId)
       if (foundProfile) {
         setProfile(foundProfile)
       } else {
+        logger.warn('Profile not found:', profileId)
         navigate('/dashboard')
       }
     } catch (error) {
       logger.error('Error loading profile:', error)
+      navigate('/dashboard')
     }
   }
 
