@@ -72,6 +72,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id).finally(() => {
+          setIsLoading(false)
           clearTimeout(safetyTimeout)
         })
       } else {
@@ -93,6 +94,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
         if (session?.user) {
           await fetchProfile(session.user.id)
+          setIsLoading(false) // Ensure loading state is cleared after profile fetch
 
           // Redirect logic based on auth event
           if (!noRedirectPaths.includes(location.pathname)) {
