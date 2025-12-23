@@ -202,7 +202,7 @@ export async function loadProfileData<T = any>(
         .select('profile_data')
         .eq('user_id', session.session.user.id)
         .eq('profile_id', profileId)
-        .single()
+        .maybeSingle()
 
       if (error) {
         logger.error('Error loading profile data from Supabase:', error)
@@ -267,6 +267,110 @@ export async function saveProfileData(
   } catch (error) {
     logger.error('Error saving profile data:', error)
     throw error
+  }
+}
+
+/**
+ * Save chat messages for a specific profile
+ */
+export async function saveChatMessages(
+  profileId: string,
+  messages: any[],
+  encryptionKey: CryptoKey | null
+): Promise<void> {
+  try {
+    if (encryptionKey) {
+      // Encrypted auth: use secure localStorage
+      const key = `chat_messages_${profileId}`
+      await setSecure(key, messages, encryptionKey)
+    } else if (isSupabaseConfigured()) {
+      // Supabase auth: merge messages into profile_data
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session?.user) {
+        logger.warn('No authenticated user, falling back to localStorage')
+        localStorage.setItem(`chat_messages_${profileId}`, JSON.stringify(messages))
+        return
+      }
+
+      // First load existing profile_data
+      const { data: existing } = await supabase
+        .from('personality_profiles')
+        .select('profile_data')
+        .eq('user_id', session.session.user.id)
+        .eq('profile_id', profileId)
+        .maybeSingle()
+
+      // Merge messages into existing profile_data
+      const mergedData = {
+        ...(existing?.profile_data || {}),
+        messages: messages
+      }
+
+      const { error } = await supabase
+        .from('personality_profiles')
+        .update({ profile_data: mergedData })
+        .eq('user_id', session.session.user.id)
+        .eq('profile_id', profileId)
+
+      if (error) {
+        logger.error('Error saving messages to database:', error)
+        localStorage.setItem(`chat_messages_${profileId}`, JSON.stringify(messages))
+      } else {
+        logger.log('💬 Saved chat messages to database:', messages.length)
+      }
+    } else {
+      // Fallback: localStorage
+      localStorage.setItem(`chat_messages_${profileId}`, JSON.stringify(messages))
+    }
+  } catch (error) {
+    logger.error('Error saving chat messages:', error)
+    throw error
+  }
+}
+
+/**
+ * Load chat messages for a specific profile
+ */
+export async function loadChatMessages(
+  profileId: string,
+  encryptionKey: CryptoKey | null
+): Promise<any[]> {
+  try {
+    if (encryptionKey) {
+      // Encrypted auth: use secure localStorage
+      const key = `chat_messages_${profileId}`
+      return await getSecure<any[]>(key, encryptionKey) || []
+    } else if (isSupabaseConfigured()) {
+      // Supabase auth: load from profile_data
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session?.user) {
+        logger.warn('No authenticated user, falling back to localStorage')
+        const stored = localStorage.getItem(`chat_messages_${profileId}`)
+        return stored ? JSON.parse(stored) : []
+      }
+
+      const { data, error } = await supabase
+        .from('personality_profiles')
+        .select('profile_data')
+        .eq('user_id', session.session.user.id)
+        .eq('profile_id', profileId)
+        .maybeSingle()
+
+      if (error || !data) {
+        logger.error('Error loading messages from database:', error)
+        const stored = localStorage.getItem(`chat_messages_${profileId}`)
+        return stored ? JSON.parse(stored) : []
+      }
+
+      return data.profile_data?.messages || []
+    } else {
+      // Fallback: localStorage
+      const stored = localStorage.getItem(`chat_messages_${profileId}`)
+      return stored ? JSON.parse(stored) : []
+    }
+  } catch (error) {
+    logger.error('Error loading chat messages:', error)
+    return []
   }
 }
 

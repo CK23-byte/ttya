@@ -28,9 +28,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { getSecure, setSecure } from '../utils/secureStorage'
 import { sendMessageToClaude, generateSystemPrompt } from '../utils/claudeAPI'
-import { loadPersonalityProfiles } from '../utils/profileStorage'
+import { loadPersonalityProfiles, loadChatMessages, saveChatMessages } from '../utils/profileStorage'
 import TypingIndicator from '../components/TypingIndicator'
 import EmojiPicker from '../components/EmojiPicker'
 import AttachmentPicker from '../components/AttachmentPicker'
@@ -184,18 +183,8 @@ export default function ChatPage() {
         // Load messages for each profile
         const convos: ChatConversation[] = await Promise.all(
           profiles.map(async (profile) => {
-            let messages: Message[] = []
-
-            if (encryptionKey) {
-              messages = await getSecure<Message[]>(
-                `${MESSAGES_STORAGE_PREFIX}${profile.id}`,
-                encryptionKey
-              ) || []
-            } else {
-              // Load from plain localStorage for Supabase users
-              const stored = localStorage.getItem(`${MESSAGES_STORAGE_PREFIX}${profile.id}`)
-              messages = stored ? JSON.parse(stored) : []
-            }
+            // Use centralized message loading (handles both encrypted and Supabase database)
+            const messages = await loadChatMessages(profile.id, encryptionKey)
 
             return {
               profileId: profile.id,
@@ -248,13 +237,8 @@ export default function ChatPage() {
 
   const saveMessages = async (profileId: string, messages: Message[]) => {
     try {
-      if (encryptionKey) {
-        // Old password-based auth: use encrypted storage
-        await setSecure(`${MESSAGES_STORAGE_PREFIX}${profileId}`, messages, encryptionKey)
-      } else {
-        // Supabase users: use plain localStorage
-        localStorage.setItem(`${MESSAGES_STORAGE_PREFIX}${profileId}`, JSON.stringify(messages))
-      }
+      // Use centralized message saving (handles both encrypted and Supabase database)
+      await saveChatMessages(profileId, messages, encryptionKey)
 
       // Update conversations list
       setConversations(prev => prev.map(c =>

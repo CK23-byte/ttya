@@ -22,11 +22,10 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { usePayment } from '../contexts/PaymentContext'
-import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile, Message } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
-import { loadPersonalityProfiles, deletePersonalityProfile } from '../utils/profileStorage'
+import { loadPersonalityProfiles, deletePersonalityProfile, loadChatMessages } from '../utils/profileStorage'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
 
@@ -116,19 +115,8 @@ export default function DashboardPage() {
       // Load message stats for each profile
       const profilesWithStats = await Promise.all(
         savedProfiles.map(async (profile) => {
-          let messages: Message[] = []
-
-          if (encryptionKey) {
-            messages = await getSecure<Message[]>(
-              `${MESSAGES_STORAGE_PREFIX}${profile.id}`,
-              encryptionKey
-            ) || []
-          } else {
-            // Load from plain localStorage for Supabase users
-            const stored = localStorage.getItem(`${MESSAGES_STORAGE_PREFIX}${profile.id}`)
-            messages = stored ? JSON.parse(stored) : []
-          }
-
+          // Use centralized message loading (handles both encrypted and Supabase database)
+          const messages = await loadChatMessages(profile.id, encryptionKey)
           const lastMessage = messages[messages.length - 1]
 
           return {
