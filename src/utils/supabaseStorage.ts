@@ -42,10 +42,19 @@ export async function uploadFileToStorage(
       path: filePath
     })
 
-    // Upload file directly - Supabase handles it correctly
+    // Convert File to ArrayBuffer to ensure pure binary upload (no multipart wrapper)
+    const fileArrayBuffer = await file.arrayBuffer()
+
+    logger.log('📦 File converted to ArrayBuffer:', {
+      originalSize: file.size,
+      bufferSize: fileArrayBuffer.byteLength,
+      contentType: file.type
+    })
+
+    // Upload raw binary data - this prevents multipart form boundary corruption
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, {
+      .upload(filePath, fileArrayBuffer, {
         cacheControl: '3600',
         upsert: false,
         contentType: file.type // Explicitly set content type
