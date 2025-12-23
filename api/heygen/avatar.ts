@@ -122,7 +122,7 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
   })
 
   const contentType = fileData.type || 'image/jpeg'
-  let mediaBuffer = Buffer.from(await fileData.arrayBuffer())
+  let mediaBuffer = Buffer.from(await fileData.arrayBuffer() as ArrayBuffer)
   console.log('Media downloaded successfully:', {
     size: mediaBuffer.length,
     sizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2),
