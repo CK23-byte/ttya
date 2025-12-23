@@ -122,13 +122,27 @@ export async function savePersonalityProfiles(
         return
       }
 
+      // Load existing profiles to preserve messages
+      const { data: existingProfiles } = await supabase
+        .from('personality_profiles')
+        .select('profile_id, profile_data')
+        .eq('user_id', session.session.user.id)
+
+      const existingMessagesMap = new Map<string, any[]>()
+      if (existingProfiles) {
+        existingProfiles.forEach(row => {
+          const messages = row.profile_data?.messages || []
+          existingMessagesMap.set(row.profile_id, messages)
+        })
+      }
+
       // Delete existing profiles first
       await supabase
         .from('personality_profiles')
         .delete()
         .eq('user_id', session.session.user.id)
 
-      // Insert new profiles
+      // Insert new profiles (preserving messages)
       if (profiles.length > 0) {
         const rows = profiles.map(profile => ({
           user_id: session.session.user.id,
@@ -149,7 +163,9 @@ export async function savePersonalityProfiles(
             photoUrl: profile.photoUrl,
             photoUrls: profile.photoUrls,
             birthDate: profile.birthDate,
-            dateSince: profile.dateSince
+            dateSince: profile.dateSince,
+            // PRESERVE EXISTING MESSAGES
+            messages: existingMessagesMap.get(profile.id) || []
           }
         }))
 

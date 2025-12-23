@@ -236,15 +236,31 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
 
   const data = await response.json()
 
+  console.log('HeyGen talking photo upload response (full):', JSON.stringify(data, null, 2))
   console.log('HeyGen talking photo uploaded:', {
-    id: data.data?.talking_photo_id || data.data?.photo_id || data.data?.avatar_id || data.data?.id,
-    status: data.data?.status,
-    fullResponse: JSON.stringify(data)
+    talking_photo_id: data.data?.talking_photo_id,
+    photo_id: data.data?.photo_id,
+    avatar_id: data.data?.avatar_id,
+    id: data.data?.id,
+    status: data.data?.status
   })
+
+  const avatarId = data.data?.talking_photo_id || data.data?.photo_id || data.data?.avatar_id || data.data?.id
+
+  if (!avatarId) {
+    console.error('❌ No avatar ID found in HeyGen response!', data)
+    return res.status(500).json({
+      error: 'Avatar created but no ID returned',
+      details: 'HeyGen API did not return an avatar ID',
+      fullResponse: data
+    })
+  }
+
+  console.log('✅ Avatar created successfully with ID:', avatarId)
 
   return res.status(200).json({
     success: true,
-    avatarId: data.data?.talking_photo_id || data.data?.photo_id || data.data?.avatar_id || data.data?.id,
+    avatarId,
     avatarName: data.data?.talking_photo_name || data.data?.photo_name || avatarName,
     status: data.data?.status || 'processing',
     message: 'Talking photo is being processed. This may take a few minutes.'
@@ -268,7 +284,10 @@ async function handleGetStatus(req: VercelRequest, res: VercelResponse) {
   console.log('Checking HeyGen talking photo status:', { avatarId })
 
   // Use v2 API endpoint for getting talking photo status
-  const response = await fetch(`https://api.heygen.com/v2/talking_photo/${avatarId}`, {
+  const apiUrl = `https://api.heygen.com/v2/talking_photo/${avatarId}`
+  console.log('Status check URL:', apiUrl)
+
+  const response = await fetch(apiUrl, {
     method: 'GET',
     headers: {
       'X-Api-Key': HEYGEN_API_KEY!,
@@ -276,16 +295,28 @@ async function handleGetStatus(req: VercelRequest, res: VercelResponse) {
     }
   })
 
+  console.log('Status check response:', {
+    status: response.status,
+    statusText: response.statusText
+  })
+
   if (!response.ok) {
     const error = await response.text()
-    console.error('HeyGen get status error:', error)
+    console.error('HeyGen get status error:', {
+      status: response.status,
+      error
+    })
     return res.status(response.status).json({
       error: 'Failed to get avatar status',
-      details: error
+      details: error,
+      hint: response.status === 404
+        ? 'Avatar not found. It may have been deleted or the ID is incorrect.'
+        : 'Check HeyGen API status and your API key'
     })
   }
 
   const data = await response.json()
+  console.log('Status check data (full):', JSON.stringify(data, null, 2))
 
   return res.status(200).json({
     success: true,
