@@ -155,9 +155,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
               email: userEmail,
               display_name: null,
               credits: CREDIT_PRICING.SIGNUP_BONUS,
-              text_credits: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
-              voice_credits: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
-              video_credits: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
             })
             .select()
 
@@ -184,39 +181,14 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             setProfile(newProfile as Profile)
             setCredits(CREDIT_PRICING.SIGNUP_BONUS)
 
-            // Also create signup bonus transactions
-            const transactions = [
-              {
-                user_id: userId,
-                amount: CREDIT_PRICING.SIGNUP_BONUS,
-                type: 'bonus' as const,
-                credit_type: 'general' as const,
-                description: 'Welcome bonus on registration',
-              },
-              {
-                user_id: userId,
-                amount: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
-                type: 'bonus' as const,
-                credit_type: 'text' as const,
-                description: 'Text credits welcome bonus',
-              },
-              {
-                user_id: userId,
-                amount: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
-                type: 'bonus' as const,
-                credit_type: 'voice' as const,
-                description: 'Voice credits welcome bonus',
-              },
-              {
-                user_id: userId,
-                amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
-                type: 'bonus' as const,
-                credit_type: 'video' as const,
-                description: 'Video credits welcome bonus',
-              },
-            ]
-
-            await supabase.from('credit_transactions').insert(transactions)
+            // Also create signup bonus transaction
+            await supabase.from('credit_transactions').insert({
+              user_id: userId,
+              amount: CREDIT_PRICING.SIGNUP_BONUS,
+              type: 'bonus' as const,
+              credit_type: 'general' as const,
+              description: 'Welcome bonus - universal credits on registration',
+            })
           }
         } else {
           logger.error('Cannot create profile: no email found')
@@ -279,7 +251,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     })
 
     if (!error && data.user) {
-      // Create profile with signup bonus credits
+      // Create profile with signup bonus universal credits
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -287,47 +259,19 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email!,
           display_name: displayName || null,
           credits: CREDIT_PRICING.SIGNUP_BONUS,
-          text_credits: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
-          voice_credits: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
-          video_credits: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
         })
 
       if (profileError) {
         logger.error('Error creating profile:', profileError)
       } else {
-        // Record the signup bonus transactions
-        const transactions = [
-          {
-            user_id: data.user.id,
-            amount: CREDIT_PRICING.SIGNUP_BONUS,
-            type: 'bonus' as const,
-            credit_type: 'general' as const,
-            description: 'Welcome bonus on registration',
-          },
-          {
-            user_id: data.user.id,
-            amount: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
-            type: 'bonus' as const,
-            credit_type: 'text' as const,
-            description: 'Text credits welcome bonus',
-          },
-          {
-            user_id: data.user.id,
-            amount: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
-            type: 'bonus' as const,
-            credit_type: 'voice' as const,
-            description: 'Voice credits welcome bonus',
-          },
-          {
-            user_id: data.user.id,
-            amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
-            type: 'bonus' as const,
-            credit_type: 'video' as const,
-            description: 'Video credits welcome bonus',
-          },
-        ]
-
-        await supabase.from('credit_transactions').insert(transactions)
+        // Record the signup bonus transaction
+        await supabase.from('credit_transactions').insert({
+          user_id: data.user.id,
+          amount: CREDIT_PRICING.SIGNUP_BONUS,
+          type: 'bonus' as const,
+          credit_type: 'general' as const,
+          description: 'Welcome bonus - universal credits on registration',
+        })
       }
     }
 

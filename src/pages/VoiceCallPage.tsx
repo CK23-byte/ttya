@@ -122,14 +122,14 @@ export default function VoiceCallPage() {
       return
     }
 
-    // Check if user has enough voice credits for at least 30 seconds
-    const voiceCredits = profile.voice_credits || 0
+    // Check if user has enough universal credits for at least 30 seconds
+    const universalCredits = profile.credits || 0
     const minRequiredCredits = CREDIT_PRICING.VOICE_COST_PER_MINUTE / 2 // 1 credit for 30 seconds
 
-    if (voiceCredits < minRequiredCredits) {
+    if (universalCredits < minRequiredCredits) {
       showModal(
-        'Insufficient Voice Credits',
-        `You need at least ${minRequiredCredits} voice credit${minRequiredCredits > 1 ? 's' : ''} for a voice call (30 seconds minimum).\n\nYou have ${voiceCredits} voice credit${voiceCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue.`,
+        'Insufficient Credits',
+        `You need at least ${minRequiredCredits} universal credit${minRequiredCredits > 1 ? 's' : ''} for a voice call (30 seconds minimum).\n\nYou have ${universalCredits} universal credit${universalCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue.`,
         'warning'
       )
       setTimeout(() => navigate('/pricing'), 2000)
@@ -176,7 +176,7 @@ export default function VoiceCallPage() {
 
             // Check remaining credits
             const updatedProfile = await fetch(`/api/credits/check?userId=${user.id}`).then(r => r.json())
-            const remainingCredits = updatedProfile.voice_credits || 0
+            const remainingCredits = updatedProfile.credits || 0
             const remainingMinutes = Math.floor(remainingCredits / CREDIT_PRICING.VOICE_COST_PER_MINUTE)
 
             // Show warning if low on credits (less than 1 minute left)

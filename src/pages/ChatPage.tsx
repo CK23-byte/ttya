@@ -266,14 +266,14 @@ export default function ChatPage() {
       return
     }
 
-    // Check if user has enough text credits
-    const textCredits = supabaseProfile.text_credits || 0
+    // Check if user has enough universal credits
+    const universalCredits = supabaseProfile.credits || 0
     const requiredCredits = CREDIT_PRICING.MESSAGE_BASE_COST
 
-    if (textCredits < requiredCredits) {
+    if (universalCredits < requiredCredits) {
       showModal(
         'Insufficient Credits',
-        `You need ${requiredCredits} text credit${requiredCredits > 1 ? 's' : ''} to send a message.\n\nYou have ${textCredits} text credit${textCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue chatting.`,
+        `You need ${requiredCredits} universal credit${requiredCredits > 1 ? 's' : ''} to send a message.\n\nYou have ${universalCredits} universal credit${universalCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue chatting.`,
         'warning'
       )
       navigate('/pricing')

@@ -142,7 +142,7 @@ export default function VideoPage() {
 
             // Check remaining credits
             const updatedProfile = await fetch(`/api/credits/check?userId=${user.id}`).then(r => r.json())
-            const remainingCredits = updatedProfile.video_credits || 0
+            const remainingCredits = updatedProfile.credits || 0
             const remainingMinutes = Math.floor(remainingCredits / CREDIT_PRICING.VIDEO_COST_PER_MINUTE)
 
             // Show warning if low on credits (less than 1 minute left)
@@ -232,14 +232,14 @@ export default function VideoPage() {
       return
     }
 
-    // Check if user has enough video credits for at least 12 seconds (1 credit minimum)
-    const videoCredits = supabaseProfile.video_credits || 0
-    const minRequiredCredits = 1 // Minimum 1 credit (12 seconds)
+    // Check if user has enough universal credits for at least 12 seconds (1 credit minimum)
+    const universalCredits = supabaseProfile.credits || 0
+    const minRequiredCredits = 1 // Minimum 1 credit (12 seconds of video)
 
-    if (videoCredits < minRequiredCredits) {
+    if (universalCredits < minRequiredCredits) {
       showModal(
-        'Insufficient Video Credits',
-        `You need at least ${minRequiredCredits} video credit${minRequiredCredits > 1 ? 's' : ''} for a video call.\n\nYou have ${videoCredits} video credit${videoCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue.`,
+        'Insufficient Credits',
+        `You need at least ${minRequiredCredits} universal credit${minRequiredCredits > 1 ? 's' : ''} for a video call.\n\nYou have ${universalCredits} universal credit${universalCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue.`,
         'warning'
       )
       setTimeout(() => navigate('/pricing'), 2000)

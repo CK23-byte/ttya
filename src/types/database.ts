@@ -150,9 +150,6 @@ export const CREDIT_PRICING = {
     { credits: 1500, price: 45.00, id: 'credits_1500' },
   ] as CreditPackage[],
 
-  // Bonus credits for new users
-  SIGNUP_BONUS: 10, // General credits
-  SIGNUP_BONUS_TEXT: 10, // Text credits
-  SIGNUP_BONUS_VOICE: 5, // Voice credits (2.5 minutes)
-  SIGNUP_BONUS_VIDEO: 2, // Video credits (24 seconds)
+  // Bonus credits for new users (universal credits)
+  SIGNUP_BONUS: 50, // Universal credits (50 text messages, 25 min voice, or 10 min video)
 }
