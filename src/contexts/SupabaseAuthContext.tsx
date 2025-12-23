@@ -23,6 +23,7 @@ interface SupabaseAuthContextType {
   // Credits
   credits: number
   refreshCredits: () => Promise<void>
+  refreshProfile: () => Promise<void>
 
   // Auth methods
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: AuthError | null }>
@@ -365,6 +366,12 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     return { error }
   }
 
+  // Refresh profile from database
+  const refreshProfile = async () => {
+    if (!user) return
+    await fetchProfile(user.id)
+  }
+
   return (
     <SupabaseAuthContext.Provider
       value={{
@@ -375,6 +382,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         isConfigured,
         credits,
         refreshCredits,
+        refreshProfile,
         signUp,
         signIn,
         signInWithOAuth,

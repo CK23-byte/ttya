@@ -30,7 +30,7 @@ import Header from '../components/Header'
 
 export default function AccountPage() {
   const navigate = useNavigate()
-  const { user, profile, credits, isConfigured } = useSupabaseAuth()
+  const { user, profile, credits, isConfigured, refreshProfile } = useSupabaseAuth()
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   // Profile editing
@@ -63,8 +63,8 @@ export default function AccountPage() {
       }
 
       setIsEditingName(false)
-      // Refresh the page to show updated name
-      window.location.reload()
+      // Refresh the profile from database
+      await refreshProfile()
     } catch (error) {
       logger.error('Error saving name:', error)
       alert('Something went wrong saving your name.')
@@ -130,8 +130,9 @@ export default function AccountPage() {
         return
       }
 
-      // Refresh page to show new avatar
-      window.location.reload()
+      // Refresh profile to show new avatar
+      await refreshProfile()
+      setIsUploadingAvatar(false)
     } catch (error) {
       logger.error('Error uploading avatar:', error)
       alert('Something went wrong. Please try again.')

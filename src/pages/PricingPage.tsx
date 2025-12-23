@@ -133,11 +133,6 @@ export default function PricingPage() {
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
-            Simple, transparent pricing
-          </div>
-
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             Choose Your Plan
           </h1>
@@ -188,14 +183,14 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* Universal Credits Subscriptions */}
+      {/* Monthly Subscriptions */}
       <section className="pb-12 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
-            Universal Credits Subscriptions
+            Monthly Plans
           </h2>
           <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
-            All plans include universal credits that work for text, voice, and video. Free tier includes text chat only.
+            All plans include credits that work for text, voice, and video. Free tier includes text chat only.
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -395,19 +390,20 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Universal Credit Packs */}
+      {/* Credit Packs - Only visible for logged-in users */}
+      {user && (
       <section className="py-16 px-4 bg-white border-y border-orange-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-100 to-rose-100 text-orange-700 rounded-full text-sm font-medium mb-4">
               <Coins className="w-4 h-4" />
-              Universal Credits
+              Credit Packs
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Buy Credits On-Demand
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              No subscription? No problem. Purchase universal credits that work for <strong>text chat, voice calls, AND video calls</strong>. Credits never expire.
+              <strong>One-time purchase</strong> - Credits work for <strong>text chat, voice calls, AND video calls</strong>. Credits never expire.
             </p>
           </div>
 
@@ -530,6 +526,7 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Trust Badges */}
       <section className="py-12 px-4 border-t border-orange-100">
@@ -570,11 +567,20 @@ export default function PricingPage() {
           <div className="space-y-6">
             <div className="border-b border-gray-200 pb-6">
               <h3 className="font-semibold text-gray-900 mb-2">
-                How do universal credits work?
+                How do credits work?
               </h3>
               <p className="text-gray-600">
-                All plans include universal credits that can be used for text chat, voice calls, or video calls.
+                All plans include credits that can be used for text chat, voice calls, or video calls.
                 1 credit = 1 text message, 5 seconds of voice, or 3 seconds of video. Higher tiers include more credits and unlock more AI personalities.
+              </p>
+            </div>
+
+            <div className="border-b border-gray-200 pb-6">
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Can I buy extra credits without a subscription?
+              </h3>
+              <p className="text-gray-600">
+                Yes! Once you have an account, you can purchase credit packs as one-time payments. These credits work for all features and never expire.
               </p>
             </div>
 
@@ -583,7 +589,7 @@ export default function PricingPage() {
                 Can I cancel my subscription anytime?
               </h3>
               <p className="text-gray-600">
-                Yes! You can cancel your subscription at any time from your account page.
+                Yes! You can cancel your subscription at any time from your account settings.
                 You'll continue to have access until the end of your billing period.
               </p>
             </div>
@@ -593,7 +599,7 @@ export default function PricingPage() {
                 What's included in the free plan?
               </h3>
               <p className="text-gray-600">
-                The free plan includes 1 personality profile and 50 universal credits for text chat only.
+                The free plan includes 1 personality profile and 50 credits for text chat only.
                 Upgrade to unlock voice & video calls, more credits, and additional personalities.
               </p>
             </div>
