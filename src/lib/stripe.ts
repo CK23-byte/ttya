@@ -176,7 +176,7 @@ export const VIDEO_CREDIT_PACKS = {
 } as const
 
 // Universal Credits (can be used for text, voice, AND video)
-// 1 credit = 1 text message, 30 seconds of voice, or 12 seconds of video
+// 1 credit = 1 text message, 10 seconds of voice, or 5 seconds of video
 export const UNIVERSAL_CREDIT_PACKS = {
   small: {
     name: '100 Universal Credits',
@@ -204,8 +204,8 @@ export const UNIVERSAL_CREDIT_PACKS = {
     price: 69.99,
     pricePerCredit: 0.07,
     popular: false,
-    bestValue: true,
-    description: 'Best value for all features',
+    bestValue: false,
+    description: 'Great value for all features',
     priceId: 'universal_credits_1000',
   },
   xlarge: {
@@ -213,10 +213,10 @@ export const UNIVERSAL_CREDIT_PACKS = {
     credits: 2500,
     price: 149.99,
     pricePerCredit: 0.06,
-    description: 'Maximum savings - text, voice & video',
+    description: 'Best value - maximum savings',
     priceId: 'universal_credits_2500',
     popular: false,
-    bestValue: false,
+    bestValue: true,
   },
 } as const
 

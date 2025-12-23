@@ -399,7 +399,7 @@ export default function PricingPage() {
       <section className="py-16 px-4 bg-white border-y border-orange-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-100 to-rose-100 text-orange-700 rounded-full text-sm font-medium mb-4">
               <Coins className="w-4 h-4" />
               Universal Credits
             </div>
@@ -417,9 +417,9 @@ export default function PricingPage() {
                 key={key}
                 className={`rounded-2xl shadow-lg p-6 flex flex-col relative transition-all hover:shadow-xl ${
                   pack.popular
-                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 scale-105'
+                    ? 'bg-gradient-to-br from-orange-500 to-rose-500 scale-105'
                     : pack.bestValue
-                    ? 'bg-gradient-to-br from-amber-500 to-orange-500'
+                    ? 'bg-gradient-to-br from-orange-600 to-rose-600'
                     : 'bg-white border border-gray-200'
                 }`}
               >
@@ -459,7 +459,7 @@ export default function PricingPage() {
                 <ul className="space-y-2 mb-6 flex-1 text-sm">
                   <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'
                     }`}>
                       <Check className="w-3 h-3" />
                     </div>
@@ -467,7 +467,7 @@ export default function PricingPage() {
                   </li>
                   <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'
                     }`}>
                       <MessageCircle className="w-3 h-3" />
                     </div>
@@ -475,7 +475,7 @@ export default function PricingPage() {
                   </li>
                   <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-green-100 text-green-600'
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'
                     }`}>
                       <Zap className="w-3 h-3" />
                     </div>
@@ -483,7 +483,7 @@ export default function PricingPage() {
                   </li>
                   <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-pink-100 text-pink-600'
+                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600'
                     }`}>
                       <Crown className="w-3 h-3" />
                     </div>
@@ -503,9 +503,7 @@ export default function PricingPage() {
                   onClick={() => handleBuyCredits(key as UniversalCreditPackType)}
                   disabled={isLoading === key}
                   className={`w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                    pack.popular
-                      ? 'bg-white text-purple-600 hover:bg-gray-50'
-                      : pack.bestValue
+                    pack.popular || pack.bestValue
                       ? 'bg-white text-orange-600 hover:bg-gray-50'
                       : 'bg-gray-900 text-white hover:bg-gray-800'
                   }`}
@@ -527,7 +525,7 @@ export default function PricingPage() {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
-              💡 <strong>Tip:</strong> Credits can be used across all features. 1 credit = 1 text message, 30 seconds of voice, or 12 seconds of video.
+              💡 <strong>Tip:</strong> Credits can be used across all features. 1 credit = 1 text message, 10 seconds of voice, or 5 seconds of video.
             </p>
           </div>
         </div>
@@ -576,7 +574,7 @@ export default function PricingPage() {
               </h3>
               <p className="text-gray-600">
                 All plans include universal credits that can be used for text chat, voice calls, or video calls.
-                1 credit = 1 text message, 30 seconds of voice, or 12 seconds of video. Higher tiers include more credits and unlock more AI personalities.
+                1 credit = 1 text message, 10 seconds of voice, or 5 seconds of video. Higher tiers include more credits and unlock more AI personalities.
               </p>
             </div>
 

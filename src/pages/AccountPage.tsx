@@ -490,14 +490,14 @@ export default function AccountPage() {
 
             {/* Voice Usage */}
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{Math.floor(credits / 2)}</p>
+              <p className="text-2xl font-bold">{Math.floor(credits / 6)}</p>
               <p className="text-white/80 text-xs mt-1">🎙️ Voice</p>
               <p className="text-white/60 text-xs">minutes</p>
             </div>
 
             {/* Video Usage */}
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{Math.floor(credits / 5)}</p>
+              <p className="text-2xl font-bold">{Math.floor(credits / 12)}</p>
               <p className="text-white/80 text-xs mt-1">📹 Video</p>
               <p className="text-white/60 text-xs">minutes</p>
             </div>
@@ -506,7 +506,7 @@ export default function AccountPage() {
           <div className="bg-white/20 rounded-lg p-3 text-sm">
             <p className="flex items-center gap-2 text-xs">
               <Sparkles className="w-4 h-4" />
-              <span>Universal credits work for all features: 1 credit = 1 message, 30s voice, or 12s video</span>
+              <span>Universal credits work for all features: 1 credit = 1 message, 10s voice, or 5s video</span>
             </p>
           </div>
         </div>

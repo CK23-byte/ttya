@@ -23,8 +23,7 @@ import {
   Camera,
   Mic,
   Archive,
-  Database,
-  AlertCircle
+  Database
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 
@@ -548,9 +547,9 @@ export default function LandingPage() {
               Every conversation holds a lifetime
             </p>
             <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
-              We lose more than we realize when someone passes away. Not just their presence, but their voice, their humor,
+              People drift apart, move away, grow distant — but the memories don't fade. Their voice, their humor,
               the way they said your name, their advice, their stories. All those text messages, voice notes, photos, and moments –
-              they don't have to disappear. <span className="font-semibold text-gray-900">TalkToYouAI transforms your digital memories into a living connection.</span>
+              they don't have to disappear. <span className="font-semibold text-gray-900">TalkToYouAI transforms your digital memories into a living connection</span>, whether they're across the world or no longer with us.
             </p>
           </div>
 
@@ -561,10 +560,10 @@ export default function LandingPage() {
                 <Archive className="w-4 h-4" />
                 The Digital Legacy We Forget About
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-4">What We Actually Lose</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-4">What's Hidden in Your Conversations</h3>
               <p className="text-gray-600 max-w-3xl mx-auto">
-                When someone passes, we often think about the big things: their belongings, photographs, maybe some videos.
-                But there's an entire world of their personality captured in digital form that usually gets lost.
+                Whether it's a childhood friend, a loved one who passed away, or family abroad — their entire personality lives in your conversations.
+                Thousands of messages, voice notes, and photos that capture exactly who they are. Don't let it sit forgotten in your phone.
               </p>
             </div>
 
@@ -842,37 +841,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Urgency CTA */}
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full text-sm font-semibold mb-6">
-              <AlertCircle className="w-4 h-4" />
-              Don't Wait Until It's Too Late
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              Digital Memories Don't Last Forever
-            </h3>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
-              Phone upgrades, cloud storage limits, forgotten passwords, account deletions – every day, precious memories are lost.
-              <span className="font-semibold text-gray-900"> Start preserving what matters today.</span>
-            </p>
-            <button
-              onClick={() => navigate('/email-auth')}
-              className="group px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-3"
-            >
-              Start Preserving Memories Now
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Social Proof */}
-      <div className="py-12 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <p className="text-2xl font-medium text-gray-700 italic">
-            "It felt like talking to her again. The way she used to say things... it brought tears to my eyes."
-          </p>
-          <p className="text-gray-500 mt-4">— Sarah, who lost her mother in 2022</p>
         </div>
       </div>
 
@@ -883,7 +851,7 @@ export default function LandingPage() {
             Ready to reconnect?
           </h3>
           <p className="text-lg text-gray-600 mb-8">
-            Start with 10 free credits. No credit card required.
+            Start with 50 free credits. No credit card required.
           </p>
           <button
             onClick={() => navigate('/email-auth')}
