@@ -31,7 +31,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { getSecure, setSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
