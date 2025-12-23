@@ -494,21 +494,48 @@ export default function LandingPage() {
                   <div className="flex-1 flex items-center justify-center p-6 relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-blue-900/20"></div>
                     <div className="relative">
-                      {/* Video frame with subtle animation */}
-                      <div className="bg-gradient-to-br from-amber-100 to-rose-100 rounded-2xl p-8 shadow-2xl border-4 border-white/10 animate-pulse" style={{animationDuration: '3s'}}>
+                      {/* Video frame with talking animation */}
+                      <div className="bg-gradient-to-br from-amber-100 to-rose-100 rounded-2xl p-8 shadow-2xl border-4 border-white/10" style={{animation: 'videoGlow 2s ease-in-out infinite'}}>
                         <div className="text-center">
-                          <img
-                            src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop&crop=faces"
-                            alt="Grandma Rose on video call"
-                            className="w-24 h-24 rounded-full mx-auto mb-3 object-cover shadow-xl border-4 border-white/30"
-                          />
-                          <div className="bg-white/90 rounded-lg px-4 py-2 text-sm text-gray-800 italic mt-3 max-w-[200px]">
-                            "...and then I would walk to the bakery every morning for fresh bread..."
+                          {/* Animated GIF of talking person */}
+                          <div className="relative w-24 h-24 mx-auto mb-3">
+                            <img
+                              src="https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif"
+                              alt="Grandma Rose talking on video call"
+                              className="w-24 h-24 rounded-full object-cover shadow-xl border-4 border-white/30"
+                              style={{animation: 'videoTalking 1.5s ease-in-out infinite'}}
+                            />
+                            {/* Live indicator */}
+                            <div className="absolute -top-1 -right-1 flex items-center gap-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                              <span className="font-semibold">LIVE</span>
+                            </div>
+                          </div>
+                          {/* Speech bubble with typing animation */}
+                          <div className="bg-white/90 rounded-lg px-4 py-2 text-sm text-gray-800 italic mt-3 max-w-[200px]" style={{animation: 'speechBubble 3s ease-in-out infinite'}}>
+                            <span className="inline-block">"...and then I would walk to the bakery every morning for fresh bread..."</span>
+                            <span className="inline-block ml-1 animate-pulse">💬</span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Add CSS animations */}
+                  <style>{`
+                    @keyframes videoGlow {
+                      0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+                      50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.5); }
+                    }
+                    @keyframes videoTalking {
+                      0%, 100% { transform: scale(1); }
+                      50% { transform: scale(1.02); }
+                    }
+                    @keyframes speechBubble {
+                      0%, 100% { opacity: 0.9; transform: translateY(0); }
+                      50% { opacity: 1; transform: translateY(-2px); }
+                    }
+                  `}</style>
 
                   {/* Small self-view in corner */}
                   <div className="absolute top-4 right-4 w-20 h-28 bg-gray-800 rounded-lg border-2 border-gray-600 flex items-center justify-center shadow-xl">
