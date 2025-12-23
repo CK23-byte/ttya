@@ -15,6 +15,7 @@ import {
   Sparkles,
   Users,
   Video,
+  Phone,
   Lock,
   Shield,
   Check,
@@ -218,7 +219,7 @@ export default function LandingPage() {
             </div>
 
             <p className="text-sm text-gray-500">
-              ✓ 10 free credits on signup • ✓ No credit card required
+              ✓ 50 free credits on signup • ✓ No credit card required
             </p>
           </div>
 
@@ -320,8 +321,15 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Story 1: Het gesprek dat je nooit kon voeren */}
-            <div className="group">
+            {/* Story 1: Chat Example */}
+            <div>
+              <div className="text-center mb-4">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full font-semibold text-sm shadow-lg">
+                  <MessageCircle className="w-4 h-4" />
+                  Chat
+                </span>
+              </div>
+              <div className="group">
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
                 {/* WhatsApp Interface Mockup */}
                 <div className="bg-[#075E54] p-3 border-b border-gray-200">
@@ -376,9 +384,92 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
+            </div>
 
-            {/* Story 2: Oma's verhalen voor de volgende generatie */}
-            <div className="group">
+            {/* Story 2: Call Example */}
+            <div>
+              <div className="text-center mb-4">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full font-semibold text-sm shadow-lg">
+                  <Phone className="w-4 h-4" />
+                  Call
+                </span>
+              </div>
+              <div className="group">
+              <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Voice Interface Mockup */}
+                <div className="p-4 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces"
+                      alt="Tim"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
+                    />
+                    <span className="font-semibold text-white">Tim</span>
+                  </div>
+                </div>
+
+                <div className="p-6 min-h-[280px] flex flex-col justify-center items-center">
+                  {/* Profile photo */}
+                  <img
+                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces"
+                    alt="Tim profile"
+                    className="w-24 h-24 rounded-full mb-4 object-cover shadow-xl border-4 border-orange-400/30"
+                  />
+
+                  <div className="text-amber-400 text-2xl mb-1">🎂 30 years</div>
+                  <div className="text-gray-400 text-sm mb-4">March 8, 2024</div>
+
+                  {/* Audio waveform */}
+                  <div className="w-full mb-3">
+                    <div className="flex items-center justify-center gap-1 h-12">
+                      {[...Array(20)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1 bg-gradient-to-t from-orange-500 to-rose-400 rounded-full animate-pulse"
+                          style={{
+                            height: `${Math.random() * 100 + 20}%`,
+                            animationDelay: `${i * 50}ms`
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div className="bg-gray-800/50 rounded-xl px-4 py-3 text-sm text-gray-200 text-center border border-gray-700">
+                    "Bro, remember our pact? Skydiving on our 30th? You'd laugh that I did it without you 😄..."
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 bg-gray-800/50 border-t border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-orange-500 animate-pulse" />
+                    <span className="text-xs text-gray-400 font-medium">Voice Call Active</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 px-2">
+                <h4 className="font-bold text-gray-900 mb-2 text-lg">One last birthday together</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Thomas lost his twin brother Tim in a car accident. On what would have been Tim's 30th birthday, he can still mark this moment "together" - with Tim's voice, humor, and responses.
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  "Moments that matter, together."
+                </p>
+              </div>
+            </div>
+            </div>
+
+            {/* Story 3: Video Call Example */}
+            <div>
+              <div className="text-center mb-4">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-full font-semibold text-sm shadow-lg">
+                  <Video className="w-4 h-4" />
+                  Video Call
+                </span>
+              </div>
+              <div className="group">
               <div className="bg-black rounded-2xl shadow-lg overflow-hidden border-2 border-gray-800 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
                 {/* Video Call Interface - Messenger Style */}
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white">
@@ -450,72 +541,6 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-
-            {/* Story 3: Een laatste verjaardag samen */}
-            <div className="group">
-              <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                {/* Voice Interface Mockup */}
-                <div className="p-4 border-b border-gray-700">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces"
-                      alt="Tim"
-                      className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
-                    />
-                    <span className="font-semibold text-white">Tim</span>
-                  </div>
-                </div>
-
-                <div className="p-6 min-h-[280px] flex flex-col justify-center items-center">
-                  {/* Profile photo */}
-                  <img
-                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces"
-                    alt="Tim profile"
-                    className="w-24 h-24 rounded-full mb-4 object-cover shadow-xl border-4 border-orange-400/30"
-                  />
-
-                  <div className="text-amber-400 text-2xl mb-1">🎂 30 years</div>
-                  <div className="text-gray-400 text-sm mb-4">March 8, 2024</div>
-
-                  {/* Audio waveform */}
-                  <div className="w-full mb-3">
-                    <div className="flex items-center justify-center gap-1 h-12">
-                      {[...Array(20)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="w-1 bg-gradient-to-t from-orange-500 to-rose-400 rounded-full animate-pulse"
-                          style={{
-                            height: `${Math.random() * 100 + 20}%`,
-                            animationDelay: `${i * 50}ms`
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Message */}
-                  <div className="bg-gray-800/50 rounded-xl px-4 py-3 text-sm text-gray-200 text-center border border-gray-700">
-                    "Bro, remember our pact? Skydiving on our 30th? You'd laugh that I did it without you 😄..."
-                  </div>
-                </div>
-
-                <div className="px-4 py-3 bg-gray-800/50 border-t border-gray-700">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-orange-500 animate-pulse" />
-                    <span className="text-xs text-gray-400 font-medium">Voice Call Active</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 px-2">
-                <h4 className="font-bold text-gray-900 mb-2 text-lg">One last birthday together</h4>
-                <p className="text-sm text-gray-600 mb-3">
-                  Thomas lost his twin brother Tim in a car accident. On what would have been Tim's 30th birthday, he can still mark this moment "together" - with Tim's voice, humor, and responses.
-                </p>
-                <p className="text-xs text-gray-500 italic">
-                  "Moments that matter, together."
-                </p>
-              </div>
             </div>
           </div>
 
