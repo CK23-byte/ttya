@@ -82,6 +82,15 @@ export default function LandingPage() {
     }
   }, [demoMessages, isTyping])
 
+  // Handle email verification redirect from Supabase
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash && hash.includes('access_token')) {
+      // Email verification link clicked - redirect to email-auth page with token
+      navigate('/email-auth' + hash)
+    }
+  }, [navigate])
+
   const handleDemoSend = async () => {
     if (!demoInput.trim() || isTyping || messageCount >= MAX_FREE_MESSAGES) return
 
