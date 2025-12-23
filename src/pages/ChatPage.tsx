@@ -28,19 +28,16 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { getSecure, setSecure } from '../utils/secureStorage'
 import { sendMessageToClaude, generateSystemPrompt } from '../utils/claudeAPI'
+import { loadPersonalityProfiles, loadChatMessages, saveChatMessages } from '../utils/profileStorage'
 import TypingIndicator from '../components/TypingIndicator'
 import EmojiPicker from '../components/EmojiPicker'
 import AttachmentPicker from '../components/AttachmentPicker'
 import VoiceCallModal from '../components/VoiceCallModal'
-import VideoCallModal from '../components/VideoCallModal'
 import Modal from '../components/Modal'
 import { Message, PersonalityProfile } from '../types'
 import { CREDIT_PRICING } from '../types/database'
 
-const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
-const PROFILES_STORAGE_KEY = 'personality_profiles'
 const THEME_STORAGE_KEY = 'chat_theme'
 
 type ChatTheme = 'whatsapp' | 'imessage' | 'messenger'
@@ -109,9 +106,12 @@ interface ChatConversation {
 
 export default function ChatPage() {
   const { isAuthenticated, encryptionKey, updateActivity } = useAuth()
-  const { user, profile, refreshCredits } = useSupabaseAuth()
+  const { user, profile: supabaseProfile, refreshCredits, isLoading: supabaseLoading, isConfigured } = useSupabaseAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+
+  // Check auth: Support both old password-based and new Supabase email auth
+  const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
   const [conversations, setConversations] = useState<ChatConversation[]>([])
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null)
   const [currentMessages, setCurrentMessages] = useState<Message[]>([])
@@ -123,7 +123,6 @@ export default function ChatPage() {
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [showAttachmentPicker, setShowAttachmentPicker] = useState(false)
   const [showVoiceCallModal, setShowVoiceCallModal] = useState(false)
-  const [showVideoCallModal, setShowVideoCallModal] = useState(false)
   const [theme, setTheme] = useState<ChatTheme>('whatsapp')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const hasLoadedRef = useRef(false)
@@ -161,38 +160,30 @@ export default function ChatPage() {
 
   // Redirect if not authenticated (but wait for initial auth check)
   useEffect(() => {
-    // Give auth context time to initialize before redirecting
-    const timeoutId = setTimeout(() => {
-      if (!isAuthenticated && !encryptionKey) {
-        navigate('/email-auth')
-      }
-    }, 100)
+    // Wait for Supabase auth to finish loading
+    if (isConfigured && supabaseLoading) {
+      return
+    }
 
-    return () => clearTimeout(timeoutId)
-  }, [isAuthenticated, encryptionKey, navigate])
+    // Redirect to login if not authenticated
+    if (!isUserAuthenticated) {
+      navigate('/email-auth')
+    }
+  }, [isUserAuthenticated, supabaseLoading, navigate, isConfigured])
 
   // Load all personality profiles and their conversations
   useEffect(() => {
     const loadConversations = async () => {
-      if (!encryptionKey) {
-        setIsLoading(false)
-        return
-      }
-
       try {
-        // Load all profiles
-        const profiles = await getSecure<PersonalityProfile[]>(
-          PROFILES_STORAGE_KEY,
-          encryptionKey
-        ) || []
+        // Use centralized storage utility (handles both encrypted and Supabase database)
+        const profiles = await loadPersonalityProfiles(encryptionKey)
+        logger.log('📱 ChatPage: Loaded profiles from storage:', profiles.length)
 
         // Load messages for each profile
         const convos: ChatConversation[] = await Promise.all(
           profiles.map(async (profile) => {
-            const messages = await getSecure<Message[]>(
-              `${MESSAGES_STORAGE_PREFIX}${profile.id}`,
-              encryptionKey
-            ) || []
+            // Use centralized message loading (handles both encrypted and Supabase database)
+            const messages = await loadChatMessages(profile.id, encryptionKey)
 
             return {
               profileId: profile.id,
@@ -244,9 +235,9 @@ export default function ChatPage() {
   }
 
   const saveMessages = async (profileId: string, messages: Message[]) => {
-    if (!encryptionKey) return
     try {
-      await setSecure(`${MESSAGES_STORAGE_PREFIX}${profileId}`, messages, encryptionKey)
+      // Use centralized message saving (handles both encrypted and Supabase database)
+      await saveChatMessages(profileId, messages, encryptionKey)
 
       // Update conversations list
       setConversations(prev => prev.map(c =>
@@ -260,13 +251,13 @@ export default function ChatPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !activeProfileId || !encryptionKey) return
+    if (!messageInput.trim() || !activeProfileId) return
 
     const activeConvo = getActiveConversation()
     if (!activeConvo) return
 
     // Check if user has Supabase account and credits
-    if (!user || !profile) {
+    if (!user || !supabaseProfile) {
       showModal(
         'Account Required',
         'Please sign in with email to use chat features and track your credits.',
@@ -276,7 +267,7 @@ export default function ChatPage() {
     }
 
     // Check if user has enough text credits
-    const textCredits = profile.text_credits || 0
+    const textCredits = supabaseProfile.text_credits || 0
     const requiredCredits = CREDIT_PRICING.MESSAGE_BASE_COST
 
     if (textCredits < requiredCredits) {
@@ -302,6 +293,9 @@ export default function ChatPage() {
     const updatedMessages = [...currentMessages, userMessage]
     setCurrentMessages(updatedMessages)
     setMessageInput('')
+
+    // Save user message immediately (before AI responds)
+    await saveMessages(activeProfileId, updatedMessages)
 
     setTimeout(() => {
       setCurrentMessages(prev =>
@@ -373,6 +367,7 @@ export default function ChatPage() {
 
       const finalMessages = [...updatedMessages, errorMessage]
       setCurrentMessages(finalMessages)
+      await saveMessages(activeProfileId, finalMessages)
     } finally {
       setIsTyping(false)
     }
@@ -425,21 +420,10 @@ export default function ChatPage() {
     alert(`Voice sample "${file.name}" uploaded! This will be used to generate voice calls.`)
   }
 
-  // Handle media upload for video calls
-  const handleMediaUpload = (files: File[], type: 'photo' | 'video' | 'voice') => {
-    logger.log(`Uploading ${files.length} ${type} files for video:`, files.map(f => f.name))
-    // TODO: Store media with profile
-  }
-
   // Handle buy credits
   const handleBuyVoiceCredits = () => {
     alert('Voice credits purchase coming soon! This will redirect to Stripe checkout.')
     setShowVoiceCallModal(false)
-  }
-
-  const handleBuyVideoCredits = () => {
-    alert('Video credits purchase coming soon! This will redirect to Stripe checkout.')
-    setShowVideoCallModal(false)
   }
 
   if (isLoading) {
@@ -468,8 +452,8 @@ export default function ChatPage() {
                 <Home className={`w-5 h-5 ${currentTheme.textMuted}`} />
               </button>
               <h2 className={`text-xl font-semibold ${currentTheme.text}`}>Chats</h2>
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded">
-                v2.5.1
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded" title="Build: 2025-12-18 10:57 UTC">
+                v2.11.0
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -628,11 +612,11 @@ export default function ChatPage() {
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowVideoCallModal(true)}
-                  className="p-2 hover:bg-black/10 rounded-full transition"
-                  title="Video Call - Buy Credits"
+                  onClick={() => navigate(`/video?profile=${activeConvo.profileId}`)}
+                  className="p-2 hover:bg-purple-500/20 rounded-full transition group"
+                  title="Start Video Call"
                 >
-                  <Video className={`w-5 h-5 ${currentTheme.textMuted}`} />
+                  <Video className={`w-5 h-5 ${currentTheme.textMuted} group-hover:text-purple-500 transition`} />
                 </button>
                 <button
                   onClick={() => {
@@ -784,18 +768,6 @@ export default function ChatPage() {
           hasVoiceSample={false}
           onUploadVoiceSample={handleVoiceSampleUpload}
           onBuyCredits={handleBuyVoiceCredits}
-          theme={theme}
-        />
-      )}
-
-      {showVideoCallModal && activeConvo && (
-        <VideoCallModal
-          onClose={() => setShowVideoCallModal(false)}
-          profileName={activeConvo.profile.name}
-          hasVoiceSample={false}
-          hasVisualMedia={!!(activeConvo.profile.photoUrl || activeConvo.profile.photoUrls?.length)}
-          onUploadMedia={handleMediaUpload}
-          onBuyCredits={handleBuyVideoCredits}
           theme={theme}
         />
       )}

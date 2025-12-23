@@ -88,7 +88,10 @@ export default function Header({ variant = 'default' }: HeaderProps) {
             </span>
           </div>
           {/* Version Badge */}
-          <span className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200">
+          <span
+            className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200"
+            title="Build: 2025-12-18 10:57 UTC"
+          >
             v2.11.0
           </span>
         </div>

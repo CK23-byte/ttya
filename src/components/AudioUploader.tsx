@@ -50,7 +50,7 @@ export default function AudioUploader({ onAudioLoaded, maxSize = 5 }: AudioUploa
         })
       } catch (err) {
         logger.error('Error processing audio:', err)
-        setError('Fout bij het verwerken van audiobestand')
+        setError('Error processing audio file')
       }
     }
 
@@ -141,13 +141,13 @@ export default function AudioUploader({ onAudioLoaded, maxSize = 5 }: AudioUploa
       >
         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-600 mb-2">
-          Sleep audio hier of klik om te uploaden
+          Drag audio here or click to upload
         </p>
         <p className="text-xs text-gray-500 mb-4">
           MP3, WAV, M4A - Max {maxSize}MB per bestand
         </p>
         <label className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition">
-          Audio Kiezen
+          Choose Audio
           <input
             type="file"
             accept="audio/mp3,audio/mpeg,audio/wav,audio/m4a"

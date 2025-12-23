@@ -7,6 +7,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useAuth } from './AuthContext'
+import { useSupabaseAuth } from './SupabaseAuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { logger } from '../utils/logger'
 
@@ -47,12 +48,22 @@ const DEFAULT_SUBSCRIPTION: SubscriptionStatus = {
 
 export function PaymentProvider({ children }: { children: ReactNode }) {
   const { encryptionKey } = useAuth()
+  const { user } = useSupabaseAuth()
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   // Load subscription status on mount
   useEffect(() => {
     const loadSubscription = async () => {
+      // For Supabase users without encryption key: give default free plan
+      if (!encryptionKey && user) {
+        logger.log('Supabase user detected - providing default free plan')
+        setSubscription(DEFAULT_SUBSCRIPTION)
+        setIsLoading(false)
+        return
+      }
+
+      // For users without auth at all
       if (!encryptionKey) {
         setIsLoading(false)
         return
@@ -88,7 +99,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
     }
 
     loadSubscription()
-  }, [encryptionKey])
+  }, [encryptionKey, user])
 
   const updateSubscription = async (plan: SubscriptionPlan) => {
     if (!encryptionKey) return

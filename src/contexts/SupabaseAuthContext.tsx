@@ -72,6 +72,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id).finally(() => {
+          setIsLoading(false)
           clearTimeout(safetyTimeout)
         })
       } else {
@@ -87,24 +88,29 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
-        logger.log('Auth state change:', event, session ? 'Session exists' : 'No session')
+        logger.log('🔐 Auth state change:', event, session ? 'Session exists' : 'No session')
         setSession(session)
         setUser(session?.user ?? null)
 
         if (session?.user) {
           await fetchProfile(session.user.id)
+          setIsLoading(false) // Ensure loading state is cleared after profile fetch
 
-          // Redirect to dashboard on sign in or email confirmation
-          // But not if we're on certain pages like password reset
-          if (
-            (event === 'SIGNED_IN' || event === 'USER_UPDATED') &&
-            !noRedirectPaths.includes(location.pathname)
-          ) {
-            // Check if we're on homepage or auth pages, then redirect to dashboard
-            const authPaths = ['/', '/auth', '/email-auth', '/login', '/setup']
-            if (authPaths.includes(location.pathname)) {
-              logger.log('Redirecting to dashboard after sign in')
+          // Redirect logic based on auth event
+          if (!noRedirectPaths.includes(location.pathname)) {
+            if (event === 'SIGNED_IN') {
+              // Regular sign in → go to dashboard
+              logger.log('✅ User signed in, redirecting to dashboard')
               navigate('/dashboard')
+            } else if (event === 'USER_UPDATED') {
+              // Email verification or profile update → sign out and go to login
+              logger.log('✅ Email verified, signing out and redirecting to login')
+              // Sign out so user must explicitly log in
+              await supabase.auth.signOut()
+              // Show success message
+              navigate('/email-auth', {
+                state: { message: 'Email verified! You can now log in with your account.' }
+              })
             }
           }
         } else {
@@ -124,22 +130,101 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
     try {
-      logger.log('Fetching profile for user:', userId)
+      logger.log('📋 Fetching profile for user:', userId)
 
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
       if (error) {
-        // Profile doesn't exist yet - will be created on signup
-        logger.error('Profile fetch error:', error)
-        logger.log('Profile not found, might be new user')
-        setProfile(null)
-        setCredits(0)
+        // Profile doesn't exist - create it automatically for new users
+        logger.warn('Profile not found, creating new profile for user:', userId)
+
+        // Get user email from session
+        const { data: { session } } = await supabase.auth.getSession()
+        const userEmail = session?.user?.email
+
+        if (userEmail) {
+          // Create profile with signup bonus - don't use .single() to avoid 406 errors
+          const { data: insertedProfiles, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: userEmail,
+              display_name: null,
+              credits: CREDIT_PRICING.SIGNUP_BONUS,
+              text_credits: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
+              voice_credits: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
+              video_credits: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
+            })
+            .select()
+
+          if (createError) {
+            logger.error('Error creating profile:', createError)
+            // Profile might already exist, try to fetch it
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle()
+
+            if (existingProfile) {
+              logger.log('✅ Using existing profile:', existingProfile)
+              setProfile(existingProfile as Profile)
+              setCredits((existingProfile as Profile).credits)
+            } else {
+              setProfile(null)
+              setCredits(0)
+            }
+          } else if (insertedProfiles && insertedProfiles.length > 0) {
+            const newProfile = insertedProfiles[0]
+            logger.log('✅ Profile created successfully:', newProfile)
+            setProfile(newProfile as Profile)
+            setCredits(CREDIT_PRICING.SIGNUP_BONUS)
+
+            // Also create signup bonus transactions
+            const transactions = [
+              {
+                user_id: userId,
+                amount: CREDIT_PRICING.SIGNUP_BONUS,
+                type: 'bonus' as const,
+                credit_type: 'general' as const,
+                description: 'Welcome bonus on registration',
+              },
+              {
+                user_id: userId,
+                amount: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
+                type: 'bonus' as const,
+                credit_type: 'text' as const,
+                description: 'Text credits welcome bonus',
+              },
+              {
+                user_id: userId,
+                amount: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
+                type: 'bonus' as const,
+                credit_type: 'voice' as const,
+                description: 'Voice credits welcome bonus',
+              },
+              {
+                user_id: userId,
+                amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
+                type: 'bonus' as const,
+                credit_type: 'video' as const,
+                description: 'Video credits welcome bonus',
+              },
+            ]
+
+            await supabase.from('credit_transactions').insert(transactions)
+          }
+        } else {
+          logger.error('Cannot create profile: no email found')
+          setProfile(null)
+          setCredits(0)
+        }
       } else if (data) {
-        logger.log('Profile loaded successfully:', data)
+        logger.log('✅ Profile loaded successfully:', data)
         setProfile(data as Profile)
         setCredits((data as Profile).credits)
       } else {
@@ -166,7 +251,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       .from('profiles')
       .select('credits')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!error && data) {
       setCredits((data as { credits: number }).credits)
@@ -217,28 +302,28 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             amount: CREDIT_PRICING.SIGNUP_BONUS,
             type: 'bonus' as const,
             credit_type: 'general' as const,
-            description: 'Welkomstbonus bij registratie',
+            description: 'Welcome bonus on registration',
           },
           {
             user_id: data.user.id,
             amount: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
             type: 'bonus' as const,
             credit_type: 'text' as const,
-            description: 'Text credits welkomstbonus',
+            description: 'Text credits welcome bonus',
           },
           {
             user_id: data.user.id,
             amount: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
             type: 'bonus' as const,
             credit_type: 'voice' as const,
-            description: 'Voice credits welkomstbonus',
+            description: 'Voice credits welcome bonus',
           },
           {
             user_id: data.user.id,
             amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
             type: 'bonus' as const,
             credit_type: 'video' as const,
-            description: 'Video credits welkomstbonus',
+            description: 'Video credits welcome bonus',
           },
         ]
 
@@ -275,7 +360,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       return { error }
     } catch (err) {
       logger.error('Exception during sign in:', err)
-      return { error: { message: 'Er is een fout opgetreden bij het inloggen' } as AuthError }
+      return { error: { message: 'An error occurred while logging in' } as AuthError }
     }
   }
 

@@ -26,11 +26,15 @@ export default async function handler(
 
   // Check required environment variables
   if (!ELEVENLABS_API_KEY) {
-    console.error('ElevenLabs API key not configured')
+    console.error('❌ ElevenLabs API key not configured in environment variables')
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('ELEVEN')))
     return res.status(500).json({
-      error: 'ElevenLabs API key not configured'
+      error: 'ElevenLabs API key not configured',
+      hint: 'Set ELEVENLABS_API_KEY in Vercel environment variables. Go to Project Settings > Environment Variables and add ELEVENLABS_API_KEY with your API key from https://elevenlabs.io/app/settings/api-keys'
     })
   }
+
+  console.log('✓ ElevenLabs API key found, length:', ELEVENLABS_API_KEY.length)
 
   try {
     const body = req.body as RequestBody
@@ -71,10 +75,41 @@ export default async function handler(
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('ElevenLabs API error:', error)
+      console.error('ElevenLabs API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error
+      })
+
+      // Parse error message
+      let errorMessage = error
+      let errorStatus = ''
+      try {
+        const errorJson = JSON.parse(error)
+        errorMessage = errorJson.detail?.message || errorJson.message || JSON.stringify(errorJson)
+        errorStatus = errorJson.detail?.status || ''
+      } catch (e) {
+        // Not JSON, use raw error
+      }
+
+      // Provide specific guidance based on error content and status code
+      let hint = ''
+
+      // Check for quota exceeded in error message (ElevenLabs sends this as 401)
+      if (errorStatus === 'quota_exceeded' || errorMessage.includes('quota') || errorMessage.includes('credits remaining')) {
+        hint = '💰 Out of ElevenLabs Credits! Your account has insufficient credits. Add more credits at https://elevenlabs.io/app/settings/billing'
+      } else if (response.status === 401) {
+        hint = '🔑 ElevenLabs API key is invalid or expired. Check ELEVENLABS_API_KEY in Vercel environment variables. Get your key at https://elevenlabs.io/app/settings/api-keys'
+      } else if (response.status === 429) {
+        hint = '⏱️ Rate limit exceeded. Too many requests to ElevenLabs. Wait a moment and try again.'
+      } else if (response.status === 402) {
+        hint = '💰 Insufficient credits. Your ElevenLabs account needs more credits. Visit https://elevenlabs.io/app/settings/billing'
+      }
+
       return res.status(response.status).json({
         error: 'Failed to generate speech',
-        details: error
+        details: errorMessage,
+        hint
       })
     }
 

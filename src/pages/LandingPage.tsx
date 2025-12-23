@@ -17,8 +17,6 @@ import {
   Video,
   Lock,
   Shield,
-  Crown,
-  Zap,
   Check,
   Mail,
   Globe,
@@ -84,6 +82,15 @@ export default function LandingPage() {
     }
   }, [demoMessages, isTyping])
 
+  // Handle email verification redirect from Supabase
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash && hash.includes('access_token')) {
+      // Email verification link clicked - redirect to email-auth page with token
+      navigate('/email-auth' + hash)
+    }
+  }, [navigate])
+
   const handleDemoSend = async () => {
     if (!demoInput.trim() || isTyping || messageCount >= MAX_FREE_MESSAGES) return
 
@@ -142,7 +149,7 @@ export default function LandingPage() {
       {/* Version Badge */}
       <div className="fixed top-4 left-4 z-50">
         <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
-          <span className="text-xs font-semibold text-gray-600">v2.5.1</span>
+          <span className="text-xs font-semibold text-gray-600" title="Build: 2025-12-18 10:57 UTC">v2.11.0</span>
         </div>
       </div>
 
@@ -192,7 +199,7 @@ export default function LandingPage() {
 
             <p className="text-lg text-gray-600 mb-6 leading-relaxed">
               Upload conversations from WhatsApp, Messenger, Telegram, or any messaging app to recreate the personality of loved ones.
-              Secure, private, and deeply personal.
+              Chat, make voice calls, or video call with AI recreations that sound and feel like them. Secure, private, and deeply personal.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-6">
@@ -320,9 +327,11 @@ export default function LandingPage() {
                 {/* WhatsApp Interface Mockup */}
                 <div className="bg-[#075E54] p-3 border-b border-gray-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white font-bold">
-                      P
-                    </div>
+                    <img
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces"
+                      alt="Dad"
+                      className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+                    />
                     <div className="flex-1">
                       <span className="font-semibold text-white block">Dad</span>
                       <span className="text-xs text-green-100">online</span>
@@ -376,9 +385,11 @@ export default function LandingPage() {
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-xl">
-                        👵
-                      </div>
+                      <img
+                        src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop&crop=faces"
+                        alt="Grandma Rose"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-white/30"
+                      />
                       <span className="font-semibold">Grandma Rose</span>
                     </div>
                     <div className="flex gap-1 items-center">
@@ -396,9 +407,11 @@ export default function LandingPage() {
                       {/* Video frame with subtle animation */}
                       <div className="bg-gradient-to-br from-amber-100 to-rose-100 rounded-2xl p-8 shadow-2xl border-4 border-white/10 animate-pulse" style={{animationDuration: '3s'}}>
                         <div className="text-center">
-                          <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full mx-auto mb-3 flex items-center justify-center text-4xl shadow-xl">
-                            👵
-                          </div>
+                          <img
+                            src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop&crop=faces"
+                            alt="Grandma Rose on video call"
+                            className="w-24 h-24 rounded-full mx-auto mb-3 object-cover shadow-xl border-4 border-white/30"
+                          />
                           <div className="bg-white/90 rounded-lg px-4 py-2 text-sm text-gray-800 italic mt-3 max-w-[200px]">
                             "...and then I would walk to the bakery every morning for fresh bread..."
                           </div>
@@ -445,18 +458,22 @@ export default function LandingPage() {
                 {/* Voice Interface Mockup */}
                 <div className="p-4 border-b border-gray-700">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      T
-                    </div>
+                    <img
+                      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces"
+                      alt="Tim"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
+                    />
                     <span className="font-semibold text-white">Tim</span>
                   </div>
                 </div>
 
                 <div className="p-6 min-h-[280px] flex flex-col justify-center items-center">
                   {/* Profile photo */}
-                  <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-rose-500 rounded-full mb-4 flex items-center justify-center text-4xl shadow-xl">
-                    👨
-                  </div>
+                  <img
+                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces"
+                    alt="Tim profile"
+                    className="w-24 h-24 rounded-full mb-4 object-cover shadow-xl border-4 border-orange-400/30"
+                  />
 
                   <div className="text-amber-400 text-2xl mb-1">🎂 30 years</div>
                   <div className="text-gray-400 text-sm mb-4">March 8, 2024</div>
@@ -825,36 +842,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Privacy & Security */}
-          <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl p-8 md:p-12 text-white mb-12">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <Shield className="w-10 h-10 text-orange-400" />
-                <h3 className="text-3xl font-bold">Your Data, Your Privacy</h3>
-              </div>
-              <p className="text-lg text-gray-300 text-center mb-8">
-                We understand how precious and private these memories are. That's why we've built TalkToYouAI with security and privacy at its core.
-              </p>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <Lock className="w-8 h-8 text-orange-400 mx-auto mb-3" />
-                  <h4 className="font-semibold mb-2">End-to-End Encryption</h4>
-                  <p className="text-sm text-gray-400">Your data is encrypted with AES-256 before it ever leaves your device</p>
-                </div>
-                <div className="text-center">
-                  <Users className="w-8 h-8 text-orange-400 mx-auto mb-3" />
-                  <h4 className="font-semibold mb-2">You Own Your Data</h4>
-                  <p className="text-sm text-gray-400">Download or delete your profiles anytime. No questions asked.</p>
-                </div>
-                <div className="text-center">
-                  <Shield className="w-8 h-8 text-orange-400 mx-auto mb-3" />
-                  <h4 className="font-semibold mb-2">Never Shared or Sold</h4>
-                  <p className="text-sm text-gray-400">Your memories stay yours. We never share or sell your data.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Urgency CTA */}
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full text-sm font-semibold mb-6">
@@ -875,218 +862,6 @@ export default function LandingPage() {
               Start Preserving Memories Now
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Living Legacy CTA Section */}
-      <div className="py-20 bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-900">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-semibold mb-6">
-              <Sparkles className="w-4 h-4" />
-              Living Legacy - Create Your Digital Avatar
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Leave Your Personality Behind
-            </h2>
-            <p className="text-xl text-purple-100 max-w-4xl mx-auto leading-relaxed mb-8">
-              Want loved ones to always have access to your wisdom, encouragement, and personality?
-              Create your own digital avatar so those meaningful conversations can continue -
-              that valuable advice, those genuine compliments, that unique perspective only you can offer.
-            </p>
-          </div>
-
-          {/* USPs Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center mb-4">
-                <Mic className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-bold text-white mb-2 text-lg">Voice Cloning</h4>
-              <p className="text-sm text-purple-200">
-                Upload voice recordings and create an AI that speaks in your actual voice
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center mb-4">
-                <Video className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-bold text-white mb-2 text-lg">Video Avatar</h4>
-              <p className="text-sm text-purple-200">
-                Create a talking avatar from photos and videos that moves and speaks like you
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center mb-4">
-                <MessageCircle className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-bold text-white mb-2 text-lg">Personality Capture</h4>
-              <p className="text-sm text-purple-200">
-                AI learns your writing style, humor, values, and unique way of expressing thoughts
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-rose-500 rounded-xl flex items-center justify-center mb-4">
-                <Camera className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-bold text-white mb-2 text-lg">Photo Integration</h4>
-              <p className="text-sm text-purple-200">
-                Add photos to create a visual representation that captures your appearance
-              </p>
-            </div>
-          </div>
-
-          {/* CTA Button */}
-          <div className="text-center">
-            <button
-              onClick={() => navigate('/email-auth')}
-              className="group px-10 py-5 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold text-xl shadow-2xl hover:shadow-orange-500/50 transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-3"
-            >
-              Start Your Journey Now
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <p className="text-sm text-purple-200 mt-4">
-              Create your AI companion • Available whenever you need
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Pricing Preview */}
-      <div className="py-16 bg-gradient-to-r from-orange-500 to-rose-500">
-        <div className="max-w-6xl mx-auto px-4 text-center text-white">
-          <Sparkles className="w-10 h-10 mx-auto mb-4 opacity-90" />
-          <h3 className="text-3xl font-bold mb-4">
-            Simple, Transparent Pricing
-          </h3>
-          <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-            Choose a plan that fits your needs. Start free, upgrade anytime.
-          </p>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-8">
-            {/* Free */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left hover:bg-white/15 transition">
-              <div className="text-2xl font-bold mb-1">Free</div>
-              <div className="text-xl font-bold mb-3">€0<span className="text-sm font-normal">/mo</span></div>
-              <ul className="space-y-2 text-sm text-white/80">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>50 messages</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>1 AI personality</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Starter */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left hover:bg-white/15 transition">
-              <div className="text-2xl font-bold mb-1">Starter</div>
-              <div className="text-xl font-bold mb-3">€9.99<span className="text-sm font-normal">/mo</span></div>
-              <ul className="space-y-2 text-sm text-white/80">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>1,500 messages/mo</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>3 AI personalities</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Pro - Popular */}
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-5 text-left border-2 border-white/40 relative hover:bg-white/25 transition">
-              <span className="absolute -top-2 right-3 px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full flex items-center gap-1">
-                <Crown className="w-3 h-3" />
-                Popular
-              </span>
-              <div className="text-2xl font-bold mb-1">Pro</div>
-              <div className="text-xl font-bold mb-3">€24.99<span className="text-sm font-normal">/mo</span></div>
-              <ul className="space-y-2 text-sm text-white/90">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>6,000 messages/mo</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>10 AI personalities</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Memory enhancement</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Premium */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left hover:bg-white/15 transition relative">
-              <span className="absolute -top-2 right-3 px-2 py-0.5 bg-amber-400 text-gray-900 text-xs font-bold rounded-full flex items-center gap-1">
-                <Zap className="w-3 h-3" />
-                Premium
-              </span>
-              <div className="text-2xl font-bold mb-1">Premium</div>
-              <div className="text-xl font-bold mb-3">€49.99<span className="text-sm font-normal">/mo</span></div>
-              <ul className="space-y-2 text-sm text-white/80">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>20,000 messages/mo</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Unlimited AI's</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Ultra fast responses</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <button
-            onClick={() => navigate('/pricing')}
-            className="px-8 py-4 bg-white text-orange-600 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-          >
-            See All Plans & Add-ons
-          </button>
-
-          {/* Add-on Notice */}
-          <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-sm">
-            <Video className="w-4 h-4" />
-            <span>+ Voice & Video credits available</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Features Grid */}
-      <div className="py-16 bg-white">
-        <div className="max-w-5xl mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Everything You Need
-          </h3>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="p-5 rounded-xl border border-gray-100 hover:border-orange-200 hover:shadow-md transition">
-              <MessageCircle className="w-8 h-8 text-orange-500 mb-3" />
-              <h4 className="font-semibold text-gray-900 mb-2">Natural Conversations</h4>
-              <p className="text-sm text-gray-600">AI learns their exact writing style and expressions</p>
-            </div>
-            <div className="p-5 rounded-xl border border-gray-100 hover:border-orange-200 hover:shadow-md transition">
-              <Users className="w-8 h-8 text-orange-500 mb-3" />
-              <h4 className="font-semibold text-gray-900 mb-2">Multiple Profiles</h4>
-              <p className="text-sm text-gray-600">Create conversations with different loved ones</p>
-            </div>
-            <div className="p-5 rounded-xl border border-gray-100 hover:border-orange-200 hover:shadow-md transition">
-              <Sparkles className="w-8 h-8 text-orange-500 mb-3" />
-              <h4 className="font-semibold text-gray-900 mb-2">Chat Themes</h4>
-              <p className="text-sm text-gray-600">WhatsApp, iMessage, or Messenger style</p>
-            </div>
           </div>
         </div>
       </div>
@@ -1120,6 +895,40 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Privacy & Security */}
+      <div className="py-16 bg-gradient-to-br from-gray-900 to-slate-800">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl p-8 md:p-12 text-white">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <Shield className="w-10 h-10 text-orange-400" />
+                <h3 className="text-3xl font-bold">Your Data, Your Privacy</h3>
+              </div>
+              <p className="text-lg text-gray-300 text-center mb-8">
+                We understand how precious and private these memories are. That's why we've built TalkToYouAI with security and privacy at its core.
+              </p>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <Lock className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">End-to-End Encryption</h4>
+                  <p className="text-sm text-gray-400">Your data is encrypted with AES-256 before it ever leaves your device</p>
+                </div>
+                <div className="text-center">
+                  <Users className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">You Own Your Data</h4>
+                  <p className="text-sm text-gray-400">Download or delete your profiles anytime. No questions asked.</p>
+                </div>
+                <div className="text-center">
+                  <Shield className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">Never Shared or Sold</h4>
+                  <p className="text-sm text-gray-400">Your memories stay yours. We never share or sell your data.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Footer with Privacy */}
       <div className="border-t border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -1127,7 +936,10 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <Heart className="w-5 h-5 text-rose-500" fill="currentColor" />
               <span className="font-medium text-gray-900">TalkToYouAI</span>
-              <span className="px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200">
+              <span
+                className="px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200"
+                title="Build: 2025-12-18 10:57 UTC"
+              >
                 v2.11.0
               </span>
             </div>

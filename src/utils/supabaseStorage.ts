@@ -42,12 +42,22 @@ export async function uploadFileToStorage(
       path: filePath
     })
 
-    // Upload file
+    // Convert File to ArrayBuffer to ensure pure binary upload (no multipart wrapper)
+    const fileArrayBuffer = await file.arrayBuffer()
+
+    logger.log('📦 File converted to ArrayBuffer:', {
+      originalSize: file.size,
+      bufferSize: fileArrayBuffer.byteLength,
+      contentType: file.type
+    })
+
+    // Upload raw binary data - this prevents multipart form boundary corruption
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, {
+      .upload(filePath, fileArrayBuffer, {
         cacheControl: '3600',
-        upsert: false
+        upsert: false,
+        contentType: file.type // Explicitly set content type
       })
 
     if (error) {
@@ -55,15 +65,54 @@ export async function uploadFileToStorage(
       throw new Error(`Failed to upload file: ${error.message}`)
     }
 
-    // Get public URL
+    if (!data || !data.path) {
+      logger.error('Upload succeeded but no path returned:', data)
+      throw new Error('Upload succeeded but no path returned from Supabase')
+    }
+
+    logger.log('Upload response from Supabase:', {
+      uploadedPath: data.path,
+      requestedPath: filePath,
+      fullKey: data.fullPath || data.path
+    })
+
+    // Use the path returned by Supabase (might be different from requested path)
+    const actualPath = data.path
+
+    // Try to get public URL
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
-      .getPublicUrl(filePath)
+      .getPublicUrl(actualPath)
 
     logger.log('File uploaded successfully:', {
-      path: data.path,
-      publicUrl
+      requestedPath: filePath,
+      actualPath: actualPath,
+      publicUrl,
+      bucket
     })
+
+    // Verify the file actually exists by listing bucket contents
+    try {
+      const { data: listData, error: listError } = await supabase.storage
+        .from(bucket)
+        .list(folder || '', {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: 'created_at', order: 'desc' }
+        })
+
+      if (!listError && listData) {
+        logger.log('📁 Files in bucket after upload:', {
+          folder: folder || 'root',
+          fileCount: listData.length,
+          files: listData.map(f => f.name),
+          ourFile: fileName,
+          fileExists: listData.some(f => f.name === fileName)
+        })
+      }
+    } catch (e) {
+      logger.warn('Could not verify file upload by listing:', e)
+    }
 
     return {
       url: publicUrl,
@@ -72,6 +121,37 @@ export async function uploadFileToStorage(
     }
   } catch (error) {
     logger.error('Error uploading file:', error)
+    throw error
+  }
+}
+
+/**
+ * Get a signed URL for temporary access to a file (expires in 1 hour)
+ * Use this when you need to share files with external services like HeyGen
+ *
+ * @param path - The file path in storage
+ * @param bucket - Storage bucket name (default: 'user-uploads')
+ * @param expiresIn - Expiration time in seconds (default: 3600 = 1 hour)
+ * @returns Signed URL string
+ */
+export async function getSignedUrl(
+  path: string,
+  bucket: string = 'user-uploads',
+  expiresIn: number = 3600
+): Promise<string> {
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, expiresIn)
+
+    if (error) {
+      logger.error('Failed to create signed URL:', error)
+      throw new Error(`Failed to create signed URL: ${error.message}`)
+    }
+
+    return data.signedUrl
+  } catch (error) {
+    logger.error('Error creating signed URL:', error)
     throw error
   }
 }

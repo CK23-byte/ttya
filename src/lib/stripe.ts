@@ -162,9 +162,55 @@ export const VIDEO_CREDIT_PACKS = {
   },
 } as const
 
+// Universal Credits (can be used for text, voice, AND video)
+// 1 credit = 1 message, 12 seconds of voice, or 12 seconds of video
+export const UNIVERSAL_CREDIT_PACKS = {
+  small: {
+    name: '100 Universal Credits',
+    credits: 100,
+    price: 9.99,
+    pricePerCredit: 0.10,
+    description: 'Perfect for casual use',
+    priceId: 'universal_credits_100',
+    popular: false,
+    bestValue: false,
+  },
+  medium: {
+    name: '500 Universal Credits',
+    credits: 500,
+    price: 39.99,
+    pricePerCredit: 0.08,
+    popular: true,
+    bestValue: false,
+    description: 'Most popular',
+    priceId: 'universal_credits_500',
+  },
+  large: {
+    name: '1,000 Universal Credits',
+    credits: 1000,
+    price: 69.99,
+    pricePerCredit: 0.07,
+    popular: false,
+    bestValue: true,
+    description: 'Best value',
+    priceId: 'universal_credits_1000',
+  },
+  xlarge: {
+    name: '2,500 Universal Credits',
+    credits: 2500,
+    price: 149.99,
+    pricePerCredit: 0.06,
+    description: 'Maximum savings',
+    priceId: 'universal_credits_2500',
+    popular: false,
+    bestValue: false,
+  },
+} as const
+
 export type PlanType = keyof typeof SUBSCRIPTION_PLANS
 export type VoiceCreditPackType = keyof typeof VOICE_CREDIT_PACKS
 export type VideoCreditPackType = keyof typeof VIDEO_CREDIT_PACKS
+export type UniversalCreditPackType = keyof typeof UNIVERSAL_CREDIT_PACKS
 export type BillingPeriod = 'monthly' | 'yearly'
 
 // Payment Links - Create these in Stripe Dashboard > Products > Payment Links
@@ -184,6 +230,11 @@ export const PAYMENT_LINKS: Record<string, string> = {
   video_credits_50: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_50_LINK || '',
   video_credits_100: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_100_LINK || '',
   video_credits_500: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_500_LINK || '',
+  // Universal Credit Packs
+  universal_credits_100: import.meta.env.VITE_STRIPE_UNIVERSAL_CREDITS_100_LINK || '',
+  universal_credits_500: import.meta.env.VITE_STRIPE_UNIVERSAL_CREDITS_500_LINK || '',
+  universal_credits_1000: import.meta.env.VITE_STRIPE_UNIVERSAL_CREDITS_1000_LINK || '',
+  universal_credits_2500: import.meta.env.VITE_STRIPE_UNIVERSAL_CREDITS_2500_LINK || '',
 }
 
 // Redirect to Stripe Payment Link
@@ -218,6 +269,12 @@ export async function buyVoiceCredits(packType: VoiceCreditPackType, userEmail?:
 // Helper to buy video credits
 export async function buyVideoCredits(packType: VideoCreditPackType, userEmail?: string): Promise<void> {
   const pack = VIDEO_CREDIT_PACKS[packType]
+  await redirectToCheckout(pack.priceId, userEmail)
+}
+
+// Helper to buy universal credits
+export async function buyUniversalCredits(packType: UniversalCreditPackType, userEmail?: string): Promise<void> {
+  const pack = UNIVERSAL_CREDIT_PACKS[packType]
   await redirectToCheckout(pack.priceId, userEmail)
 }
 

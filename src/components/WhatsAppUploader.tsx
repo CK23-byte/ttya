@@ -91,7 +91,7 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
         setSelectedSender(senders[0])
       }
     } catch (err) {
-      setError('Fout bij het lezen van het bestand')
+      setError('Error reading the file')
       logger.error('WhatsApp file upload error', err)
     }
   }
@@ -142,13 +142,13 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
       >
         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-600 mb-2">
-          Sleep je WhatsApp export hier of klik om te uploaden
+          Drag your WhatsApp export here or click to upload
         </p>
         <p className="text-xs text-gray-500 mb-4">
           .txt of .zip bestand (geëxporteerd vanuit WhatsApp, Messenger, Telegram, etc.)
         </p>
         <label className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg cursor-pointer hover:bg-purple-700 transition">
-          Bestand Kiezen
+          Choose File
           <input
             type="file"
             accept=".txt,.zip"
@@ -185,14 +185,14 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
           {senders.length > 1 && (
             <div className="mt-3">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Selecteer de persoon wiens schrijfstijl je wilt imiteren:
+                Select the person whose writing style you want to imitate:
               </label>
               <select
                 value={selectedSender}
                 onChange={(e) => setSelectedSender(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="">-- Kies een naam --</option>
+                <option value="">-- Choose a name --</option>
                 {senders.map((sender) => (
                   <option key={sender} value={sender}>
                     {sender}
@@ -222,10 +222,10 @@ export default function WhatsAppUploader({ onMessagesLoaded }: WhatsAppUploaderP
             <p className="text-xs text-blue-800 font-semibold mb-1">WhatsApp:</p>
             <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside pl-2">
               <li>Open de chat in WhatsApp</li>
-              <li>Tik op de naam bovenaan</li>
-              <li>Scroll naar beneden en kies "Exporteer chat"</li>
-              <li>Kies "Zonder media" voor .txt of "Met media" voor .zip</li>
-              <li>Upload het bestand hier</li>
+              <li>Tap the name at the top</li>
+              <li>Scroll down and choose "Export chat"</li>
+              <li>Choose "Without media" for .txt or "With media" for .zip</li>
+              <li>Upload the file here</li>
             </ol>
           </div>
           <p className="text-xs text-blue-600 italic">

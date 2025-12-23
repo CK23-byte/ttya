@@ -2,7 +2,7 @@
  * Video Call Page - WhatsApp Style Video Call
  *
  * Features:
- * - HeyGen Interactive Avatar powered video
+ * - AI-powered interactive video avatars
  * - WhatsApp-style video call interface
  * - Real-time conversation with avatars
  */
@@ -39,8 +39,11 @@ type CallStatus = 'idle' | 'connecting' | 'connected' | 'ended' | 'error'
 export default function VideoPage() {
   const navigate = useNavigate()
   const { isAuthenticated, encryptionKey } = useAuth()
-  const { user, profile: supabaseProfile, refreshCredits } = useSupabaseAuth()
+  const { user, profile: supabaseProfile, refreshCredits, isLoading: supabaseLoading, isConfigured } = useSupabaseAuth()
   const [searchParams] = useSearchParams()
+
+  // Check auth: Support both old password-based and new Supabase email auth
+  const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
 
   const [profile, setProfile] = useState<PersonalityProfile | null>(null)
   const [callStatus, setCallStatus] = useState<CallStatus>('idle')
@@ -74,13 +77,19 @@ export default function VideoPage() {
   const callStartTimeRef = useRef<number | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for Supabase auth to finish loading
+    if (isConfigured && supabaseLoading) {
+      return
+    }
+
+    // Redirect to login if not authenticated
+    if (!isUserAuthenticated) {
       navigate('/email-auth')
       return
     }
 
     loadProfile()
-  }, [isAuthenticated, encryptionKey, searchParams])
+  }, [isUserAuthenticated, supabaseLoading, encryptionKey, searchParams, navigate, isConfigured])
 
   // Track call duration
   useEffect(() => {
@@ -176,8 +185,6 @@ export default function VideoPage() {
   }, [duration, callStatus, user, supabaseProfile]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadProfile = async () => {
-    if (!encryptionKey) return
-
     const profileId = searchParams.get('profile')
     if (!profileId) {
       navigate('/dashboard')
@@ -185,10 +192,19 @@ export default function VideoPage() {
     }
 
     try {
-      const profiles = await getSecure<PersonalityProfile[]>(
-        PROFILES_STORAGE_KEY,
-        encryptionKey
-      ) || []
+      let profiles: PersonalityProfile[] = []
+
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        profiles = await getSecure<PersonalityProfile[]>(
+          PROFILES_STORAGE_KEY,
+          encryptionKey
+        ) || []
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+        profiles = stored ? JSON.parse(stored) : []
+      }
 
       const foundProfile = profiles.find(p => p.id === profileId)
       if (!foundProfile) {
@@ -234,13 +250,13 @@ export default function VideoPage() {
     setError(null)
 
     try {
-      // HeyGen uses avatar IDs instead of image URLs
-      // Default to a professional avatar ID (customize in env)
+      // Use avatar ID for video streaming
+      // Default to a professional avatar (customize in env)
       const avatarId = import.meta.env.VITE_HEYGEN_AVATAR_ID || 'Angela-inblackskirt-20220820'
 
-      logger.log('Creating HeyGen streaming session with avatar:', avatarId)
+      logger.log('Creating video streaming session with avatar:', avatarId)
 
-      // Create HeyGen streaming session
+      // Create video streaming session
       const session = await createHeyGenStreamingSession(avatarId, 'medium')
       setSessionId(session.session_id)
 
@@ -253,7 +269,7 @@ export default function VideoPage() {
 
       // Validate SDP
       if (!session.offer || !session.offer.sdp || session.offer.sdp.length === 0) {
-        throw new Error('Invalid SDP received from HeyGen - SDP is empty')
+        throw new Error('Invalid SDP received from video service - SDP is empty')
       }
 
       if (!session.offer.sdp.startsWith('v=')) {
@@ -274,22 +290,22 @@ export default function VideoPage() {
         }
       }
 
-      // Set remote description (offer from HeyGen)
+      // Set remote description (offer from video service)
       await pc.setRemoteDescription(session.offer)
 
       // Create answer
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
 
-      // Send answer back to HeyGen
-      // HeyGen handles this automatically via their API
-      logger.log('HeyGen session established successfully')
+      // Send answer back to video service
+      // Service handles this automatically via their API
+      logger.log('Video session established successfully')
 
       callStartTimeRef.current = Date.now()
       setCallStatus('connected')
     } catch (error) {
       logger.error('Error starting call:', error)
-      setError('Failed to start video call. Please check your HeyGen API configuration.')
+      setError('Failed to start video call. Please try again later.')
       setCallStatus('error')
     }
   }
@@ -371,8 +387,8 @@ export default function VideoPage() {
             </div>
           </div>
 
-          <span className="px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs font-semibold rounded">
-            v2.5.1
+          <span className="px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs font-semibold rounded" title="Build: 2025-12-18 10:57 UTC">
+            v2.11.0
           </span>
         </div>
       </div>
@@ -522,18 +538,6 @@ export default function VideoPage() {
           </div>
         )}
 
-        {/* HeyGen Setup Notice */}
-        {callStatus === 'idle' && (
-          <div className="absolute top-4 left-4 right-4">
-            <div className="bg-blue-900/50 backdrop-blur-sm border border-blue-700 rounded-lg p-4 max-w-md">
-              <p className="text-sm text-blue-200">
-                <strong>Note:</strong> Video calls require HeyGen API configuration.
-                Add your HeyGen API key as <code className="bg-blue-800 px-1 rounded">VITE_HEYGEN_API_KEY</code>
-                and optionally set avatar ID as <code className="bg-blue-800 px-1 rounded">VITE_HEYGEN_AVATAR_ID</code>
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Call Duration Display */}
         {callStatus === 'connected' && (

@@ -30,14 +30,13 @@ import {
   HelpCircle
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { getSecure, setSecure } from '../utils/secureStorage'
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
 import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
+import { loadProfileData as loadProfileDataFromStorage, saveProfileData as saveProfileDataToStorage, loadPersonalityProfiles, savePersonalityProfiles } from '../utils/profileStorage'
 import JSZip from 'jszip'
-
-const PROFILES_STORAGE_KEY = 'personality_profiles'
 
 // Voice configuration
 interface VoiceConfig {
@@ -60,8 +59,8 @@ interface AvatarConfig {
 interface StoredProfileData {
   textNotes: string[]
   voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
-  photos: { id: string; url: string; name: string }[]
-  videos: { id: string; url: string; name: string }[]
+  photos: { id: string; url: string; name: string; storagePath?: string }[]
+  videos: { id: string; url: string; name: string; storagePath?: string }[]
   voiceConfig?: VoiceConfig // Voice configuration for calls
   avatarConfig?: AvatarConfig // Avatar configuration for video calls
 }
@@ -70,8 +69,8 @@ interface StoredProfileData {
 interface ProfileData {
   textNotes: string[]
   voiceSamples: { id: string; blob: Blob; duration: number; name: string }[]
-  photos: { id: string; url: string; name: string }[]
-  videos: { id: string; url: string; name: string }[]
+  photos: { id: string; url: string; name: string; storagePath?: string }[]
+  videos: { id: string; url: string; name: string; storagePath?: string }[]
   voiceConfig?: VoiceConfig // Voice configuration for calls
   avatarConfig?: AvatarConfig // Avatar configuration for video calls
 }
@@ -81,6 +80,7 @@ export default function ProfileImprovementPage() {
   const [searchParams] = useSearchParams()
   const profileId = searchParams.get('profileId')
   const { encryptionKey } = useAuth()
+  const { user, isConfigured } = useSupabaseAuth()
 
   const [profile, setProfile] = useState<PersonalityProfile | null>(null)
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -108,9 +108,14 @@ export default function ProfileImprovementPage() {
   const [cloneError, setCloneError] = useState<string | null>(null)
   const [isCreatingAvatar, setIsCreatingAvatar] = useState(false)
   const [avatarCreationStatus, setAvatarCreationStatus] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'error'>('idle')
+  const [avatarCreationProgress, setAvatarCreationProgress] = useState(0)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
+  const [isEditingProfileName, setIsEditingProfileName] = useState(false)
+  const [tempProfileName, setTempProfileName] = useState('')
+  const [isEditingRelationship, setIsEditingRelationship] = useState(false)
+  const [tempRelationship, setTempRelationship] = useState('')
 
   // Modal state
   const [modal, setModal] = useState<{
@@ -132,6 +137,7 @@ export default function ProfileImprovementPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatFileInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const voiceSectionRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -143,14 +149,17 @@ export default function ProfileImprovementPage() {
   const focusParam = searchParams.get('focus')
 
   useEffect(() => {
-    if (!profileId || !encryptionKey) {
+    // Check auth: either encryptionKey (password auth) or Supabase user
+    const isAuthenticated = encryptionKey || (isConfigured && user)
+
+    if (!profileId || !isAuthenticated) {
       navigate('/dashboard')
       return
     }
 
     loadProfile()
     loadProfileData()
-  }, [profileId, encryptionKey])
+  }, [profileId, encryptionKey, user, isConfigured])
 
   // Scroll to focused section if focus parameter is provided
   useEffect(() => {
@@ -174,33 +183,29 @@ export default function ProfileImprovementPage() {
   }, [])
 
   const loadProfile = async () => {
-    if (!encryptionKey) return
-
     try {
-      const profiles = await getSecure<PersonalityProfile[]>(
-        PROFILES_STORAGE_KEY,
-        encryptionKey
-      ) || []
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      const profiles = await loadPersonalityProfiles(encryptionKey)
 
       const foundProfile = profiles.find(p => p.id === profileId)
       if (foundProfile) {
         setProfile(foundProfile)
       } else {
+        logger.warn('Profile not found:', profileId)
         navigate('/dashboard')
       }
     } catch (error) {
       logger.error('Error loading profile:', error)
+      navigate('/dashboard')
     }
   }
 
   const loadProfileData = async () => {
-    if (!encryptionKey || !profileId) return
+    if (!profileId) return
 
     try {
-      const data = await getSecure<StoredProfileData>(
-        `profile_data_${profileId}`,
-        encryptionKey
-      )
+      // Use centralized storage utility (handles both encrypted and Supabase)
+      const data = await loadProfileDataFromStorage<StoredProfileData>(profileId, encryptionKey)
 
       logger.log('Loading profile data:', data)
 
@@ -249,7 +254,7 @@ export default function ProfileImprovementPage() {
   }
 
   const saveProfileData = async () => {
-    if (!encryptionKey || !profileId) return
+    if (!profileId) return
 
     setIsSaving(true)
     setSaveSuccess(false)
@@ -290,11 +295,8 @@ export default function ProfileImprovementPage() {
         voiceConfig: dataToStore.voiceConfig ? `${dataToStore.voiceConfig.type}` : 'none'
       })
 
-      await setSecure(
-        `profile_data_${profileId}`,
-        dataToStore,
-        encryptionKey
-      )
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      await saveProfileDataToStorage(profileId, dataToStore, encryptionKey)
 
       logger.log('Profile data saved successfully')
 
@@ -546,8 +548,8 @@ export default function ProfileImprovementPage() {
       // Create recorder with simple webm format
       logger.log('🎤 Creating MediaRecorder...')
 
-      // Choose audio format that ElevenLabs supports
-      // ElevenLabs supports: MP3, WAV, FLAC, OGG, M4A (but NOT WEBM!)
+      // Choose audio format that voice AI service supports
+      // voice AI service supports: MP3, WAV, FLAC, OGG, M4A (but NOT WEBM!)
       let mimeType = 'audio/webm' // fallback
       if (MediaRecorder.isTypeSupported('audio/mp4')) {
         mimeType = 'audio/mp4'
@@ -743,11 +745,25 @@ export default function ProfileImprovementPage() {
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('📸 Photo upload triggered')
+
     const files = Array.from(e.target.files || [])
-    if (!profile) return
+    console.log('📸 Files selected:', files.length, files)
+
+    if (!profile) {
+      console.error('❌ No profile found, cannot upload photos')
+      showModal('Upload Error', 'Profile not loaded. Please refresh the page and try again.', 'error')
+      return
+    }
+
+    if (files.length === 0) {
+      console.log('⚠️ No files selected')
+      return
+    }
 
     for (const file of files) {
       try {
+        console.log('📤 Uploading photo:', file.name, file.type, file.size)
         logger.log('Uploading photo to Supabase Storage...', {
           name: file.name,
           size: file.size,
@@ -763,6 +779,8 @@ export default function ProfileImprovementPage() {
 
         const id = `photo_${Date.now()}_${Math.random()}`
 
+        console.log('✅ Photo uploaded, adding to state:', id, publicUrl)
+
         setProfileData(prev => ({
           ...prev,
           photos: [
@@ -777,11 +795,16 @@ export default function ProfileImprovementPage() {
         }))
 
         logger.log('Photo uploaded successfully:', publicUrl)
+        showModal('Upload Success', `${file.name} uploaded successfully!`, 'success')
       } catch (error) {
+        console.error('❌ Error uploading photo:', error)
         logger.error('Error uploading photo:', error)
         showModal('Upload Failed', `Failed to upload ${file.name}. Please try again.`, 'error')
       }
     }
+
+    // Reset file input to allow re-uploading same file
+    e.target.value = ''
   }
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -821,6 +844,100 @@ export default function ProfileImprovementPage() {
     } catch (error) {
       logger.error('Error uploading video:', error)
       showModal('Upload Failed', 'Failed to upload video. Please try again.', 'error')
+    }
+  }
+
+  const handleProfileNameSave = async () => {
+    if (!tempProfileName.trim() || !profile) return
+
+    try {
+      // Load profiles from database/storage
+      const profiles = await loadPersonalityProfiles(encryptionKey)
+
+      // Update profile name
+      const updatedProfiles = profiles.map(p =>
+        p.id === profile.id ? { ...p, name: tempProfileName.trim() } : p
+      )
+
+      // Save profiles back to database/storage
+      await savePersonalityProfiles(updatedProfiles, encryptionKey)
+
+      // Update local state
+      setProfile({ ...profile, name: tempProfileName.trim() })
+      setIsEditingProfileName(false)
+
+      showModal('Name Updated', 'The profile name has been successfully updated.', 'success')
+    } catch (error) {
+      logger.error('Error updating profile name:', error)
+      showModal('Update Failed', 'Something went wrong while updating the name.', 'error')
+    }
+  }
+
+  const handleRelationshipSave = async () => {
+    if (!tempRelationship.trim() || !profile) return
+
+    try {
+      // Load profiles from database/storage
+      const profiles = await loadPersonalityProfiles(encryptionKey)
+
+      // Update relationship
+      const updatedProfiles = profiles.map(p =>
+        p.id === profile.id ? { ...p, relationship: tempRelationship.trim() } : p
+      )
+
+      // Save profiles back to database/storage
+      await savePersonalityProfiles(updatedProfiles, encryptionKey)
+
+      // Update local state
+      setProfile({ ...profile, relationship: tempRelationship.trim() })
+      setIsEditingRelationship(false)
+
+      showModal('Relationship Updated', 'The relationship has been successfully updated.', 'success')
+    } catch (error) {
+      logger.error('Error updating relationship:', error)
+      showModal('Update Failed', 'Something went wrong while updating the relationship.', 'error')
+    }
+  }
+
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !profile) return
+
+    try {
+      logger.log('Uploading profile photo...', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      })
+
+      // Upload to Supabase Storage
+      const { publicUrl, path } = await uploadFileToStorage(
+        file,
+        'user-uploads',
+        `profiles/${profile.id}/photos`
+      )
+
+      const id = `photo_${Date.now()}_profile`
+
+      // Insert at the beginning (make it the profile photo)
+      setProfileData(prev => ({
+        ...prev,
+        photos: [
+          {
+            id,
+            url: publicUrl,
+            name: 'Profile Photo',
+            storagePath: path
+          },
+          ...prev.photos
+        ]
+      }))
+
+      logger.log('Profile photo uploaded successfully:', publicUrl)
+      showModal('Photo Uploaded', 'The profile photo has been successfully updated.', 'success')
+    } catch (error) {
+      logger.error('Error uploading profile photo:', error)
+      showModal('Upload Failed', 'Something went wrong while uploading the photo.', 'error')
     }
   }
 
@@ -907,18 +1024,18 @@ export default function ProfileImprovementPage() {
       // Get MIME type from processed audio
       const mimeType = audioFile.type || 'audio/mp4'
 
-      logger.log('Cloning voice to ElevenLabs...', {
+      logger.log('Cloning voice to voice AI service...', {
         audioSize: audioFile.size,
         mimeType,
         duration: sample.duration,
         wasVideo: originalFile.type.startsWith('video/')
       })
 
-      // Validate audio duration (ElevenLabs requires at least 30 seconds, recommends 1+ minute)
+      // Validate audio duration (voice AI service requires at least 30 seconds, recommends 1+ minute)
       if (!sample.duration || sample.duration < 30) {
         showModal(
           'Voice Sample Too Short',
-          `Duration: ${sample.duration || 0} seconds.\n\nElevenLabs requires at least 30 seconds of audio. Please record a longer sample.`,
+          `Duration: ${sample.duration || 0} seconds.\n\nvoice AI service requires at least 30 seconds of audio. Please record a longer sample.`,
           'warning'
         )
         setIsCloningVoice(false)
@@ -957,7 +1074,7 @@ export default function ProfileImprovementPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        logger.error('❌ ElevenLabs API Error:', {
+        logger.error('❌ voice AI service API Error:', {
           status: response.status,
           error: error.error,
           details: error.details,
@@ -1020,48 +1137,40 @@ export default function ProfileImprovementPage() {
 
   // Avatar creation handler
   const handleCreateAvatar = async () => {
-    if (!profileData.videos || profileData.videos.length === 0) {
-      showModal('No Video', 'Please upload a video first! Upload a 2-10 second video with clear frontal face and good lighting.', 'warning')
+    if (!profileData.photos || profileData.photos.length === 0) {
+      showModal('No Photo', 'Please upload a photo first! Upload a clear photo showing frontal face with good lighting.', 'warning')
       return
     }
 
     setIsCreatingAvatar(true)
     setAvatarCreationStatus('uploading')
+    setAvatarCreationProgress(10) // Initial progress
 
     try {
-      // Use the first uploaded video
-      const videoUrl = profileData.videos[0].url
-      logger.log('Creating avatar from video:', videoUrl)
-
-      // Fetch the video from Supabase Storage
-      const videoResponse = await fetch(videoUrl)
-      if (!videoResponse.ok) {
-        throw new Error('Failed to fetch video')
-      }
-
-      const videoBlob = await videoResponse.blob()
-
-      // Convert to base64
-      const reader = new FileReader()
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onloadend = () => {
-          const base64 = reader.result as string
-          resolve(base64.split(',')[1]) // Remove data:video/mp4;base64, prefix
-        }
-        reader.readAsDataURL(videoBlob)
-      })
-
-      const videoBase64 = await base64Promise
+      // Get the first uploaded photo
+      const firstPhoto = profileData.photos[0]
       const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
 
-      logger.log('Uploading avatar...', { avatarName, videoSize: videoBlob.size })
+      logger.log('Creating avatar from photo:', {
+        photoPath: firstPhoto.storagePath || 'unknown',
+        photoUrl: firstPhoto.url,
+        avatarName
+      })
 
-      // Upload avatar
+      // Use public URL directly since bucket is public
+      // Signed URLs are returning multipart form data instead of the image
+      let photoUrl = firstPhoto.url
+      setAvatarCreationProgress(20) // URL generation progress
+
+      logger.log('Using public URL for video service:', photoUrl.substring(0, 100) + '...')
+
+      setAvatarCreationProgress(30) // Before API call
+      // Send photo URL to API (API will download and convert it to JPG if needed)
       const response = await fetch('/api/heygen/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          videoBase64,
+          videoUrl: photoUrl, // Keep param name for compatibility
           avatarName
         })
       })
@@ -1075,6 +1184,7 @@ export default function ProfileImprovementPage() {
       logger.log('Avatar creation response:', data)
 
       setAvatarCreationStatus('processing')
+      setAvatarCreationProgress(40) // Upload complete, processing started
 
       // Poll for avatar status
       const avatarId = data.avatarId
@@ -1087,17 +1197,27 @@ export default function ProfileImprovementPage() {
         }
 
         attempts++
-        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`)
+        // Update progress incrementally (40% to 95%)
+        const progressIncrement = 55 / maxAttempts
+        setAvatarCreationProgress(prev => Math.min(95, prev + progressIncrement))
+
+        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
 
         if (!statusResponse.ok) {
           throw new Error('Failed to check avatar status')
         }
 
         const statusData = await statusResponse.json()
-        logger.log(`Avatar status check ${attempts}:`, statusData)
+        logger.log(`Avatar status check ${attempts}/${maxAttempts}:`, statusData)
 
         if (statusData.status === 'completed' || statusData.status === 'active') {
           // Avatar is ready
+          setAvatarCreationProgress(100)
           setProfileData(prev => ({
             ...prev,
             avatarConfig: {
@@ -1129,6 +1249,7 @@ export default function ProfileImprovementPage() {
       logger.error('Avatar creation error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       setAvatarCreationStatus('error')
+      setAvatarCreationProgress(0)
       showModal('Avatar Creation Failed', errorMsg, 'error')
     } finally {
       setIsCreatingAvatar(false)
@@ -1179,20 +1300,136 @@ export default function ProfileImprovementPage() {
         {/* Profile Header */}
         <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
           <div className="flex items-start gap-4 mb-6">
-            {profileData.photos.length > 0 ? (
-              <img
-                src={profileData.photos[0].url}
-                alt={profile.name}
-                className="w-20 h-20 rounded-full object-cover shadow-lg border-4 border-white"
+            {/* Profile Photo with Edit Button */}
+            <div className="relative group">
+              {profileData.photos.length > 0 ? (
+                <img
+                  src={profileData.photos[0].url}
+                  alt={profile.name}
+                  className="w-20 h-20 rounded-full object-cover shadow-lg border-4 border-white"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center text-white font-semibold text-2xl shadow-lg">
+                  {profile.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <button
+                onClick={() => profilePhotoInputRef.current?.click()}
+                className="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition hover:bg-blue-600"
+                title="Change profile photo"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <input
+                ref={profilePhotoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePhotoUpload}
+                className="hidden"
               />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-rose-400 flex items-center justify-center text-white font-semibold text-2xl shadow-lg">
-                {profile.name.charAt(0).toUpperCase()}
-              </div>
-            )}
+            </div>
+
+            {/* Profile Name with Edit */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">{profile.name}</h1>
-              <p className="text-gray-600 capitalize">{profile.relationship}</p>
+              {isEditingProfileName ? (
+                <div className="flex items-center gap-2 mb-1">
+                  <input
+                    type="text"
+                    value={tempProfileName}
+                    onChange={(e) => setTempProfileName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleProfileNameSave()
+                      if (e.key === 'Escape') {
+                        setIsEditingProfileName(false)
+                        setTempProfileName('')
+                      }
+                    }}
+                    className="flex-1 text-3xl font-bold text-gray-900 px-3 py-1 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleProfileNameSave}
+                    className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    title="Save"
+                  >
+                    <Check className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingProfileName(false)
+                      setTempProfileName('')
+                    }}
+                    className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                    title="Cancel"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mb-1 group/name">
+                  <h1 className="text-3xl font-bold text-gray-900">{profile.name}</h1>
+                  <button
+                    onClick={() => {
+                      setIsEditingProfileName(true)
+                      setTempProfileName(profile.name)
+                    }}
+                    className="p-1 text-gray-400 opacity-0 group-hover/name:opacity-100 hover:text-blue-500 transition"
+                    title="Edit name"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+              {isEditingRelationship ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={tempRelationship}
+                    onChange={(e) => setTempRelationship(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRelationshipSave()
+                      if (e.key === 'Escape') {
+                        setIsEditingRelationship(false)
+                        setTempRelationship('')
+                      }
+                    }}
+                    className="flex-1 px-3 py-1 border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                    placeholder="e.g., mother, friend, grandmother"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleRelationshipSave}
+                    className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    title="Save"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingRelationship(false)
+                      setTempRelationship('')
+                    }}
+                    className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 group/relationship">
+                  <p className="text-gray-600 capitalize">{profile.relationship}</p>
+                  <button
+                    onClick={() => {
+                      setIsEditingRelationship(true)
+                      setTempRelationship(profile.relationship)
+                    }}
+                    className="p-1 text-gray-400 opacity-0 group-hover/relationship:opacity-100 hover:text-blue-500 transition"
+                    title="Edit relationship"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1595,158 +1832,6 @@ export default function ProfileImprovementPage() {
             </div>
           </div>
 
-          {/* Avatar Configuration */}
-          <div className="bg-white rounded-2xl p-6 shadow-md">
-            <div className="flex items-center gap-3 mb-4">
-              <VideoIcon className="w-6 h-6 text-pink-500" />
-              <h2 className="text-xl font-bold text-gray-900">Avatar Configuration</h2>
-              <span className="text-sm text-gray-500">(For video calls)</span>
-            </div>
-
-            <div className="space-y-4">
-              {/* Avatar Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Choose Avatar Type
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => handleAvatarTypeChange('custom')}
-                    className={`p-4 rounded-lg border-2 transition ${
-                      profileData.avatarConfig?.type === 'custom'
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 hover:border-pink-200'
-                    }`}
-                  >
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-900">👤 Custom Avatar</p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Upload your own video to create a personalized avatar
-                      </p>
-                      {profileData.avatarConfig?.type === 'custom' && profileData.avatarConfig.customAvatarName && (
-                        <p className="text-xs text-pink-600 mt-2 font-medium">
-                          ✓ {profileData.avatarConfig.customAvatarName}
-                        </p>
-                      )}
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleAvatarTypeChange('default')}
-                    className={`p-4 rounded-lg border-2 transition ${
-                      profileData.avatarConfig?.type === 'default'
-                        ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 hover:border-pink-200'
-                    }`}
-                  >
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-900">🤖 Default Avatar</p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Use preset AI avatars
-                      </p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Custom Avatar Section */}
-              {profileData.avatarConfig?.type === 'custom' && (
-                <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 space-y-3">
-                  {!profileData.avatarConfig.customAvatarId ? (
-                    <>
-                      <p className="text-sm text-pink-800">
-                        <strong>Avatar Creation:</strong> Upload a 2-10 second video with clear frontal face and good lighting. This will be used to create your custom AI avatar.
-                      </p>
-
-                      {/* Avatar Preview */}
-                      {profileData.videos.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-pink-900">Preview (using first video):</p>
-                          <div className="relative rounded-lg overflow-hidden bg-black max-w-xs mx-auto">
-                            <video
-                              src={profileData.videos[0].url}
-                              className="w-full"
-                              controls
-                              muted
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      <button
-                        onClick={handleCreateAvatar}
-                        disabled={isCreatingAvatar || profileData.videos.length === 0}
-                        className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                          isCreatingAvatar || profileData.videos.length === 0
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-pink-500 text-white hover:bg-pink-600'
-                        }`}
-                      >
-                        {isCreatingAvatar ? (
-                          <>
-                            <span className="animate-spin">⏳</span>
-                            {avatarCreationStatus === 'uploading' && 'Uploading...'}
-                            {avatarCreationStatus === 'processing' && 'Processing Avatar... (this may take a few minutes)'}
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-5 h-5" />
-                            Create Avatar from Video
-                          </>
-                        )}
-                      </button>
-                      {profileData.videos.length === 0 && (
-                        <p className="text-xs text-pink-600">
-                          ⚠️ Please upload a video first (scroll down to Videos section)
-                        </p>
-                      )}
-                      <p className="text-xs text-pink-600">
-                        💡 <strong>Tips:</strong> Use a 2-10 second video, face the camera directly, ensure good lighting, and speak clearly.
-                      </p>
-                    </>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Check className="w-6 h-6 text-green-500" />
-                        <div className="flex-1">
-                          <p className="font-medium text-pink-900">
-                            Avatar Created Successfully!
-                          </p>
-                          <p className="text-sm text-pink-700">
-                            Using: {profileData.avatarConfig.customAvatarName}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Avatar Thumbnail Preview */}
-                      {profileData.avatarConfig.customAvatarThumbnail && (
-                        <div className="rounded-lg overflow-hidden max-w-xs mx-auto">
-                          <img
-                            src={profileData.avatarConfig.customAvatarThumbnail}
-                            alt="Avatar Preview"
-                            className="w-full"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Default Avatar Selection */}
-              {profileData.avatarConfig?.type === 'default' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <p className="text-sm text-blue-800">
-                    Using default AI avatar: <strong>Angela</strong>
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    💡 Default avatars are ready to use immediately. No setup required!
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Photos */}
           <div className="bg-white rounded-2xl p-6 shadow-md">
             <div className="flex items-center gap-3 mb-4">
@@ -1773,12 +1858,21 @@ export default function ProfileImprovementPage() {
 
               {profileData.photos.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {profileData.photos.map((photo) => (
+                  {profileData.photos.map((photo) => {
+                    console.log('🖼️ Rendering photo:', photo.url)
+                    return (
                     <div key={photo.id} className="relative group">
                       <img
                         src={photo.url}
                         alt={photo.name}
                         className="w-full h-32 object-cover rounded-lg"
+                        onError={(e) => {
+                          console.error('❌ Failed to load photo:', photo.url)
+                          e.currentTarget.style.border = '2px solid red'
+                        }}
+                        onLoad={() => {
+                          console.log('✅ Photo loaded successfully:', photo.url)
+                        }}
                       />
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg">
                         {editingItemId === photo.id ? (
@@ -1827,7 +1921,8 @@ export default function ProfileImprovementPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -1910,6 +2005,174 @@ export default function ProfileImprovementPage() {
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Avatar Configuration */}
+          <div className="bg-white rounded-2xl p-6 shadow-md">
+            <div className="flex items-center gap-3 mb-4">
+              <VideoIcon className="w-6 h-6 text-pink-500" />
+              <h2 className="text-xl font-bold text-gray-900">Avatar Configuration</h2>
+              <span className="text-sm text-gray-500">(For video calls)</span>
+            </div>
+
+            <div className="space-y-4">
+              {/* Avatar Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choose Avatar Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleAvatarTypeChange('custom')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.avatarConfig?.type === 'custom'
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 hover:border-pink-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">👤 Custom Avatar</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Upload your own video to create a personalized avatar
+                      </p>
+                      {profileData.avatarConfig?.type === 'custom' && profileData.avatarConfig.customAvatarName && (
+                        <p className="text-xs text-pink-600 mt-2 font-medium">
+                          ✓ {profileData.avatarConfig.customAvatarName}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleAvatarTypeChange('default')}
+                    className={`p-4 rounded-lg border-2 transition ${
+                      profileData.avatarConfig?.type === 'default'
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 hover:border-pink-200'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">🤖 Default Avatar</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Use preset AI avatars
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Avatar Section */}
+              {profileData.avatarConfig?.type === 'custom' && (
+                <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 space-y-3">
+                  {!profileData.avatarConfig.customAvatarId ? (
+                    <>
+                      <p className="text-sm text-pink-800">
+                        <strong>Avatar Creation:</strong> Upload a clear photo of your loved one showing a frontal view of the face with good lighting. This will be used to create your custom talking AI avatar. JPG/JPEG format recommended.
+                      </p>
+
+                      {/* Avatar Preview */}
+                      {profileData.photos.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-pink-900">Preview (using first photo):</p>
+                          <div className="relative rounded-lg overflow-hidden bg-gray-100 max-w-xs mx-auto">
+                            <img
+                              src={profileData.photos[0].url}
+                              alt="Avatar preview"
+                              className="w-full object-contain"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Avatar Creation Button with Progress */}
+                      <div className="space-y-2">
+                        <button
+                          onClick={handleCreateAvatar}
+                          disabled={isCreatingAvatar || profileData.photos.length === 0}
+                          className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                            isCreatingAvatar || profileData.photos.length === 0
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-pink-500 text-white hover:bg-pink-600'
+                          }`}
+                        >
+                          {!isCreatingAvatar && (
+                            <>
+                              <Upload className="w-5 h-5" />
+                              Create Avatar from Photo
+                            </>
+                          )}
+                          {isCreatingAvatar && avatarCreationStatus === 'uploading' && (
+                            <>
+                              <span className="animate-spin">⏳</span>
+                              Preparing video... {Math.round(avatarCreationProgress)}%
+                            </>
+                          )}
+                          {isCreatingAvatar && avatarCreationStatus === 'processing' && (
+                            <>
+                              <span className="animate-pulse">🎬</span>
+                              Processing avatar... {Math.round(avatarCreationProgress)}%
+                            </>
+                          )}
+                        </button>
+
+                        {/* Progress Bar */}
+                        {isCreatingAvatar && (
+                          <div className="space-y-1">
+                            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500 ease-out"
+                                style={{ width: `${avatarCreationProgress}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-center text-pink-700">
+                              {avatarCreationStatus === 'uploading' && 'Uploading and preparing video...'}
+                              {avatarCreationStatus === 'processing' && 'AI is processing your avatar (this may take 2-5 minutes)'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-6 h-6 text-green-500" />
+                        <div className="flex-1">
+                          <p className="font-medium text-pink-900">
+                            Avatar Created Successfully!
+                          </p>
+                          <p className="text-sm text-pink-700">
+                            Using: {profileData.avatarConfig.customAvatarName}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Avatar Thumbnail Preview */}
+                      {profileData.avatarConfig.customAvatarThumbnail && (
+                        <div className="rounded-lg overflow-hidden max-w-xs mx-auto">
+                          <img
+                            src={profileData.avatarConfig.customAvatarThumbnail}
+                            alt="Avatar Preview"
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Default Avatar Selection */}
+              {profileData.avatarConfig?.type === 'default' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <p className="text-sm text-blue-800">
+                    Using default AI avatar: <strong>Angela</strong>
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    💡 Default avatars are ready to use immediately. No setup required!
+                  </p>
                 </div>
               )}
             </div>

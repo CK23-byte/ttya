@@ -17,16 +17,16 @@ import {
   Upload,
   CreditCard,
   Crown,
+  Trash2,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { usePayment } from '../contexts/PaymentContext'
+import { PersonalityProfile } from '../types'
 import { getSecure } from '../utils/secureStorage'
-import { PersonalityProfile, Message } from '../types'
 import Header from '../components/Header'
-
-const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
-const PROFILES_STORAGE_KEY = 'personality_profiles'
+import Modal from '../components/Modal'
+import { loadPersonalityProfiles, deletePersonalityProfile, loadChatMessages } from '../utils/profileStorage'
 
 interface ProfileWithStats extends PersonalityProfile {
   messageCount: number
@@ -36,9 +36,9 @@ interface ProfileWithStats extends PersonalityProfile {
 
 // Voice configuration interface
 interface VoiceConfig {
-  type: 'cloned' | 'standard' // cloned = ElevenLabs, standard = OpenAI
-  clonedVoiceId?: string // ElevenLabs voice ID (if type is 'cloned')
-  clonedVoiceName?: string // ElevenLabs voice name
+  type: 'cloned' | 'standard' // cloned = voice AI service, standard = OpenAI
+  clonedVoiceId?: string // voice AI service voice ID (if type is 'cloned')
+  clonedVoiceName?: string // voice AI service voice name
   standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // OpenAI voice (if type is 'standard')
 }
 
@@ -58,6 +58,31 @@ export default function DashboardPage() {
   const { subscription } = usePayment()
   const [profiles, setProfiles] = useState<ProfileWithStats[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+    confirmText?: string
+    cancelText?: string
+    onConfirm?: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showModal = (
+    title: string,
+    message: string,
+    type: 'success' | 'error' | 'info' | 'warning' = 'info',
+    onConfirm?: () => void,
+    confirmText?: string,
+    cancelText?: string
+  ) => {
+    setModal({ isOpen: true, title, message, type, onConfirm, confirmText, cancelText })
+  }
 
   // Check auth: Support both old password-based and new Supabase email auth
   const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
@@ -78,25 +103,19 @@ export default function DashboardPage() {
 
     logger.log('User authenticated, loading profiles')
     loadProfiles()
-  }, [isUserAuthenticated, supabaseLoading, encryptionKey])
+  }, [isUserAuthenticated, supabaseLoading])
 
   const loadProfiles = async () => {
-    if (!encryptionKey) return
-
     try {
-      const savedProfiles = await getSecure<PersonalityProfile[]>(
-        PROFILES_STORAGE_KEY,
-        encryptionKey
-      ) || []
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      const savedProfiles = await loadPersonalityProfiles(encryptionKey)
+      logger.log('Loaded profiles:', savedProfiles.length)
 
       // Load message stats for each profile
       const profilesWithStats = await Promise.all(
         savedProfiles.map(async (profile) => {
-          const messages = await getSecure<Message[]>(
-            `${MESSAGES_STORAGE_PREFIX}${profile.id}`,
-            encryptionKey
-          ) || []
-
+          // Use centralized message loading (handles both encrypted and Supabase database)
+          const messages = await loadChatMessages(profile.id, encryptionKey)
           const lastMessage = messages[messages.length - 1]
 
           return {
@@ -118,24 +137,26 @@ export default function DashboardPage() {
       setProfiles(profilesWithStats)
     } catch (error) {
       logger.error('Error loading profiles:', error)
+      setProfiles([])
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleCreateProfile = () => {
-    if (!subscription) {
-      navigate('/pricing')
-      return
+    // For Supabase users: allow profile creation, credits will be checked when actually using features
+    // For old password users: check subscription limits
+    if (subscription) {
+      const profileCount = profiles.length
+
+      if (profileCount >= subscription.profileLimit) {
+        navigate('/pricing')
+        return
+      }
     }
 
-    const profileCount = profiles.length
-
-    if (profileCount >= subscription.profileLimit) {
-      navigate('/pricing')
-    } else {
-      navigate('/personality-builder')
-    }
+    // Allow profile creation
+    navigate('/personality-builder')
   }
 
   const formatLastSeen = (timestamp: number | null) => {
@@ -155,20 +176,64 @@ export default function DashboardPage() {
     return messageDate.toLocaleDateString()
   }
 
-  const handleStartCall = async (profile: ProfileWithStats) => {
-    if (!encryptionKey) return
+  const handleDeleteProfile = async (profileId: string, profileName: string) => {
+    // Confirm deletion
+    showModal(
+      'Delete Profile',
+      `Are you sure you want to delete "${profileName}"? This will delete all conversations and data. This action cannot be undone.`,
+      'warning',
+      async () => {
+        try {
+          // Use centralized delete utility (handles both encrypted and Supabase database)
+          await deletePersonalityProfile(profileId, encryptionKey)
 
+          // Reload profiles
+          await loadProfiles()
+
+          showModal(
+            'Profile Deleted',
+            `The profile "${profileName}" has been successfully deleted.`,
+            'success'
+          )
+        } catch (error) {
+          logger.error('Error deleting profile:', error)
+          showModal(
+            'Delete Failed',
+            'Something went wrong while deleting the profile. Please try again.',
+            'error'
+          )
+        }
+      },
+      'Yes, Delete',
+      'Cancel'
+    )
+  }
+
+  const handleStartCall = async (profile: ProfileWithStats) => {
     try {
-      // Check if voice samples exist for this profile
-      const profileData = await getSecure<StoredProfileData>(
-        `profile_data_${profile.id}`,
-        encryptionKey
-      )
+      // Load profile data from storage
+      let profileData: StoredProfileData | null = null
+
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        profileData = await getSecure<StoredProfileData>(
+          `profile_data_${profile.id}`,
+          encryptionKey
+        )
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(`profile_data_${profile.id}`)
+        profileData = stored ? JSON.parse(stored) : null
+      }
 
       if (!profileData || !profileData.voiceSamples || profileData.voiceSamples.length === 0) {
-        // No voice samples - redirect to improvement page
-        alert('Please add a voice sample first to enable voice calls!')
-        navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+        // No voice samples - show modal and redirect to improvement page
+        showModal(
+          'Voice Sample Required',
+          `To enable voice calls with ${profile.name}, you need to add a voice sample first. This allows us to clone their voice for realistic conversations.\n\nWould you like to add a voice sample now?`,
+          'info',
+          () => navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+        )
         return
       }
 
@@ -193,9 +258,13 @@ export default function DashboardPage() {
       navigate(`/voice-call?${params.toString()}`)
     } catch (error) {
       logger.error('Error checking voice samples:', error)
-      // On error, show improvement page to be safe
-      alert('Please add a voice sample to enable voice calls!')
-      navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+      // On error, show modal and redirect to improvement page
+      showModal(
+        'Voice Sample Required',
+        `To enable voice calls with ${profile.name}, you need to add a voice sample first.\n\nWould you like to add one now?`,
+        'warning',
+        () => navigate(`/profile-improvement?profileId=${profile.id}&focus=voice`)
+      )
     }
   }
 
@@ -370,6 +439,16 @@ export default function DashboardPage() {
                       <Upload className="w-4 h-4" />
                       Improve Profile
                     </button>
+
+                    {/* Delete Profile */}
+                    <button
+                      onClick={() => handleDeleteProfile(profile.id, profile.name)}
+                      className="w-full px-3 py-2 bg-red-50 text-red-700 rounded-lg font-medium hover:bg-red-100 transition flex items-center justify-center gap-2 border border-red-200 text-sm"
+                      title="Delete this profile permanently"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Profile
+                    </button>
                   </div>
                 </div>
               ))}
@@ -377,6 +456,19 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        confirmText={modal.confirmText || "OK"}
+        cancelText={modal.cancelText || "Cancel"}
+        showCancel={!!modal.onConfirm}
+        onConfirm={modal.onConfirm}
+      />
     </div>
   )
 }
