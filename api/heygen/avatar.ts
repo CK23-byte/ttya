@@ -10,8 +10,16 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+// Initialize Supabase client with service role key (bypasses RLS)
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null
 
 export default async function handler(
   req: VercelRequest,
@@ -60,47 +68,54 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
 
   console.log('Creating HeyGen avatar:', { avatarName, videoUrl })
 
-  // Download image/video from URL
-  console.log('Downloading media from URL...', { url: videoUrl.substring(0, 100) + '...' })
-  const mediaResponse = await fetch(videoUrl)
-  console.log('Media download response:', {
-    status: mediaResponse.status,
-    statusText: mediaResponse.statusText,
-    contentType: mediaResponse.headers.get('content-type')
+  // Extract storage path from URL
+  // URL format: https://xxx.supabase.co/storage/v1/object/public/user-uploads/profiles/xxx/photos/xxx.jpg
+  const urlParts = videoUrl.split('/storage/v1/object/public/')
+  if (urlParts.length < 2) {
+    return res.status(400).json({
+      error: 'Invalid storage URL format',
+      hint: 'URL should be from Supabase Storage'
+    })
+  }
+
+  const storagePath = urlParts[1] // e.g., "user-uploads/profiles/xxx/photos/xxx.jpg"
+  const pathParts = storagePath.split('/')
+  const bucket = pathParts[0] // "user-uploads"
+  const filePath = pathParts.slice(1).join('/') // "profiles/xxx/photos/xxx.jpg"
+
+  console.log('Downloading media from Supabase Storage:', {
+    bucket,
+    filePath: filePath.substring(0, 100) + '...'
   })
 
-  if (!mediaResponse.ok) {
-    return res.status(400).json({
-      error: 'Failed to download media from URL',
-      details: `HTTP ${mediaResponse.status}: ${mediaResponse.statusText}`,
-      hint: 'Make sure the file exists and the URL is accessible'
+  // Download using Supabase client with service role key (bypasses RLS)
+  if (!supabase) {
+    return res.status(500).json({
+      error: 'Supabase not configured',
+      hint: 'Set VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables'
     })
   }
 
-  const contentType = mediaResponse.headers.get('content-type') || 'image/jpeg'
+  const { data: fileData, error: downloadError } = await supabase.storage
+    .from(bucket)
+    .download(filePath)
 
-  // Check if we got JSON instead of an image (common Supabase Storage error)
-  if (contentType.includes('application/json')) {
-    const errorText = await mediaResponse.text()
-    console.error('❌ Received JSON instead of image from URL:', {
-      url: videoUrl.substring(0, 100) + '...',
-      contentType,
-      response: errorText
-    })
-
+  if (downloadError || !fileData) {
+    console.error('❌ Failed to download from Supabase Storage:', downloadError)
     return res.status(400).json({
-      error: 'Storage URL returned JSON instead of image',
-      details: 'The photo URL is not accessible. This usually means Supabase Storage is not configured correctly.',
-      hint: 'Check that the "user-uploads" bucket exists in Supabase Storage and has the correct RLS policies to allow public reads.',
-      technicalDetails: {
-        contentType,
-        url: videoUrl.substring(0, 100) + '...',
-        response: errorText
-      }
+      error: 'Failed to download media from storage',
+      details: downloadError?.message || 'Unknown error',
+      hint: 'Check that the file exists in Supabase Storage and the service role key has access'
     })
   }
 
-  let mediaBuffer = Buffer.from(await mediaResponse.arrayBuffer())
+  console.log('Media downloaded successfully from Supabase:', {
+    size: fileData.size,
+    type: fileData.type
+  })
+
+  const contentType = fileData.type || 'image/jpeg'
+  let mediaBuffer = Buffer.from(await fileData.arrayBuffer())
   console.log('Media downloaded successfully:', {
     size: mediaBuffer.length,
     sizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2),
