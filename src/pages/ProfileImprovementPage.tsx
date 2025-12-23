@@ -31,7 +31,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { PersonalityProfile } from '../types'
+import type { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
 import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
