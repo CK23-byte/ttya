@@ -30,6 +30,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { getSecure, setSecure } from '../utils/secureStorage'
 import { sendMessageToClaude, generateSystemPrompt } from '../utils/claudeAPI'
+import { loadPersonalityProfiles } from '../utils/profileStorage'
 import TypingIndicator from '../components/TypingIndicator'
 import EmojiPicker from '../components/EmojiPicker'
 import AttachmentPicker from '../components/AttachmentPicker'
@@ -39,7 +40,6 @@ import { Message, PersonalityProfile } from '../types'
 import { CREDIT_PRICING } from '../types/database'
 
 const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
-const PROFILES_STORAGE_KEY = 'personality_profiles'
 const THEME_STORAGE_KEY = 'chat_theme'
 
 type ChatTheme = 'whatsapp' | 'imessage' | 'messenger'
@@ -177,19 +177,9 @@ export default function ChatPage() {
   useEffect(() => {
     const loadConversations = async () => {
       try {
-        let profiles: PersonalityProfile[] = []
-
-        if (encryptionKey) {
-          // Old password-based auth: use encrypted storage
-          profiles = await getSecure<PersonalityProfile[]>(
-            PROFILES_STORAGE_KEY,
-            encryptionKey
-          ) || []
-        } else {
-          // Supabase users: use plain localStorage
-          const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
-          profiles = stored ? JSON.parse(stored) : []
-        }
+        // Use centralized storage utility (handles both encrypted and Supabase database)
+        const profiles = await loadPersonalityProfiles(encryptionKey)
+        logger.log('📱 ChatPage: Loaded profiles from storage:', profiles.length)
 
         // Load messages for each profile
         const convos: ChatConversation[] = await Promise.all(
