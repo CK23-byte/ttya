@@ -26,7 +26,7 @@ import { PersonalityProfile } from '../types'
 import { getSecure } from '../utils/secureStorage'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
-import { loadPersonalityProfiles, deletePersonalityProfile, loadChatMessages, loadProfileData } from '../utils/profileStorage'
+import { loadPersonalityProfiles, deletePersonalityProfile, loadChatMessages } from '../utils/profileStorage'
 
 interface ProfileWithStats extends PersonalityProfile {
   messageCount: number
