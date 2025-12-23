@@ -262,9 +262,25 @@ export async function saveProfileData(
         return
       }
 
+      // CRITICAL: Load existing profile_data to preserve messages
+      const { data: existing } = await supabase
+        .from('personality_profiles')
+        .select('profile_data')
+        .eq('user_id', session.session.user.id)
+        .eq('profile_id', profileId)
+        .maybeSingle()
+
+      // Merge new data with existing (preserve messages!)
+      const mergedData = {
+        ...(existing?.profile_data || {}),
+        ...data,
+        // ALWAYS preserve existing messages
+        messages: existing?.profile_data?.messages || []
+      }
+
       const { error } = await supabase
         .from('personality_profiles')
-        .update({ profile_data: data })
+        .update({ profile_data: mergedData })
         .eq('user_id', session.session.user.id)
         .eq('profile_id', profileId)
 
@@ -273,7 +289,7 @@ export async function saveProfileData(
         // Fallback to localStorage
         localStorage.setItem(key, JSON.stringify(data))
       } else {
-        logger.log('Saved profile data to Supabase:', profileId)
+        logger.log('Saved profile data to Supabase (messages preserved):', profileId)
       }
     } else {
       // Fallback: plain localStorage

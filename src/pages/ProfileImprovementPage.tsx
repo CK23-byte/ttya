@@ -1201,7 +1201,12 @@ export default function ProfileImprovementPage() {
         const progressIncrement = 55 / maxAttempts
         setAvatarCreationProgress(prev => Math.min(95, prev + progressIncrement))
 
-        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`)
+        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
 
         if (!statusResponse.ok) {
           throw new Error('Failed to check avatar status')
