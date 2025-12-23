@@ -27,11 +27,18 @@ import {
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import Header from '../components/Header'
+import {
+  UNIVERSAL_CREDIT_PACKS,
+  buyUniversalCredits,
+  UniversalCreditPackType,
+  isStripeConfigured
+} from '../lib/stripe'
 
 export default function AccountPage() {
   const navigate = useNavigate()
   const { user, profile, credits, isConfigured, refreshProfile } = useSupabaseAuth()
   const avatarInputRef = useRef<HTMLInputElement>(null)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   // Profile editing
   const [isEditingName, setIsEditingName] = useState(false)
@@ -458,10 +465,21 @@ export default function AccountPage() {
                 Upgrade to Pro
               </button>
               <button
-                onClick={() => alert('Cancel subscription coming soon!')}
-                className="px-4 py-3 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition font-medium"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.\n\nTo cancel, please contact support at support@talktoyouai.com or manage your subscription through Stripe\'s customer portal.')) {
+                    // In a real app with backend, this would redirect to Stripe Customer Portal
+                    // window.location.href = stripeCustomerPortalUrl
+                    setIsCancelling(true)
+                    setTimeout(() => {
+                      alert('To cancel your subscription, please:\n\n1. Check your email for Stripe receipts\n2. Click "Manage Billing" in any receipt\n3. Or contact support@talktoyouai.com\n\nWe\'re sorry to see you go!')
+                      setIsCancelling(false)
+                    }, 500)
+                  }
+                }}
+                disabled={isCancelling}
+                className="px-4 py-3 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition font-medium disabled:opacity-50"
               >
-                Cancel
+                {isCancelling ? 'Processing...' : 'Cancel Subscription'}
               </button>
             </div>
           </div>
@@ -507,28 +525,76 @@ export default function AccountPage() {
           <div className="bg-white/20 rounded-lg p-3 text-sm">
             <p className="flex items-center gap-2 text-xs">
               <Sparkles className="w-4 h-4" />
-              <span>Universal credits work for all features: 1 credit = 1 message, 5s voice, or 3s video</span>
+              <span>Credits work for all features: 1 credit = 1 message, 5s voice, or 3s video</span>
             </p>
           </div>
         </div>
 
-        {/* Credit Packages */}
+        {/* Credit Packs */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <Gift className="w-5 h-5 text-orange-500" />
-            Buy Credits
+            Buy Credit Packs
           </h3>
 
           <p className="text-sm text-gray-600 mb-4">
-            Purchase voice and video credits for calling features. Click to view all options.
+            <strong>One-time purchase</strong> - Credits work for text, voice, and video. Never expire.
           </p>
 
-          <button
-            onClick={() => navigate('/pricing')}
-            className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-medium hover:from-orange-600 hover:to-rose-600 transition"
-          >
-            View All Credit Packs
-          </button>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {Object.entries(UNIVERSAL_CREDIT_PACKS).map(([key, pack]) => (
+              <div
+                key={key}
+                className={`rounded-xl p-4 border-2 transition-all hover:shadow-lg ${
+                  pack.popular
+                    ? 'bg-gradient-to-br from-orange-500 to-rose-500 border-orange-600 text-white'
+                    : pack.bestValue
+                    ? 'bg-gradient-to-br from-orange-600 to-rose-600 border-rose-700 text-white'
+                    : 'bg-white border-gray-200'
+                }`}
+              >
+                <div className="text-center mb-3">
+                  <p className={`text-xs font-medium mb-1 ${pack.popular || pack.bestValue ? 'text-white/80' : 'text-gray-500'}`}>
+                    {pack.name}
+                  </p>
+                  <p className={`text-2xl font-bold ${pack.popular || pack.bestValue ? 'text-white' : 'text-gray-900'}`}>
+                    ${pack.price}
+                  </p>
+                  <p className={`text-xs mt-1 ${pack.popular || pack.bestValue ? 'text-white/70' : 'text-gray-500'}`}>
+                    {pack.credits} credits
+                  </p>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    if (!isStripeConfigured()) {
+                      alert('Stripe is not configured')
+                      return
+                    }
+                    try {
+                      await buyUniversalCredits(key as UniversalCreditPackType, user.email || undefined)
+                    } catch (err) {
+                      logger.error('Purchase error:', err)
+                      alert('Purchase failed. Please try again.')
+                    }
+                  }}
+                  className={`w-full py-2 rounded-lg text-sm font-semibold transition ${
+                    pack.popular || pack.bestValue
+                      ? 'bg-white text-orange-600 hover:bg-gray-50'
+                      : 'bg-gray-900 text-white hover:bg-gray-800'
+                  }`}
+                >
+                  Buy Now
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 text-center">
+            <p className="text-xs text-gray-500">
+              💳 Secure checkout via Stripe • Credits never expire
+            </p>
+          </div>
         </div>
 
         {/* Transaction History */}

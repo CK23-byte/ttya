@@ -26,7 +26,7 @@ export const SUBSCRIPTION_PLANS = {
     credits: 50,
     profiles: 1,
     features: [
-      '50 universal credits',
+      '50 credits/month',
       '1 AI Personality',
       'Text chat only',
       'Basic chat themes',
@@ -47,7 +47,7 @@ export const SUBSCRIPTION_PLANS = {
     credits: 350,
     profiles: 1,
     features: [
-      '350 universal credits per month',
+      '350 credits/month',
       '1 AI Personality',
       'Text, voice & video chat',
       'All chat themes',
@@ -71,7 +71,7 @@ export const SUBSCRIPTION_PLANS = {
     credits: 900,
     profiles: 5,
     features: [
-      '900 universal credits per month',
+      '900 credits/month',
       '5 AI Personalities',
       'Text, voice & video chat',
       'Faster responses',
@@ -95,7 +95,7 @@ export const SUBSCRIPTION_PLANS = {
     credits: 1800,
     profiles: 999,
     features: [
-      '1,800 universal credits per month',
+      '1,800 credits/month',
       'Unlimited AI Personalities',
       'Text, voice & video chat',
       'Ultra fast responses',
