@@ -59,27 +59,32 @@ export async function loadPersonalityProfiles(
       }
 
       // Convert database format to PersonalityProfile format
-      const profiles: PersonalityProfile[] = (data || []).map(row => ({
-        id: row.profile_id,
-        name: row.name,
-        relationship: row.relationship,
-        // Required fields with defaults
-        typicalPhrases: [],
-        hobbies: [],
-        habits: [],
-        humorStyle: 'Friendly and conversational',
-        traits: [],
-        tone: 'informal' as const,
-        emojiUsage: 'medium' as const,
-        systemPrompt: `You are ${row.name}, speaking in a natural, conversational way.`,
-        createdAt: new Date(row.created_at).getTime(),
-        updatedAt: new Date(row.updated_at).getTime(),
-        // Optional fields
-        photoUrl: undefined,
-        photoUrls: undefined,
-        birthDate: undefined,
-        dateSince: undefined
-      }))
+      const profiles: PersonalityProfile[] = (data || []).map(row => {
+        // Parse profile_data if it exists
+        const profileData = row.profile_data || {}
+
+        return {
+          id: row.profile_id,
+          name: row.name,
+          relationship: row.relationship,
+          // Use profile_data fields if available, otherwise use defaults
+          typicalPhrases: profileData.typicalPhrases || [],
+          hobbies: profileData.hobbies || [],
+          habits: profileData.habits || [],
+          humorStyle: profileData.humorStyle || 'Friendly and conversational',
+          traits: profileData.traits || [],
+          tone: profileData.tone || ('informal' as const),
+          emojiUsage: profileData.emojiUsage || ('medium' as const),
+          systemPrompt: profileData.systemPrompt || `You are ${row.name}, speaking in a natural, conversational way.`,
+          createdAt: new Date(row.created_at).getTime(),
+          updatedAt: new Date(row.updated_at).getTime(),
+          // Optional fields from profile_data
+          photoUrl: profileData.photoUrl,
+          photoUrls: profileData.photoUrls,
+          birthDate: profileData.birthDate,
+          dateSince: profileData.dateSince
+        }
+      })
 
       logger.log('✅ Loaded profiles from Supabase:', {
         count: profiles.length,
@@ -130,7 +135,22 @@ export async function savePersonalityProfiles(
           profile_id: profile.id,
           name: profile.name,
           relationship: profile.relationship,
-          description: null // Not storing description separately
+          description: null, // Not storing description separately
+          profile_data: {
+            // Store all profile fields in JSONB column
+            typicalPhrases: profile.typicalPhrases,
+            hobbies: profile.hobbies,
+            habits: profile.habits,
+            humorStyle: profile.humorStyle,
+            traits: profile.traits,
+            tone: profile.tone,
+            emojiUsage: profile.emojiUsage,
+            systemPrompt: profile.systemPrompt,
+            photoUrl: profile.photoUrl,
+            photoUrls: profile.photoUrls,
+            birthDate: profile.birthDate,
+            dateSince: profile.dateSince
+          }
         }))
 
         const { error } = await supabase

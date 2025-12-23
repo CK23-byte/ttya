@@ -134,7 +134,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
       if (error) {
         // Profile doesn't exist - create it automatically for new users
@@ -249,7 +249,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       .from('profiles')
       .select('credits')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!error && data) {
       setCredits((data as { credits: number }).credits)

@@ -42,21 +42,10 @@ export async function uploadFileToStorage(
       path: filePath
     })
 
-    // Read file as ArrayBuffer to get raw binary data
-    // This strips any multipart form wrappers and ensures pure binary upload
-    const arrayBuffer = await file.arrayBuffer()
-    const blob = new Blob([arrayBuffer], { type: file.type })
-
-    logger.log('File converted to blob:', {
-      blobSize: blob.size,
-      blobType: blob.type,
-      originalSize: file.size
-    })
-
-    // Upload blob (raw binary content only)
+    // Upload file directly - Supabase handles it correctly
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, blob, {
+      .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
         contentType: file.type // Explicitly set content type
