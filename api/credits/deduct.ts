@@ -91,10 +91,10 @@ export default async function handler(
 
     // Deduct credits (using atomic update)
     const updateField = `${creditType}_credits`
-    const updateData: Record<string, number> = { [updateField]: currentCredits - amount }
+    const updateData: { [key: string]: number } = { [updateField]: currentCredits - amount }
     const { error: updateError } = await supabase
       .from('profiles')
-      .update(updateData as any)
+      .update(updateData)
       .eq('id', userId)
 
     if (updateError) {

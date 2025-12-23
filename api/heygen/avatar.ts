@@ -25,8 +25,18 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // Get action from query or body
-  const action = req.method === 'GET' ? 'status' : 'create'
+  // Determine action based on query parameters (more robust than method alone)
+  // If avatarId query param exists, it's a status check
+  // Otherwise it's a create request
+  const { avatarId } = req.query
+  const action = avatarId ? 'status' : 'create'
+
+  console.log('Avatar API called:', {
+    method: req.method,
+    action,
+    hasAvatarId: !!avatarId,
+    queryParams: req.query
+  })
 
   if (!HEYGEN_API_KEY) {
     return res.status(500).json({
@@ -54,10 +64,7 @@ export default async function handler(
 
 // Create Avatar Handler (POST)
 async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
+  // Accept any method - we've already determined this is a create action
   const { videoUrl, avatarName } = req.body
 
   if (!videoUrl || !avatarName) {
@@ -115,7 +122,7 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
   })
 
   const contentType = fileData.type || 'image/jpeg'
-  let mediaBuffer = Buffer.from(await fileData.arrayBuffer())
+  let mediaBuffer = Buffer.from(await fileData.arrayBuffer() as ArrayBuffer)
   console.log('Media downloaded successfully:', {
     size: mediaBuffer.length,
     sizeInMB: (mediaBuffer.length / (1024 * 1024)).toFixed(2),
@@ -269,10 +276,7 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
 
 // Get Avatar Status Handler (GET)
 async function handleGetStatus(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
+  // Accept any method - we've already determined this is a status check
   const { avatarId } = req.query
 
   if (!avatarId || typeof avatarId !== 'string') {
