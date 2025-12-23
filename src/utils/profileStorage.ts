@@ -27,16 +27,29 @@ export async function loadPersonalityProfiles(
     } else if (isSupabaseConfigured()) {
       // Supabase auth: load from database
       const { data: session } = await supabase.auth.getSession()
+      logger.log('🔍 Loading profiles - Session check:', {
+        hasSession: !!session.session,
+        userId: session.session?.user?.id
+      })
+
       if (!session.session?.user) {
         logger.warn('No authenticated user, cannot load profiles from database')
         return []
       }
+
+      logger.log('📡 Fetching profiles from database for user:', session.session.user.id)
 
       const { data, error } = await supabase
         .from('personality_profiles')
         .select('*')
         .eq('user_id', session.session.user.id)
         .order('created_at', { ascending: false })
+
+      logger.log('📦 Database response:', {
+        rowCount: data?.length || 0,
+        hasError: !!error,
+        errorMessage: error?.message
+      })
 
       if (error) {
         logger.error('Error loading profiles from Supabase:', error)
@@ -68,7 +81,10 @@ export async function loadPersonalityProfiles(
         dateSince: undefined
       }))
 
-      logger.log('Loaded profiles from Supabase:', profiles.length)
+      logger.log('✅ Loaded profiles from Supabase:', {
+        count: profiles.length,
+        profiles: profiles.map(p => ({ id: p.id, name: p.name }))
+      })
       return profiles
     } else {
       // Fallback: plain localStorage (not recommended)
