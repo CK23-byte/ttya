@@ -56,15 +56,54 @@ export async function uploadFileToStorage(
       throw new Error(`Failed to upload file: ${error.message}`)
     }
 
-    // Try to get public URL first
+    if (!data || !data.path) {
+      logger.error('Upload succeeded but no path returned:', data)
+      throw new Error('Upload succeeded but no path returned from Supabase')
+    }
+
+    logger.log('Upload response from Supabase:', {
+      uploadedPath: data.path,
+      requestedPath: filePath,
+      fullKey: data.fullPath || data.path
+    })
+
+    // Use the path returned by Supabase (might be different from requested path)
+    const actualPath = data.path
+
+    // Try to get public URL
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
-      .getPublicUrl(filePath)
+      .getPublicUrl(actualPath)
 
     logger.log('File uploaded successfully:', {
-      path: data.path,
-      publicUrl
+      requestedPath: filePath,
+      actualPath: actualPath,
+      publicUrl,
+      bucket
     })
+
+    // Verify the file actually exists by listing bucket contents
+    try {
+      const { data: listData, error: listError } = await supabase.storage
+        .from(bucket)
+        .list(folder || '', {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: 'created_at', order: 'desc' }
+        })
+
+      if (!listError && listData) {
+        logger.log('📁 Files in bucket after upload:', {
+          folder: folder || 'root',
+          fileCount: listData.length,
+          files: listData.map(f => f.name),
+          ourFile: fileName,
+          fileExists: listData.some(f => f.name === fileName)
+        })
+      }
+    } catch (e) {
+      logger.warn('Could not verify file upload by listing:', e)
+    }
 
     return {
       url: publicUrl,
