@@ -294,6 +294,9 @@ export default function ChatPage() {
     setCurrentMessages(updatedMessages)
     setMessageInput('')
 
+    // Save user message immediately (before AI responds)
+    await saveMessages(activeProfileId, updatedMessages)
+
     setTimeout(() => {
       setCurrentMessages(prev =>
         prev.map(msg =>
@@ -364,6 +367,7 @@ export default function ChatPage() {
 
       const finalMessages = [...updatedMessages, errorMessage]
       setCurrentMessages(finalMessages)
+      await saveMessages(activeProfileId, finalMessages)
     } finally {
       setIsTyping(false)
     }
