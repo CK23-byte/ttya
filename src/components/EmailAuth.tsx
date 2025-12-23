@@ -5,7 +5,8 @@
  * Includes signup bonus credits and password reset
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock, User, Heart, Gift, ArrowLeft } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { CREDIT_PRICING } from '../types/database'
@@ -36,6 +37,7 @@ interface EmailAuthProps {
 
 export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
   const { signIn, signUp, signInWithOAuth, resetPassword, isConfigured } = useSupabaseAuth()
+  const location = useLocation()
   const [mode, setMode] = useState<AuthMode>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,6 +49,17 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [passwordErrors, setPasswordErrors] = useState<string[]>([])
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null)
+
+  // Check for message from navigation state (e.g., email verified)
+  useEffect(() => {
+    const state = location.state as { message?: string } | null
+    if (state?.message) {
+      setMessage(state.message)
+      setMode('signin') // Switch to sign in mode
+      // Clear the state after reading it
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   if (!isConfigured) {
     return (

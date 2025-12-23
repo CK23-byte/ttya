@@ -94,15 +94,22 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           await fetchProfile(session.user.id)
 
-          // Redirect to dashboard on sign in or email confirmation
-          // But not if we're on certain pages like password reset
-          if (
-            (event === 'SIGNED_IN' || event === 'USER_UPDATED') &&
-            !noRedirectPaths.includes(location.pathname)
-          ) {
-            logger.log('✅ User authenticated, redirecting to dashboard')
-            // Always redirect to dashboard after successful auth
-            navigate('/dashboard')
+          // Redirect logic based on auth event
+          if (!noRedirectPaths.includes(location.pathname)) {
+            if (event === 'SIGNED_IN') {
+              // Regular sign in → go to dashboard
+              logger.log('✅ User signed in, redirecting to dashboard')
+              navigate('/dashboard')
+            } else if (event === 'USER_UPDATED') {
+              // Email verification or profile update → sign out and go to login
+              logger.log('✅ Email verified, signing out and redirecting to login')
+              // Sign out so user must explicitly log in
+              await supabase.auth.signOut()
+              // Show success message
+              navigate('/email-auth', {
+                state: { message: 'Email verified! You can now log in with your account.' }
+              })
+            }
           }
         } else {
           setProfile(null)
@@ -138,8 +145,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         const userEmail = session?.user?.email
 
         if (userEmail) {
-          // Create profile with signup bonus
-          const { data: newProfile, error: createError } = await supabase
+          // Create profile with signup bonus - don't use .single() to avoid 406 errors
+          const { data: insertedProfiles, error: createError } = await supabase
             .from('profiles')
             .insert({
               id: userId,
@@ -151,13 +158,26 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
               video_credits: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
             })
             .select()
-            .single()
 
           if (createError) {
             logger.error('Error creating profile:', createError)
-            setProfile(null)
-            setCredits(0)
-          } else {
+            // Profile might already exist, try to fetch it
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle()
+
+            if (existingProfile) {
+              logger.log('✅ Using existing profile:', existingProfile)
+              setProfile(existingProfile as Profile)
+              setCredits((existingProfile as Profile).credits)
+            } else {
+              setProfile(null)
+              setCredits(0)
+            }
+          } else if (insertedProfiles && insertedProfiles.length > 0) {
+            const newProfile = insertedProfiles[0]
             logger.log('✅ Profile created successfully:', newProfile)
             setProfile(newProfile as Profile)
             setCredits(CREDIT_PRICING.SIGNUP_BONUS)
