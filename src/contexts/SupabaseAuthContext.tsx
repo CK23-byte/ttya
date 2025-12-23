@@ -87,7 +87,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
-        logger.log('Auth state change:', event, session ? 'Session exists' : 'No session')
+        logger.log('🔐 Auth state change:', event, session ? 'Session exists' : 'No session')
         setSession(session)
         setUser(session?.user ?? null)
 
@@ -100,12 +100,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             (event === 'SIGNED_IN' || event === 'USER_UPDATED') &&
             !noRedirectPaths.includes(location.pathname)
           ) {
-            // Check if we're on homepage or auth pages, then redirect to dashboard
-            const authPaths = ['/', '/auth', '/email-auth', '/login', '/setup']
-            if (authPaths.includes(location.pathname)) {
-              logger.log('Redirecting to dashboard after sign in')
-              navigate('/dashboard')
-            }
+            logger.log('✅ User authenticated, redirecting to dashboard')
+            // Always redirect to dashboard after successful auth
+            navigate('/dashboard')
           }
         } else {
           setProfile(null)
@@ -124,7 +121,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
     try {
-      logger.log('Fetching profile for user:', userId)
+      logger.log('📋 Fetching profile for user:', userId)
 
       const { data, error } = await supabase
         .from('profiles')
@@ -133,13 +130,79 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error) {
-        // Profile doesn't exist yet - will be created on signup
-        logger.error('Profile fetch error:', error)
-        logger.log('Profile not found, might be new user')
-        setProfile(null)
-        setCredits(0)
+        // Profile doesn't exist - create it automatically for new users
+        logger.warn('Profile not found, creating new profile for user:', userId)
+
+        // Get user email from session
+        const { data: { session } } = await supabase.auth.getSession()
+        const userEmail = session?.user?.email
+
+        if (userEmail) {
+          // Create profile with signup bonus
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: userEmail,
+              display_name: null,
+              credits: CREDIT_PRICING.SIGNUP_BONUS,
+              text_credits: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
+              voice_credits: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
+              video_credits: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
+            })
+            .select()
+            .single()
+
+          if (createError) {
+            logger.error('Error creating profile:', createError)
+            setProfile(null)
+            setCredits(0)
+          } else {
+            logger.log('✅ Profile created successfully:', newProfile)
+            setProfile(newProfile as Profile)
+            setCredits(CREDIT_PRICING.SIGNUP_BONUS)
+
+            // Also create signup bonus transactions
+            const transactions = [
+              {
+                user_id: userId,
+                amount: CREDIT_PRICING.SIGNUP_BONUS,
+                type: 'bonus' as const,
+                credit_type: 'general' as const,
+                description: 'Welcome bonus on registration',
+              },
+              {
+                user_id: userId,
+                amount: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
+                type: 'bonus' as const,
+                credit_type: 'text' as const,
+                description: 'Text credits welcome bonus',
+              },
+              {
+                user_id: userId,
+                amount: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
+                type: 'bonus' as const,
+                credit_type: 'voice' as const,
+                description: 'Voice credits welcome bonus',
+              },
+              {
+                user_id: userId,
+                amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
+                type: 'bonus' as const,
+                credit_type: 'video' as const,
+                description: 'Video credits welcome bonus',
+              },
+            ]
+
+            await supabase.from('credit_transactions').insert(transactions)
+          }
+        } else {
+          logger.error('Cannot create profile: no email found')
+          setProfile(null)
+          setCredits(0)
+        }
       } else if (data) {
-        logger.log('Profile loaded successfully:', data)
+        logger.log('✅ Profile loaded successfully:', data)
         setProfile(data as Profile)
         setCredits((data as Profile).credits)
       } else {
