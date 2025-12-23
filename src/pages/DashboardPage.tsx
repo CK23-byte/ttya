@@ -65,6 +65,8 @@ export default function DashboardPage() {
     title: string
     message: string
     type: 'success' | 'error' | 'info' | 'warning'
+    confirmText?: string
+    cancelText?: string
     onConfirm?: () => void
   }>({
     isOpen: false,
@@ -73,8 +75,15 @@ export default function DashboardPage() {
     type: 'info'
   })
 
-  const showModal = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', onConfirm?: () => void) => {
-    setModal({ isOpen: true, title, message, type, onConfirm })
+  const showModal = (
+    title: string,
+    message: string,
+    type: 'success' | 'error' | 'info' | 'warning' = 'info',
+    onConfirm?: () => void,
+    confirmText?: string,
+    cancelText?: string
+  ) => {
+    setModal({ isOpen: true, title, message, type, onConfirm, confirmText, cancelText })
   }
 
   // Check auth: Support both old password-based and new Supabase email auth
@@ -207,7 +216,9 @@ export default function DashboardPage() {
             'error'
           )
         }
-      }
+      },
+      'Yes, Delete',
+      'Cancel'
     )
   }
 
@@ -466,8 +477,8 @@ export default function DashboardPage() {
         title={modal.title}
         message={modal.message}
         type={modal.type}
-        confirmText={modal.onConfirm ? "Yes, Add Voice Sample" : "OK"}
-        cancelText="Not Now"
+        confirmText={modal.confirmText || "OK"}
+        cancelText={modal.cancelText || "Cancel"}
         showCancel={!!modal.onConfirm}
         onConfirm={modal.onConfirm}
       />
