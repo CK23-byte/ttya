@@ -525,7 +525,7 @@ export default function PricingPage() {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
-              💡 <strong>Tip:</strong> Credits can be used across all features. 1 credit = 1 text message, 10 seconds of voice, or 5 seconds of video.
+              💡 <strong>Tip:</strong> Credits can be used across all features. 1 credit = 1 text message, 5 seconds of voice, or 3 seconds of video.
             </p>
           </div>
         </div>
@@ -574,7 +574,7 @@ export default function PricingPage() {
               </h3>
               <p className="text-gray-600">
                 All plans include universal credits that can be used for text chat, voice calls, or video calls.
-                1 credit = 1 text message, 10 seconds of voice, or 5 seconds of video. Higher tiers include more credits and unlock more AI personalities.
+                1 credit = 1 text message, 5 seconds of voice, or 3 seconds of video. Higher tiers include more credits and unlock more AI personalities.
               </p>
             </div>
 

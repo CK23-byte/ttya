@@ -17,7 +17,8 @@ export function arePaymentLinksConfigured(): boolean {
 }
 
 // Subscription Plans Configuration - Universal Credits System
-// 1 credit = 1 text message, 30 seconds voice, or 12 seconds video
+// 1 credit = 1 text message, 5 seconds voice, or 3 seconds video
+// Optimized for 300%+ profit margins
 export const SUBSCRIPTION_PLANS = {
   free: {
     name: 'Free',
@@ -43,10 +44,10 @@ export const SUBSCRIPTION_PLANS = {
   starter: {
     name: 'Starter',
     description: 'Perfect for getting started',
-    credits: 1500,
+    credits: 350,
     profiles: 1,
     features: [
-      '1,500 universal credits per month',
+      '350 universal credits per month',
       '1 AI Personality',
       'Text, voice & video chat',
       'All chat themes',
@@ -67,10 +68,10 @@ export const SUBSCRIPTION_PLANS = {
     name: 'Pro',
     description: 'Deep, emotional continuity',
     popular: true,
-    credits: 6000,
+    credits: 900,
     profiles: 5,
     features: [
-      '6,000 universal credits per month',
+      '900 universal credits per month',
       '5 AI Personalities',
       'Text, voice & video chat',
       'Faster responses',
@@ -91,10 +92,10 @@ export const SUBSCRIPTION_PLANS = {
   premium: {
     name: 'Premium',
     description: 'Closest experience to real life',
-    credits: 20000,
+    credits: 1800,
     profiles: 999,
     features: [
-      '20,000 universal credits per month',
+      '1,800 universal credits per month',
       'Unlimited AI Personalities',
       'Text, voice & video chat',
       'Ultra fast responses',
@@ -176,7 +177,7 @@ export const VIDEO_CREDIT_PACKS = {
 } as const
 
 // Universal Credits (can be used for text, voice, AND video)
-// 1 credit = 1 text message, 10 seconds of voice, or 5 seconds of video
+// 1 credit = 1 text message, 5 seconds of voice, or 3 seconds of video
 export const UNIVERSAL_CREDIT_PACKS = {
   small: {
     name: '100 Universal Credits',

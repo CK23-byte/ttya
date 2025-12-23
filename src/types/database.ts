@@ -131,16 +131,17 @@ export interface CreditPackage {
 }
 
 // Credit pricing (in credits)
+// Designed for 300%+ profit margins on all tiers
 export const CREDIT_PRICING = {
   // Text message costs based on token usage (approximate)
   MESSAGE_BASE_COST: 1, // 1 credit per message minimum
   TOKEN_COST_PER_1K: 0.5, // 0.5 credits per 1000 tokens
 
   // Voice call costs (per minute)
-  VOICE_COST_PER_MINUTE: 6, // 6 credits per minute (1 credit = 10 seconds)
+  VOICE_COST_PER_MINUTE: 12, // 12 credits per minute (1 credit = 5 seconds)
 
   // Video call costs (per minute)
-  VIDEO_COST_PER_MINUTE: 12, // 12 credits per minute (1 credit = 5 seconds)
+  VIDEO_COST_PER_MINUTE: 20, // 20 credits per minute (1 credit = 3 seconds)
 
   // Credit packages (EUR)
   PACKAGES: [
@@ -151,5 +152,5 @@ export const CREDIT_PRICING = {
   ] as CreditPackage[],
 
   // Bonus credits for new users (universal credits)
-  SIGNUP_BONUS: 50, // Universal credits (50 text messages, ~8 min voice, or ~4 min video)
+  SIGNUP_BONUS: 50, // Universal credits (50 text messages, ~4 min voice, or ~2.5 min video)
 }

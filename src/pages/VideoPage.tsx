@@ -232,9 +232,9 @@ export default function VideoPage() {
       return
     }
 
-    // Check if user has enough universal credits for at least 5 seconds (1 credit minimum)
+    // Check if user has enough universal credits for at least 3 seconds (1 credit minimum)
     const universalCredits = supabaseProfile.credits || 0
-    const minRequiredCredits = 1 // Minimum 1 credit (5 seconds of video)
+    const minRequiredCredits = 1 // Minimum 1 credit (3 seconds of video)
 
     if (universalCredits < minRequiredCredits) {
       showModal(

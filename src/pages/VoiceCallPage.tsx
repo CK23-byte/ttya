@@ -124,7 +124,7 @@ export default function VoiceCallPage() {
 
     // Check if user has enough universal credits for at least 30 seconds
     const universalCredits = profile.credits || 0
-    const minRequiredCredits = CREDIT_PRICING.VOICE_COST_PER_MINUTE / 2 // 3 credits for 30 seconds
+    const minRequiredCredits = CREDIT_PRICING.VOICE_COST_PER_MINUTE / 2 // 6 credits for 30 seconds
 
     if (universalCredits < minRequiredCredits) {
       showModal(
