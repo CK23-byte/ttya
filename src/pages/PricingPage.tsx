@@ -115,13 +115,31 @@ export default function PricingPage() {
   }
 
   const getIconForFeature = (feature: string) => {
-    if (feature.toLowerCase().includes('message')) return <MessageCircle className="w-4 h-4" />
-    if (feature.toLowerCase().includes('personal')) return <Users className="w-4 h-4" />
+    // Credits-related features
+    if (feature.toLowerCase().includes('credit')) return <Coins className="w-4 h-4" />
+
+    // Communication types
+    if (feature.toLowerCase().includes('text')) return <MessageCircle className="w-4 h-4" />
+    if (feature.toLowerCase().includes('voice')) return <MessageCircle className="w-4 h-4" />
+    if (feature.toLowerCase().includes('video')) return <MessageCircle className="w-4 h-4" />
+    if (feature.toLowerCase().includes('chat')) return <MessageCircle className="w-4 h-4" />
+
+    // Personalities and customization
+    if (feature.toLowerCase().includes('personal') || feature.toLowerCase().includes('ai')) return <Users className="w-4 h-4" />
     if (feature.toLowerCase().includes('theme')) return <Palette className="w-4 h-4" />
-    if (feature.toLowerCase().includes('memory')) return <Brain className="w-4 h-4" />
-    if (feature.toLowerCase().includes('fast') || feature.toLowerCase().includes('response')) return <Zap className="w-4 h-4" />
+
+    // Performance features
+    if (feature.toLowerCase().includes('fast') || feature.toLowerCase().includes('response') || feature.toLowerCase().includes('priority')) return <Zap className="w-4 h-4" />
+    if (feature.toLowerCase().includes('memory') || feature.toLowerCase().includes('extended')) return <Brain className="w-4 h-4" />
+
+    // Data features
     if (feature.toLowerCase().includes('upload') || feature.toLowerCase().includes('archive')) return <Upload className="w-4 h-4" />
+    if (feature.toLowerCase().includes('unlimited')) return <Sparkles className="w-4 h-4" />
+
+    // Support
     if (feature.toLowerCase().includes('support')) return <Heart className="w-4 h-4" />
+
+    // Default
     return <Check className="w-4 h-4" />
   }
 
