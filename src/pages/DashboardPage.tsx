@@ -22,12 +22,11 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { usePayment } from '../contexts/PaymentContext'
-import { PersonalityProfile, Message } from '../types'
+import { PersonalityProfile } from '../types'
+import { getSecure } from '../utils/secureStorage'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
-import { loadPersonalityProfiles, deletePersonalityProfile, loadChatMessages } from '../utils/profileStorage'
-
-const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
+import { loadPersonalityProfiles, deletePersonalityProfile, loadChatMessages, loadProfileData } from '../utils/profileStorage'
 
 interface ProfileWithStats extends PersonalityProfile {
   messageCount: number

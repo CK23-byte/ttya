@@ -38,7 +38,6 @@ import Modal from '../components/Modal'
 import { Message, PersonalityProfile } from '../types'
 import { CREDIT_PRICING } from '../types/database'
 
-const MESSAGES_STORAGE_PREFIX = 'chat_messages_'
 const THEME_STORAGE_KEY = 'chat_theme'
 
 type ChatTheme = 'whatsapp' | 'imessage' | 'messenger'
