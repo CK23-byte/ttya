@@ -1,8 +1,9 @@
 /**
- * Vercel Serverless Function: Deduct Credits
+ * Vercel Serverless Function: Deduct Universal Credits
  *
- * Deducts credits from a user's account based on credit type
- * Supports: text, voice, video credits
+ * Deducts universal credits from a user's account
+ * All credits come from the same pool and can be used for text, voice, or video
+ * Credit type is tracked for analytics only
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -15,7 +16,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 interface DeductCreditsRequest {
   userId: string
   amount: number
-  creditType: 'text' | 'voice' | 'video'
+  usageType: 'text' | 'voice' | 'video'  // Track usage type for analytics
   description?: string
 }
 
@@ -38,12 +39,12 @@ export default async function handler(
 
   try {
     const body = req.body as DeductCreditsRequest
-    const { userId, amount, creditType, description } = body
+    const { userId, amount, usageType, description } = body
 
     // Validate input
-    if (!userId || !amount || !creditType) {
+    if (!userId || !amount || !usageType) {
       return res.status(400).json({
-        error: 'Missing required fields: userId, amount, creditType'
+        error: 'Missing required fields: userId, amount, usageType'
       })
     }
 
@@ -53,19 +54,19 @@ export default async function handler(
       })
     }
 
-    if (!['text', 'voice', 'video'].includes(creditType)) {
+    if (!['text', 'voice', 'video'].includes(usageType)) {
       return res.status(400).json({
-        error: 'Invalid creditType. Must be: text, voice, or video'
+        error: 'Invalid usageType. Must be: text, voice, or video'
       })
     }
 
     // Create Supabase client with service key (bypasses RLS)
     const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
-    // Get current credits
+    // Get current universal credits
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('text_credits, voice_credits, video_credits')
+      .select('credits')
       .eq('id', userId)
       .single()
 
@@ -76,25 +77,23 @@ export default async function handler(
       })
     }
 
-    // Check if user has enough credits
-    const creditField = `${creditType}_credits` as keyof typeof profile
-    const currentCredits = profile[creditField] as number
+    // Check if user has enough universal credits
+    const currentCredits = profile.credits || 0
 
     if (currentCredits < amount) {
       return res.status(402).json({
-        error: 'Insufficient credits',
+        error: 'Insufficient universal credits',
         required: amount,
         available: currentCredits,
-        creditType
+        usageType
       })
     }
 
-    // Deduct credits (using atomic update)
-    const updateField = `${creditType}_credits`
-    const updateData: { [key: string]: number } = { [updateField]: currentCredits - amount }
+    // Deduct universal credits (using atomic update)
+    const newBalance = currentCredits - amount
     const { error: updateError } = await supabase
       .from('profiles')
-      .update(updateData)
+      .update({ credits: newBalance })
       .eq('id', userId)
 
     if (updateError) {
@@ -111,8 +110,8 @@ export default async function handler(
         user_id: userId,
         amount: -amount, // Negative for usage
         type: 'usage' as const,
-        credit_type: creditType,
-        description: description || `Used ${amount} ${creditType} credits`
+        credit_type: 'general', // Universal credits are stored as 'general'
+        description: description || `Used ${amount} universal credits for ${usageType}`
       } as any)
 
     if (transactionError) {
@@ -121,14 +120,12 @@ export default async function handler(
     }
 
     // Return success with updated balance
-    const newBalance = currentCredits - amount
-
     return res.status(200).json({
       success: true,
-      creditType,
+      usageType,
       amountDeducted: amount,
       remainingCredits: newBalance,
-      message: `Successfully deducted ${amount} ${creditType} credits`
+      message: `Successfully deducted ${amount} universal credits for ${usageType}`
     })
 
   } catch (error) {

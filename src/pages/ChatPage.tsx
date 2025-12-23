@@ -330,7 +330,7 @@ export default function ChatPage() {
       setCurrentMessages(finalMessages)
       await saveMessages(activeProfileId, finalMessages)
 
-      // Deduct text credits after successful message
+      // Deduct universal credits after successful message
       try {
         const response = await fetch('/api/credits/deduct', {
           method: 'POST',
@@ -338,7 +338,7 @@ export default function ChatPage() {
           body: JSON.stringify({
             userId: user.id,
             amount: requiredCredits,
-            creditType: 'text',
+            usageType: 'text',
             description: `Chat message to ${activeConvo.profile.name}`
           })
         })

@@ -159,14 +159,14 @@ export default function VoiceCallPage() {
 
       const creditsToDeduct = CREDIT_PRICING.VOICE_COST_PER_MINUTE
 
-      // Deduct credits
+      // Deduct universal credits
       fetch('/api/credits/deduct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
           amount: creditsToDeduct,
-          creditType: 'voice',
+          usageType: 'voice',
           description: `Voice call with ${personalityName} (minute ${currentMinute})`
         })
       })

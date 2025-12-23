@@ -125,14 +125,14 @@ export default function VideoPage() {
 
       const creditsToDeduct = CREDIT_PRICING.VIDEO_COST_PER_MINUTE
 
-      // Deduct credits
+      // Deduct universal credits
       fetch('/api/credits/deduct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
           amount: creditsToDeduct,
-          creditType: 'video',
+          usageType: 'video',
           description: `Video call with ${profile?.name} (minute ${currentMinute})`
         })
       })

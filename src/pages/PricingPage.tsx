@@ -188,12 +188,15 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* Text Chat Subscriptions */}
+      {/* Universal Credits Subscriptions */}
       <section className="pb-12 px-4">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Text Chat Subscriptions
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
+            Universal Credits Subscriptions
           </h2>
+          <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
+            All plans include universal credits that work for text, voice, and video. Free tier includes text chat only.
+          </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Free Plan */}
@@ -524,7 +527,7 @@ export default function PricingPage() {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
-              💡 <strong>Tip:</strong> Credits can be used across all features. 1 credit = 1 text message, ~12 seconds of voice, or ~12 seconds of video.
+              💡 <strong>Tip:</strong> Credits can be used across all features. 1 credit = 1 text message, 30 seconds of voice, or 12 seconds of video.
             </p>
           </div>
         </div>
@@ -569,11 +572,11 @@ export default function PricingPage() {
           <div className="space-y-6">
             <div className="border-b border-gray-200 pb-6">
               <h3 className="font-semibold text-gray-900 mb-2">
-                How do subscriptions work?
+                How do universal credits work?
               </h3>
               <p className="text-gray-600">
-                All plans include unlimited text chat, voice, and video calls with your AI personalities.
-                Higher tiers unlock more profiles and advanced features.
+                All plans include universal credits that can be used for text chat, voice calls, or video calls.
+                1 credit = 1 text message, 30 seconds of voice, or 12 seconds of video. Higher tiers include more credits and unlock more AI personalities.
               </p>
             </div>
 
@@ -592,8 +595,8 @@ export default function PricingPage() {
                 What's included in the free plan?
               </h3>
               <p className="text-gray-600">
-                The free plan includes 1 personality profile and 100 messages to try out the service.
-                Upgrade anytime to unlock unlimited messaging and more profiles.
+                The free plan includes 1 personality profile and 50 universal credits for text chat only.
+                Upgrade to unlock voice & video calls, more credits, and additional personalities.
               </p>
             </div>
 
