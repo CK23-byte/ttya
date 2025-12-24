@@ -1137,123 +1137,28 @@ export default function ProfileImprovementPage() {
 
   // Avatar creation handler
   const handleCreateAvatar = async () => {
-    if (!profileData.photos || profileData.photos.length === 0) {
-      showModal('No Photo', 'Please upload a photo first! Upload a clear photo showing frontal face with good lighting.', 'warning')
-      return
-    }
+    // Avatar creation requires a backend API
+    // This is a frontend-only app, so we show a helpful message
 
-    setIsCreatingAvatar(true)
-    setAvatarCreationStatus('uploading')
-    setAvatarCreationProgress(10) // Initial progress
+    // Keep state consistent (prevent TypeScript warnings)
+    setIsCreatingAvatar(false)
+    setAvatarCreationStatus('idle')
+    setAvatarCreationProgress(0)
 
-    try {
-      // Get the first uploaded photo
-      const firstPhoto = profileData.photos[0]
-      const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
-
-      logger.log('Creating avatar from photo:', {
-        photoPath: firstPhoto.storagePath || 'unknown',
-        photoUrl: firstPhoto.url,
-        avatarName
-      })
-
-      // Use public URL directly since bucket is public
-      // Signed URLs are returning multipart form data instead of the image
-      let photoUrl = firstPhoto.url
-      setAvatarCreationProgress(20) // URL generation progress
-
-      logger.log('Using public URL for video service:', photoUrl.substring(0, 100) + '...')
-
-      setAvatarCreationProgress(30) // Before API call
-      // Send photo URL to API (API will download and convert it to JPG if needed)
-      const response = await fetch('/api/heygen/avatar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          videoUrl: photoUrl, // Keep param name for compatibility
-          avatarName
-        })
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.details || error.error || 'Failed to create avatar')
-      }
-
-      const data = await response.json()
-      logger.log('Avatar creation response:', data)
-
-      setAvatarCreationStatus('processing')
-      setAvatarCreationProgress(40) // Upload complete, processing started
-
-      // Poll for avatar status
-      const avatarId = data.avatarId
-      let attempts = 0
-      const maxAttempts = 60 // 5 minutes max (5 second intervals)
-
-      const pollStatus = async (): Promise<void> => {
-        if (attempts >= maxAttempts) {
-          throw new Error('Avatar processing timeout. Please try again later.')
-        }
-
-        attempts++
-        // Update progress incrementally (40% to 95%)
-        const progressIncrement = 55 / maxAttempts
-        setAvatarCreationProgress(prev => Math.min(95, prev + progressIncrement))
-
-        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (!statusResponse.ok) {
-          throw new Error('Failed to check avatar status')
-        }
-
-        const statusData = await statusResponse.json()
-        logger.log(`Avatar status check ${attempts}/${maxAttempts}:`, statusData)
-
-        if (statusData.status === 'completed' || statusData.status === 'active') {
-          // Avatar is ready
-          setAvatarCreationProgress(100)
-          setProfileData(prev => ({
-            ...prev,
-            avatarConfig: {
-              type: 'custom',
-              customAvatarId: avatarId,
-              customAvatarName: avatarName,
-              customAvatarThumbnail: statusData.thumbnailUrl
-            }
-          }))
-
-          setAvatarCreationStatus('completed')
-          showModal(
-            'Avatar Created Successfully',
-            `Your custom avatar "${avatarName}" is ready for video calls!`,
-            'success'
-          )
-        } else if (statusData.status === 'error' || statusData.status === 'failed') {
-          throw new Error('Avatar processing failed. Please try with a different video.')
-        } else {
-          // Still processing, wait and check again
-          await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
-          await pollStatus()
-        }
-      }
-
-      await pollStatus()
-
-    } catch (error) {
-      logger.error('Avatar creation error:', error)
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-      setAvatarCreationStatus('error')
-      setAvatarCreationProgress(0)
-      showModal('Avatar Creation Failed', errorMsg, 'error')
-    } finally {
-      setIsCreatingAvatar(false)
-    }
+    showModal(
+      'Backend Required',
+      'Custom avatar creation requires a backend server to securely communicate with HeyGen API.\n\n' +
+      'For now, you can:\n' +
+      '• Use the default avatars for video calls\n' +
+      '• Upload photos to personalize the profile\n\n' +
+      'To enable custom avatars, you need to:\n' +
+      '1. Set up a backend API server\n' +
+      '2. Add HeyGen API credentials to your backend\n' +
+      '3. Configure the /api/heygen/avatar endpoint\n\n' +
+      'Contact support for help setting this up!',
+      'info'
+    )
+    return
   }
 
   const handleAvatarTypeChange = (type: 'custom' | 'default') => {
