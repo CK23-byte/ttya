@@ -27,11 +27,9 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
 
-// Loading component for lazy-loaded routes
+// Loading component for lazy-loaded routes - minimal, fast
 const PageLoader = () => (
-  <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex items-center justify-center">
-    <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-  </div>
+  <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-rose-500 animate-pulse z-50" />
 )
 
 function App() {
