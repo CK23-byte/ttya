@@ -88,58 +88,54 @@ export default function AccountPage() {
       return
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('File is too large. Maximum size is 2MB')
+    // Validate file size (max 500KB for Base64)
+    if (file.size > 500 * 1024) {
+      alert('File is too large. Maximum size is 500KB')
       return
     }
 
     setIsUploadingAvatar(true)
 
     try {
-      const { supabase } = await import('../lib/supabase')
+      // Convert image to Base64
+      const reader = new FileReader()
 
-      // Create unique filename
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
-      const filePath = `avatars/${fileName}`
+      reader.onload = async (event) => {
+        try {
+          const base64String = event.target?.result as string
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        })
+          const { supabase } = await import('../lib/supabase')
 
-      if (uploadError) {
-        logger.error('Upload error:', uploadError)
-        alert('Something went wrong with uploading. Please try again.')
-        setIsUploadingAvatar(false)
-        return
+          // Update profile with Base64 image
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ avatar_url: base64String })
+            .eq('id', user.id)
+
+          if (updateError) {
+            logger.error('Error updating profile:', updateError)
+            alert('Something went wrong with saving. Please try again.')
+            setIsUploadingAvatar(false)
+            return
+          }
+
+          // Refresh profile to show new avatar
+          await refreshProfile()
+          setIsUploadingAvatar(false)
+        } catch (error) {
+          logger.error('Error saving avatar:', error)
+          alert('Something went wrong. Please try again.')
+          setIsUploadingAvatar(false)
+        }
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath)
-
-      // Update profile with avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: urlData.publicUrl })
-        .eq('id', user.id)
-
-      if (updateError) {
-        logger.error('Error updating profile:', updateError)
-        alert('Something went wrong with saving. Please try again.')
+      reader.onerror = () => {
+        logger.error('Error reading file')
+        alert('Could not read the image file. Please try again.')
         setIsUploadingAvatar(false)
-        return
       }
 
-      // Refresh profile to show new avatar
-      await refreshProfile()
-      setIsUploadingAvatar(false)
+      reader.readAsDataURL(file)
     } catch (error) {
       logger.error('Error uploading avatar:', error)
       alert('Something went wrong. Please try again.')
@@ -281,7 +277,7 @@ export default function AccountPage() {
                   Click the camera icon to upload a photo
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Max 2MB • JPG, PNG of GIF
+                  Max 500KB • JPG, PNG or GIF
                 </p>
               </div>
 
