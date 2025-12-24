@@ -145,9 +145,10 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
       console.log('✓ Sharp library loaded successfully')
 
       const originalSize = mediaBuffer.length
-      mediaBuffer = await sharp(mediaBuffer)
+      const convertedBuffer = await sharp(mediaBuffer)
         .jpeg({ quality: 95 }) // High quality JPG
         .toBuffer()
+      mediaBuffer = Buffer.from(convertedBuffer) as Buffer<ArrayBuffer>
 
       conversionSuccess = true
       console.log('✓ Image converted to JPEG successfully:', {

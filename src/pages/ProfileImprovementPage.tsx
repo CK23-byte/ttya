@@ -1156,72 +1156,139 @@ export default function ProfileImprovementPage() {
 
   // Avatar creation handler
   const handleCreateAvatar = async () => {
-    console.group('🎬 AVATAR CREATION ATTEMPTED')
-    console.log('%c========== DEBUG INFO ==========', 'color: #ff6b6b; font-weight: bold; font-size: 14px;')
-
-    // Current state
-    console.log('%c📋 Current State:', 'color: #4ecdc4; font-weight: bold;')
-    console.table({
-      'Profile ID': profile?.id || 'N/A',
-      'Profile Name': profile?.name || 'N/A',
-      'Photos Available': profileData.photos.length,
-      'Avatar Type': profileData.avatarConfig?.type || 'default',
-      'Custom Avatar ID': profileData.avatarConfig?.customAvatarId || 'none',
-      'Default Avatar': profileData.avatarConfig?.defaultAvatar || 'Angela-inblackskirt-20220820'
-    })
-
-    // Photo details
-    if (profileData.photos.length > 0) {
-      console.log('%c📸 Available Photos:', 'color: #4ecdc4; font-weight: bold;')
-      profileData.photos.forEach((photo, index) => {
-        console.log(`  ${index + 1}. ${photo.name}`)
-        console.log(`     URL: ${photo.url}`)
-        console.log(`     ID: ${photo.id}`)
-      })
-      console.log('')
-      console.log('%c✅ First photo would be used for avatar creation:', 'color: #51cf66;')
-      console.log(`   ${profileData.photos[0].url}`)
-    } else {
-      console.log('%c❌ ERROR: No photos available!', 'color: #ff6b6b; font-weight: bold;')
-      console.log('   User needs to upload photos first before creating avatar')
+    if (!profile || profileData.photos.length === 0) {
+      showModal('No Photos', 'Please upload at least one photo before creating an avatar.', 'warning')
+      return
     }
 
-    console.log('')
-    console.log('%c⚠️ AVATAR CREATION DISABLED', 'color: #ffa94d; font-weight: bold; font-size: 14px;')
-    console.log('%cReason: This is a frontend-only app (no backend server)', 'color: #ffa94d;')
-    console.log('')
-    console.log('%c🔧 To Enable Custom Avatar Creation:', 'color: #4ecdc4; font-weight: bold;')
-    console.log('   1. Set up a backend API server')
-    console.log('   2. Add HeyGen API credentials to your backend')
-    console.log('   3. Configure /api/heygen/avatar endpoint')
-    console.log('   4. Update handleCreateAvatar function to call the backend')
-    console.log('')
-    console.log('%c💡 Current Workaround:', 'color: #4ecdc4; font-weight: bold;')
-    console.log('   Using default avatars (Angela) for video calls')
-    console.log('   Users can upload photos to personalize the profile')
-    console.log('')
-    console.log('%c========== END DEBUG INFO ==========', 'color: #ff6b6b; font-weight: bold; font-size: 14px;')
-    console.groupEnd()
+    console.group('🎬 AVATAR CREATION STARTED')
+    console.log('📸 Using photo:', profileData.photos[0].url)
+    console.log('👤 Avatar name:', `${profile.name} Avatar`)
 
-    // Keep state consistent (prevent TypeScript warnings)
-    setIsCreatingAvatar(false)
-    setAvatarCreationStatus('idle')
-    setAvatarCreationProgress(0)
+    setIsCreatingAvatar(true)
+    setAvatarCreationStatus('uploading')
+    setAvatarCreationProgress(10)
 
-    showModal(
-      'Backend Required',
-      'Custom avatar creation requires a backend server to securely communicate with HeyGen API.\n\n' +
-      'For now, you can:\n' +
-      '• Use the default avatars for video calls\n' +
-      '• Upload photos to personalize the profile\n\n' +
-      'To enable custom avatars, you need to:\n' +
-      '1. Set up a backend API server\n' +
-      '2. Add HeyGen API credentials to your backend\n' +
-      '3. Configure the /api/heygen/avatar endpoint\n\n' +
-      'Contact support for help setting this up!',
-      'info'
-    )
-    return
+    try {
+      // Step 1: Upload photo to HeyGen
+      const photoUrl = profileData.photos[0].url
+      const avatarName = `${profile.name} Avatar`
+
+      console.log('📤 Step 1: Uploading photo to HeyGen...')
+      const createResponse = await fetch('/api/heygen/avatar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          videoUrl: photoUrl,
+          avatarName
+        })
+      })
+
+      if (!createResponse.ok) {
+        const error = await createResponse.json()
+        throw new Error(error.details || error.error || 'Failed to create avatar')
+      }
+
+      const createData = await createResponse.json()
+      const avatarId = createData.avatarId
+
+      console.log('✅ Avatar upload successful! ID:', avatarId)
+      console.log('⏳ Status:', createData.status)
+
+      setAvatarCreationProgress(30)
+      setAvatarCreationStatus('processing')
+
+      // Step 2: Poll for avatar status
+      console.log('🔄 Step 2: Polling for avatar status...')
+      const maxAttempts = 60 // 5 minutes max (5 seconds * 60 = 300 seconds)
+      let attempts = 0
+      let thumbnailUrl = ''
+
+      while (attempts < maxAttempts) {
+        attempts++
+        const progress = 30 + (attempts / maxAttempts) * 60 // Progress from 30% to 90%
+        setAvatarCreationProgress(Math.min(progress, 90))
+
+        console.log(`🔍 Checking status (attempt ${attempts}/${maxAttempts})...`)
+
+        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`)
+
+        if (!statusResponse.ok) {
+          console.warn('⚠️ Status check failed, retrying...')
+          await new Promise(resolve => setTimeout(resolve, 5000))
+          continue
+        }
+
+        const statusData = await statusResponse.json()
+        const status = statusData.status
+
+        console.log(`📊 Status: ${status}`)
+
+        if (status === 'completed') {
+          thumbnailUrl = statusData.thumbnailUrl || ''
+          console.log('✅ Avatar processing completed!')
+          console.log('🖼️ Thumbnail URL:', thumbnailUrl)
+          break
+        } else if (status === 'failed' || status === 'error') {
+          throw new Error('Avatar processing failed. Please try again with a different photo.')
+        }
+
+        // Wait 5 seconds before next check
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      }
+
+      if (attempts >= maxAttempts) {
+        throw new Error('Avatar processing timed out. Please check back later.')
+      }
+
+      // Step 3: Save avatar config
+      console.log('💾 Step 3: Saving avatar configuration...')
+      setAvatarCreationProgress(95)
+
+      setProfileData(prev => ({
+        ...prev,
+        avatarConfig: {
+          type: 'custom',
+          customAvatarId: avatarId,
+          customAvatarName: avatarName,
+          customAvatarThumbnail: thumbnailUrl
+        }
+      }))
+
+      setAvatarCreationProgress(100)
+      setAvatarCreationStatus('completed')
+
+      console.log('🎉 Avatar creation completed successfully!')
+      console.groupEnd()
+
+      showModal(
+        'Avatar Created Successfully!',
+        `Your custom avatar "${avatarName}" is ready to use in video calls!\n\nMake sure to save your changes to apply the avatar.`,
+        'success'
+      )
+
+    } catch (error) {
+      console.error('❌ Avatar creation error:', error)
+      console.groupEnd()
+
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred'
+
+      showModal(
+        'Avatar Creation Failed',
+        errorMsg + '\n\nPlease make sure:\n' +
+        '• Your photo shows a clear frontal face\n' +
+        '• The photo has good lighting\n' +
+        '• The file format is JPG/JPEG/PNG\n\n' +
+        'If the problem persists, contact support.',
+        'error'
+      )
+
+      setAvatarCreationStatus('error')
+    } finally {
+      setIsCreatingAvatar(false)
+    }
   }
 
   const handleAvatarTypeChange = (type: 'custom' | 'default') => {
