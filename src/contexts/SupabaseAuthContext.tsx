@@ -94,8 +94,22 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null)
 
         if (session?.user) {
-          await fetchProfile(session.user.id)
-          setIsLoading(false) // Ensure loading state is cleared after profile fetch
+          try {
+            // Set a timeout for profile fetching
+            const profilePromise = fetchProfile(session.user.id)
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+            )
+
+            await Promise.race([profilePromise, timeoutPromise])
+          } catch (err) {
+            logger.error('Error during profile fetch in auth change:', err)
+            // Continue anyway - profile can be null
+            setProfile(null)
+            setCredits(0)
+          } finally {
+            setIsLoading(false) // Always clear loading state
+          }
 
           // Redirect logic based on auth event
           if (!noRedirectPaths.includes(location.pathname)) {
@@ -133,11 +147,21 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     try {
       logger.log('📋 Fetching profile for user:', userId)
 
-      const { data, error } = await supabase
+      // Add timeout to database query
+      const queryPromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle()
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database query timeout')), 8000)
+      )
+
+      const { data, error } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any
 
       if (error) {
         // Profile doesn't exist - create it automatically for new users

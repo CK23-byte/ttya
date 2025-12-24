@@ -11,6 +11,7 @@ import { Eye, EyeOff, Mail, Lock, User, Heart, Gift, ArrowLeft } from 'lucide-re
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { CREDIT_PRICING } from '../types/database'
 import { validatePassword, getPasswordStrength } from '../utils/validation'
+import { logger } from '../utils/logger'
 
 // Import logos (you'll need to add these SVG components or use URLs)
 const GoogleIcon = () => (
@@ -127,6 +128,13 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
 
     setIsLoading(true)
 
+    // Safety timeout - reset loading after 15 seconds max
+    const safetyTimeout = setTimeout(() => {
+      logger.warn('Login took too long, resetting loading state')
+      setIsLoading(false)
+      setError('Login is taking longer than expected. The page will redirect automatically. If not, please refresh the page.')
+    }, 15000)
+
     try {
       if (mode === 'signin') {
         const { error } = await signIn(email, password)
@@ -135,6 +143,8 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
             ? 'Invalid login credentials'
             : error.message)
         } else {
+          // Success - wait briefly for redirect
+          setMessage('Login successful! Redirecting...')
           onSuccess?.()
         }
       } else if (mode === 'signup') {
@@ -157,8 +167,10 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
         }
       }
     } catch (err) {
+      logger.error('Auth error:', err)
       setError('An error occurred. Please try again.')
     } finally {
+      clearTimeout(safetyTimeout)
       setIsLoading(false)
     }
   }
