@@ -149,14 +149,25 @@ export default function ProfileImprovementPage() {
   const focusParam = searchParams.get('focus')
 
   useEffect(() => {
+    console.log('🚀 ProfileImprovementPage mounted')
+    console.log('📋 Initial state:', {
+      profileId,
+      hasEncryptionKey: !!encryptionKey,
+      hasUser: !!user,
+      isConfigured,
+      defaultAvatarConfig: profileData.avatarConfig
+    })
+
     // Check auth: either encryptionKey (password auth) or Supabase user
     const isAuthenticated = encryptionKey || (isConfigured && user)
 
     if (!profileId || !isAuthenticated) {
+      console.warn('⚠️ Not authenticated or no profileId, redirecting to dashboard')
       navigate('/dashboard')
       return
     }
 
+    console.log('✅ Authentication OK, loading profile data...')
     loadProfile()
     loadProfileData()
   }, [profileId, encryptionKey, user, isConfigured])
@@ -237,7 +248,8 @@ export default function ProfileImprovementPage() {
           voiceSamples: validVoiceSamples,
           photos: data.photos || [],
           videos: data.videos || [],
-          voiceConfig: data.voiceConfig // ✅ Load voice config
+          voiceConfig: data.voiceConfig, // ✅ Load voice config
+          avatarConfig: data.avatarConfig // ✅ Load avatar config
         })
 
         logger.log('Profile data loaded successfully:', {
@@ -245,8 +257,11 @@ export default function ProfileImprovementPage() {
           voiceSamples: validVoiceSamples.length,
           photos: data.photos?.length || 0,
           videos: data.videos?.length || 0,
-          voiceConfig: data.voiceConfig ? `${data.voiceConfig.type}` : 'none'
+          voiceConfig: data.voiceConfig ? `${data.voiceConfig.type}` : 'none',
+          avatarConfig: data.avatarConfig ? `${data.avatarConfig.type}` : 'default'
         })
+
+        console.log('🎭 Avatar config loaded:', data.avatarConfig || 'Using default')
       }
     } catch (error) {
       logger.error('Error loading profile data:', error)
@@ -284,7 +299,8 @@ export default function ProfileImprovementPage() {
         voiceSamples: voiceSamplesForStorage,
         photos: profileData.photos,
         videos: profileData.videos,
-        voiceConfig: profileData.voiceConfig // ✅ Save voice config
+        voiceConfig: profileData.voiceConfig, // ✅ Save voice config
+        avatarConfig: profileData.avatarConfig // ✅ Save avatar config
       }
 
       logger.log('Saving profile data:', {
@@ -292,8 +308,11 @@ export default function ProfileImprovementPage() {
         voiceSamples: dataToStore.voiceSamples.length,
         photos: dataToStore.photos.length,
         videos: dataToStore.videos.length,
-        voiceConfig: dataToStore.voiceConfig ? `${dataToStore.voiceConfig.type}` : 'none'
+        voiceConfig: dataToStore.voiceConfig ? `${dataToStore.voiceConfig.type}` : 'none',
+        avatarConfig: dataToStore.avatarConfig ? `${dataToStore.avatarConfig.type}` : 'default'
       })
+
+      console.log('💾 Saving avatar config:', dataToStore.avatarConfig)
 
       // Use centralized storage utility (handles both encrypted and Supabase database)
       await saveProfileDataToStorage(profileId, dataToStore, encryptionKey)
@@ -1137,8 +1156,52 @@ export default function ProfileImprovementPage() {
 
   // Avatar creation handler
   const handleCreateAvatar = async () => {
-    // Avatar creation requires a backend API
-    // This is a frontend-only app, so we show a helpful message
+    console.group('🎬 AVATAR CREATION ATTEMPTED')
+    console.log('%c========== DEBUG INFO ==========', 'color: #ff6b6b; font-weight: bold; font-size: 14px;')
+
+    // Current state
+    console.log('%c📋 Current State:', 'color: #4ecdc4; font-weight: bold;')
+    console.table({
+      'Profile ID': profile?.id || 'N/A',
+      'Profile Name': profile?.name || 'N/A',
+      'Photos Available': profileData.photos.length,
+      'Avatar Type': profileData.avatarConfig?.type || 'default',
+      'Custom Avatar ID': profileData.avatarConfig?.customAvatarId || 'none',
+      'Default Avatar': profileData.avatarConfig?.defaultAvatar || 'Angela-inblackskirt-20220820'
+    })
+
+    // Photo details
+    if (profileData.photos.length > 0) {
+      console.log('%c📸 Available Photos:', 'color: #4ecdc4; font-weight: bold;')
+      profileData.photos.forEach((photo, index) => {
+        console.log(`  ${index + 1}. ${photo.name}`)
+        console.log(`     URL: ${photo.url}`)
+        console.log(`     ID: ${photo.id}`)
+      })
+      console.log('')
+      console.log('%c✅ First photo would be used for avatar creation:', 'color: #51cf66;')
+      console.log(`   ${profileData.photos[0].url}`)
+    } else {
+      console.log('%c❌ ERROR: No photos available!', 'color: #ff6b6b; font-weight: bold;')
+      console.log('   User needs to upload photos first before creating avatar')
+    }
+
+    console.log('')
+    console.log('%c⚠️ AVATAR CREATION DISABLED', 'color: #ffa94d; font-weight: bold; font-size: 14px;')
+    console.log('%cReason: This is a frontend-only app (no backend server)', 'color: #ffa94d;')
+    console.log('')
+    console.log('%c🔧 To Enable Custom Avatar Creation:', 'color: #4ecdc4; font-weight: bold;')
+    console.log('   1. Set up a backend API server')
+    console.log('   2. Add HeyGen API credentials to your backend')
+    console.log('   3. Configure /api/heygen/avatar endpoint')
+    console.log('   4. Update handleCreateAvatar function to call the backend')
+    console.log('')
+    console.log('%c💡 Current Workaround:', 'color: #4ecdc4; font-weight: bold;')
+    console.log('   Using default avatars (Angela) for video calls')
+    console.log('   Users can upload photos to personalize the profile')
+    console.log('')
+    console.log('%c========== END DEBUG INFO ==========', 'color: #ff6b6b; font-weight: bold; font-size: 14px;')
+    console.groupEnd()
 
     // Keep state consistent (prevent TypeScript warnings)
     setIsCreatingAvatar(false)
@@ -1162,6 +1225,9 @@ export default function ProfileImprovementPage() {
   }
 
   const handleAvatarTypeChange = (type: 'custom' | 'default') => {
+    console.log('🎭 Avatar type changed to:', type)
+    console.log('📋 Previous avatar config:', profileData.avatarConfig)
+
     setProfileData(prev => ({
       ...prev,
       avatarConfig: {
@@ -1170,6 +1236,8 @@ export default function ProfileImprovementPage() {
         ...(type === 'default' && !prev.avatarConfig?.defaultAvatar ? { defaultAvatar: 'Angela-inblackskirt-20220820' } : {})
       }
     }))
+
+    console.log('✅ Avatar type update completed')
   }
 
   const formatTime = (seconds: number) => {
