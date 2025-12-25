@@ -226,8 +226,19 @@ export default function DashboardPage() {
         profileData = stored ? JSON.parse(stored) : null
       }
 
-      if (!profileData || !profileData.voiceSamples || profileData.voiceSamples.length === 0) {
-        // No voice samples - show modal and redirect to improvement page
+      // Check if voice is configured (either voice samples OR cloned voice)
+      const hasVoiceSamples = profileData?.voiceSamples && profileData.voiceSamples.length > 0
+      const hasClonedVoice = profileData?.voiceConfig?.type === 'cloned' && profileData.voiceConfig.clonedVoiceId
+
+      console.log('🔍 Voice check:', {
+        hasVoiceSamples,
+        hasClonedVoice,
+        voiceConfig: profileData?.voiceConfig,
+        voiceSamplesCount: profileData?.voiceSamples?.length || 0
+      })
+
+      if (!hasVoiceSamples && !hasClonedVoice) {
+        // No voice samples OR cloned voice - show modal and redirect to improvement page
         showModal(
           'Voice Sample Required',
           `To enable voice calls with ${profile.name}, you need to add a voice sample first. This allows us to clone their voice for realistic conversations.\n\nWould you like to add a voice sample now?`,
@@ -236,6 +247,8 @@ export default function DashboardPage() {
         )
         return
       }
+
+      console.log('✅ Voice configured, proceeding to call page')
 
       // Voice samples exist - navigate to call page
       const params = new URLSearchParams({
@@ -246,7 +259,7 @@ export default function DashboardPage() {
       })
 
       // Add voice config if available
-      if (profileData.voiceConfig) {
+      if (profileData && profileData.voiceConfig) {
         params.append('voiceType', profileData.voiceConfig.type)
         if (profileData.voiceConfig.type === 'cloned' && profileData.voiceConfig.clonedVoiceId) {
           params.append('voiceId', profileData.voiceConfig.clonedVoiceId)
@@ -421,10 +434,19 @@ export default function DashboardPage() {
                         Call
                       </button>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
                           console.log('🎥 Video button clicked for profile:', profile.id, profile.name)
+                          console.log('🎥 Current location:', window.location.href)
                           console.log('🎥 Navigating to:', `/video?profile=${profile.id}`)
-                          navigate(`/video?profile=${profile.id}`)
+
+                          try {
+                            navigate(`/video?profile=${profile.id}`)
+                            console.log('🎥 Navigate called successfully')
+                          } catch (error) {
+                            console.error('❌ Navigate error:', error)
+                          }
                         }}
                         className="flex-1 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium hover:bg-purple-100 transition flex items-center justify-center gap-2 border border-purple-200"
                         title="Start Video Call"
