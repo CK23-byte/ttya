@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
+import { APP_VERSION } from '../constants/version'
 
 interface HeaderProps {
   variant?: 'default' | 'transparent'
@@ -90,9 +91,9 @@ export default function Header({ variant = 'default' }: HeaderProps) {
           {/* Version Badge */}
           <span
             className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200"
-            title="Build: 2025-12-18 10:57 UTC"
+            title={`Version ${APP_VERSION} - Custom Avatar Creation Enabled`}
           >
-            v2.11.0
+            v{APP_VERSION}
           </span>
         </div>
 

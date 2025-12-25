@@ -33,6 +33,7 @@ import {
   UniversalCreditPackType,
   isStripeConfigured
 } from '../lib/stripe'
+import { APP_VERSION } from '../constants/version'
 
 export default function AccountPage() {
   const navigate = useNavigate()
@@ -618,6 +619,13 @@ export default function AccountPage() {
             <ExternalLink className="w-4 h-4" />
             <span>Need help? View our FAQ</span>
           </a>
+        </div>
+
+        {/* Version Info */}
+        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+          <p className="text-xs text-gray-400">
+            TalkToYouAI v{APP_VERSION} • Custom Avatar Creation Enabled
+          </p>
         </div>
       </main>
     </div>
