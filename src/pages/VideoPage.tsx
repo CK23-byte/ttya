@@ -27,7 +27,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { PersonalityProfile } from '../types'
-import { createHeyGenStreamingSession, closeHeyGenStreamSession } from '../utils/heygenAPI'
+import { createHeyGenStreamingSession, closeHeyGenStreamSession, sendHeyGenStreamMessage } from '../utils/heygenAPI'
 import Modal from '../components/Modal'
 import { CREDIT_PRICING } from '../types/database'
 import { loadPersonalityProfiles, loadProfileData } from '../utils/profileStorage'
@@ -364,6 +364,20 @@ export default function VideoPage() {
 
       callStartTimeRef.current = Date.now()
       setCallStatus('connected')
+
+      // Start the avatar with a greeting to activate the video stream
+      console.log('👋 Sending initial greeting to activate avatar...')
+      setTimeout(async () => {
+        try {
+          await sendHeyGenStreamMessage(
+            session.session_id,
+            `Hello! I'm ${profile.name}. It's great to see you!`
+          )
+          console.log('✅ Avatar greeting sent successfully')
+        } catch (error) {
+          console.error('❌ Failed to send greeting:', error)
+        }
+      }, 1000) // Small delay to ensure connection is fully established
     } catch (error) {
       console.error('❌ Error starting call:', error)
       logger.error('Error starting call:', error)
@@ -496,10 +510,25 @@ export default function VideoPage() {
           )}
 
           {callStatus === 'connecting' && (
-            <div className="text-center">
-              <Loader className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
-              <p className="text-white text-lg">Connecting to {profile.name}...</p>
-            </div>
+            <>
+              <div className="text-center">
+                <Loader className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
+                <p className="text-white text-lg">Connecting to {profile.name}...</p>
+              </div>
+
+              {/* Local video preview during connecting - FaceTime style */}
+              {localStreamRef.current && (
+                <div className="absolute top-4 right-4 w-32 h-48 rounded-xl overflow-hidden shadow-2xl border-2 border-white/30">
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover transform scale-x-[-1]"
+                  />
+                </div>
+              )}
+            </>
           )}
 
           {callStatus === 'connected' && (
@@ -509,6 +538,7 @@ export default function VideoPage() {
                 ref={videoRef}
                 autoPlay
                 playsInline
+                muted
                 className="w-full h-full object-cover"
               />
 
