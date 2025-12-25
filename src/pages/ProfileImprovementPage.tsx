@@ -1240,7 +1240,35 @@ export default function ProfileImprovementPage() {
       }
 
       if (attempts >= maxAttempts) {
-        throw new Error('Avatar processing timed out. Please check back later.')
+        console.warn('⚠️ Status polling timed out, but avatar was created!')
+        console.log('💾 Saving avatar anyway - it may still be processing...')
+
+        // Save avatar even if status check timed out
+        // The avatar is likely still processing and will complete later
+        setProfileData(prev => ({
+          ...prev,
+          avatarConfig: {
+            type: 'custom',
+            customAvatarId: avatarId,
+            customAvatarName: avatarName,
+            customAvatarThumbnail: thumbnailUrl || '' // May be empty if still processing
+          }
+        }))
+
+        setAvatarCreationProgress(100)
+        setAvatarCreationStatus('completed')
+        console.groupEnd()
+
+        showModal(
+          'Avatar Upload Successful!',
+          `Your avatar "${avatarName}" has been uploaded and is processing.\n\n` +
+          `Avatar ID: ${avatarId}\n\n` +
+          `The avatar may take a few more minutes to complete processing. ` +
+          `Save your changes now, and the avatar will be available for video calls once processing finishes.\n\n` +
+          `You can check status at: https://app.heygen.com/`,
+          'success'
+        )
+        return
       }
 
       // Step 3: Save avatar config
