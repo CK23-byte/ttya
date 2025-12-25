@@ -421,7 +421,11 @@ export default function DashboardPage() {
                         Call
                       </button>
                       <button
-                        onClick={() => navigate(`/video?profile=${profile.id}`)}
+                        onClick={() => {
+                          console.log('🎥 Video button clicked for profile:', profile.id, profile.name)
+                          console.log('🎥 Navigating to:', `/video?profile=${profile.id}`)
+                          navigate(`/video?profile=${profile.id}`)
+                        }}
                         className="flex-1 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium hover:bg-purple-100 transition flex items-center justify-center gap-2 border border-purple-200"
                         title="Start Video Call"
                       >

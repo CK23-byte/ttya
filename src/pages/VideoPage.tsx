@@ -36,6 +36,30 @@ const PROFILES_STORAGE_KEY = 'personality_profiles'
 
 type CallStatus = 'idle' | 'connecting' | 'connected' | 'ended' | 'error'
 
+// Avatar configuration interface
+interface AvatarConfig {
+  type: 'custom' | 'default'
+  customAvatarId?: string
+  customAvatarName?: string
+  customAvatarThumbnail?: string
+  defaultAvatar?: string
+}
+
+// Storage interface for profile data
+interface StoredProfileData {
+  textNotes: string[]
+  voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
+  photos: { id: string; url: string; name: string }[]
+  videos: { id: string; url: string; name: string }[]
+  voiceConfig?: {
+    type: 'cloned' | 'standard'
+    clonedVoiceId?: string
+    clonedVoiceName?: string
+    standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'
+  }
+  avatarConfig?: AvatarConfig
+}
+
 export default function VideoPage() {
   const navigate = useNavigate()
   const { isAuthenticated, encryptionKey } = useAuth()
@@ -250,9 +274,38 @@ export default function VideoPage() {
     setError(null)
 
     try {
-      // Use avatar ID for video streaming
-      // Default to a professional avatar (customize in env)
-      const avatarId = import.meta.env.VITE_HEYGEN_AVATAR_ID || 'Angela-inblackskirt-20220820'
+      // Load profile data to get avatar configuration
+      let profileData: StoredProfileData | null = null
+
+      if (encryptionKey) {
+        // Old password-based auth: use encrypted storage
+        profileData = await getSecure<StoredProfileData>(
+          `profile_data_${profile.id}`,
+          encryptionKey
+        )
+      } else {
+        // Supabase users: use plain localStorage
+        const stored = localStorage.getItem(`profile_data_${profile.id}`)
+        profileData = stored ? JSON.parse(stored) : null
+      }
+
+      // Determine avatar ID to use
+      let avatarId: string
+      const avatarConfig = profileData?.avatarConfig
+
+      if (avatarConfig?.type === 'custom' && avatarConfig.customAvatarId) {
+        // Use custom uploaded avatar
+        avatarId = avatarConfig.customAvatarId
+        console.log('🎭 Using custom avatar:', avatarId, avatarConfig.customAvatarName)
+      } else if (avatarConfig?.type === 'default' && avatarConfig.defaultAvatar) {
+        // Use configured default avatar
+        avatarId = avatarConfig.defaultAvatar
+        console.log('🎭 Using default avatar:', avatarId)
+      } else {
+        // Fallback to environment variable or hardcoded default
+        avatarId = import.meta.env.VITE_HEYGEN_AVATAR_ID || 'Angela-inblackskirt-20220820'
+        console.log('🎭 Using fallback avatar:', avatarId)
+      }
 
       logger.log('Creating video streaming session with avatar:', avatarId)
 
