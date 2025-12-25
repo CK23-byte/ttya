@@ -26,13 +26,11 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
-import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import { createHeyGenStreamingSession, closeHeyGenStreamSession } from '../utils/heygenAPI'
 import Modal from '../components/Modal'
 import { CREDIT_PRICING } from '../types/database'
-
-const PROFILES_STORAGE_KEY = 'personality_profiles'
+import { loadPersonalityProfiles, loadProfileData } from '../utils/profileStorage'
 
 type CallStatus = 'idle' | 'connecting' | 'connected' | 'ended' | 'error'
 
@@ -219,21 +217,8 @@ export default function VideoPage() {
     }
 
     try {
-      let profiles: PersonalityProfile[] = []
-
-      if (encryptionKey) {
-        // Old password-based auth: use encrypted storage
-        profiles = await getSecure<PersonalityProfile[]>(
-          PROFILES_STORAGE_KEY,
-          encryptionKey
-        ) || []
-      } else {
-        // Supabase users: use plain localStorage
-        const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
-        console.log('📦 Loading profiles from localStorage:', PROFILES_STORAGE_KEY)
-        console.log('📦 Raw stored data:', stored ? `${stored.substring(0, 100)}...` : 'null')
-        profiles = stored ? JSON.parse(stored) : []
-      }
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      const profiles = await loadPersonalityProfiles(encryptionKey)
 
       console.log('👥 Loaded profiles count:', profiles.length)
       console.log('👥 Profile IDs:', profiles.map(p => p.id))
@@ -287,19 +272,8 @@ export default function VideoPage() {
 
     try {
       // Load profile data to get avatar configuration
-      let profileData: StoredProfileData | null = null
-
-      if (encryptionKey) {
-        // Old password-based auth: use encrypted storage
-        profileData = await getSecure<StoredProfileData>(
-          `profile_data_${profile.id}`,
-          encryptionKey
-        )
-      } else {
-        // Supabase users: use plain localStorage
-        const stored = localStorage.getItem(`profile_data_${profile.id}`)
-        profileData = stored ? JSON.parse(stored) : null
-      }
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      const profileData = await loadProfileData<StoredProfileData>(profile.id, encryptionKey)
 
       // Determine avatar ID to use
       let avatarId: string

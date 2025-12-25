@@ -23,10 +23,9 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { usePayment } from '../contexts/PaymentContext'
 import { PersonalityProfile } from '../types'
-import { getSecure } from '../utils/secureStorage'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
-import { loadPersonalityProfiles, deletePersonalityProfile, loadChatMessages } from '../utils/profileStorage'
+import { loadPersonalityProfiles, deletePersonalityProfile, loadChatMessages, loadProfileData } from '../utils/profileStorage'
 
 interface ProfileWithStats extends PersonalityProfile {
   messageCount: number
@@ -212,19 +211,8 @@ export default function DashboardPage() {
   const handleStartCall = async (profile: ProfileWithStats) => {
     try {
       // Load profile data from storage
-      let profileData: StoredProfileData | null = null
-
-      if (encryptionKey) {
-        // Old password-based auth: use encrypted storage
-        profileData = await getSecure<StoredProfileData>(
-          `profile_data_${profile.id}`,
-          encryptionKey
-        )
-      } else {
-        // Supabase users: use plain localStorage
-        const stored = localStorage.getItem(`profile_data_${profile.id}`)
-        profileData = stored ? JSON.parse(stored) : null
-      }
+      // Use centralized storage utility (handles both encrypted and Supabase database)
+      const profileData = await loadProfileData<StoredProfileData>(profile.id, encryptionKey)
 
       // Check if voice is configured (either voice samples OR cloned voice)
       const hasVoiceSamples = profileData?.voiceSamples && profileData.voiceSamples.length > 0
