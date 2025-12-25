@@ -230,12 +230,15 @@ export default function DashboardPage() {
       const hasVoiceSamples = profileData?.voiceSamples && profileData.voiceSamples.length > 0
       const hasClonedVoice = profileData?.voiceConfig?.type === 'cloned' && profileData.voiceConfig.clonedVoiceId
 
-      console.log('🔍 Voice check:', {
-        hasVoiceSamples,
-        hasClonedVoice,
-        voiceConfig: profileData?.voiceConfig,
-        voiceSamplesCount: profileData?.voiceSamples?.length || 0
-      })
+      console.log('🔍 Voice check for profile:', profile.name)
+      console.log('  📊 hasVoiceSamples:', hasVoiceSamples)
+      console.log('  📊 hasClonedVoice:', hasClonedVoice)
+      console.log('  📊 voiceConfig:', profileData?.voiceConfig)
+      console.log('  📊 voiceConfig.type:', profileData?.voiceConfig?.type)
+      console.log('  📊 voiceConfig.clonedVoiceId:', profileData?.voiceConfig?.clonedVoiceId)
+      console.log('  📊 voiceSamplesCount:', profileData?.voiceSamples?.length || 0)
+      console.log('  📊 profileData exists:', !!profileData)
+      console.log('  📊 Full profileData keys:', profileData ? Object.keys(profileData) : 'null')
 
       if (!hasVoiceSamples && !hasClonedVoice) {
         // No voice samples OR cloned voice - show modal and redirect to improvement page

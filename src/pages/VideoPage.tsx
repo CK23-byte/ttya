@@ -210,7 +210,10 @@ export default function VideoPage() {
 
   const loadProfile = async () => {
     const profileId = searchParams.get('profile')
+    console.log('🎬 VideoPage loadProfile called, profileId:', profileId)
+
     if (!profileId) {
+      console.log('❌ No profileId in URL, redirecting to dashboard')
       navigate('/dashboard')
       return
     }
@@ -227,15 +230,24 @@ export default function VideoPage() {
       } else {
         // Supabase users: use plain localStorage
         const stored = localStorage.getItem(PROFILES_STORAGE_KEY)
+        console.log('📦 Loading profiles from localStorage:', PROFILES_STORAGE_KEY)
+        console.log('📦 Raw stored data:', stored ? `${stored.substring(0, 100)}...` : 'null')
         profiles = stored ? JSON.parse(stored) : []
       }
 
+      console.log('👥 Loaded profiles count:', profiles.length)
+      console.log('👥 Profile IDs:', profiles.map(p => p.id))
+
       const foundProfile = profiles.find(p => p.id === profileId)
+
       if (!foundProfile) {
+        console.log('❌ Profile not found with ID:', profileId)
+        console.log('❌ Available profile IDs:', profiles.map(p => p.id))
         navigate('/dashboard')
         return
       }
 
+      console.log('✅ Profile found:', foundProfile.name)
       setProfile(foundProfile)
     } catch (error) {
       logger.error('Error loading profile:', error)
