@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { PaymentProvider } from './contexts/PaymentContext'
 import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext'
-import { logger } from './utils/logger'
 import { APP_VERSION, APP_NAME } from './constants/version'
 
 // Eager load: Only landing and auth pages (critical for first paint)
