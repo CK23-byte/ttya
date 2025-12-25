@@ -77,6 +77,31 @@ export async function createHeyGenStreamingSession(
 }
 
 /**
+ * Start a HeyGen streaming session (must be called after create and before sending messages)
+ */
+export async function startHeyGenStreamSession(sessionId: string): Promise<void> {
+  logger.log('Starting HeyGen streaming session:', sessionId)
+
+  const response = await fetch('/api/heygen/stream?action=start', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sessionId }),
+  })
+
+  logger.log('HeyGen start stream response status:', response.status)
+
+  if (!response.ok) {
+    const error = await response.json()
+    logger.error('HeyGen start stream error:', error)
+    throw new Error(error.message || 'Failed to start streaming session')
+  }
+
+  logger.log('HeyGen streaming session started successfully')
+}
+
+/**
  * Send message to HeyGen streaming session
  */
 export async function sendHeyGenStreamMessage(

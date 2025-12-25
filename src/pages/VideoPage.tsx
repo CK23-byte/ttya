@@ -27,7 +27,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { PersonalityProfile } from '../types'
-import { createHeyGenStreamingSession, closeHeyGenStreamSession, sendHeyGenStreamMessage } from '../utils/heygenAPI'
+import { createHeyGenStreamingSession, startHeyGenStreamSession, closeHeyGenStreamSession, sendHeyGenStreamMessage } from '../utils/heygenAPI'
 import Modal from '../components/Modal'
 import { CREDIT_PRICING } from '../types/database'
 import { loadPersonalityProfiles, loadProfileData } from '../utils/profileStorage'
@@ -365,7 +365,12 @@ export default function VideoPage() {
       callStartTimeRef.current = Date.now()
       setCallStatus('connected')
 
-      // Start the avatar with a greeting to activate the video stream
+      // Start the HeyGen streaming session before sending messages
+      console.log('🚀 Starting HeyGen streaming session...')
+      await startHeyGenStreamSession(session.session_id)
+      console.log('✅ HeyGen session started')
+
+      // Send greeting to activate the avatar (wait a bit to ensure stream is ready)
       console.log('👋 Sending initial greeting to activate avatar...')
       setTimeout(async () => {
         try {
@@ -377,7 +382,7 @@ export default function VideoPage() {
         } catch (error) {
           console.error('❌ Failed to send greeting:', error)
         }
-      }, 1000) // Small delay to ensure connection is fully established
+      }, 1500) // Delay to ensure stream is fully ready
     } catch (error) {
       console.error('❌ Error starting call:', error)
       logger.error('Error starting call:', error)

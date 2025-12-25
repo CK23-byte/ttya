@@ -29,12 +29,14 @@ export default async function handler(
     switch (action) {
       case 'create':
         return await handleCreateStream(req, res)
+      case 'start':
+        return await handleStartStream(req, res)
       case 'message':
         return await handleStreamMessage(req, res)
       case 'close':
         return await handleCloseStream(req, res)
       default:
-        return res.status(400).json({ error: 'Invalid action. Use: create, message, or close' })
+        return res.status(400).json({ error: 'Invalid action. Use: create, start, message, or close' })
     }
   } catch (error) {
     console.error('HeyGen stream endpoint error:', error)
@@ -106,6 +108,61 @@ async function handleCreateStream(req: VercelRequest, res: VercelResponse) {
     ice_servers: data.data?.ice_servers2 || data.data?.ice_servers || [
       { urls: 'stun:stun.l.google.com:19302' }
     ]
+  })
+}
+
+// Start Stream Handler
+async function handleStartStream(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  const { sessionId } = req.body
+
+  if (!sessionId) {
+    return res.status(400).json({
+      error: 'Missing required field: sessionId'
+    })
+  }
+
+  console.log('Starting HeyGen streaming session:', sessionId)
+
+  const response = await fetch('https://api.heygen.com/v1/streaming.start', {
+    method: 'POST',
+    headers: {
+      'X-Api-Key': HEYGEN_API_KEY!,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      session_id: sessionId
+    })
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    console.error('HeyGen start stream error:', error)
+
+    let errorMessage = 'Failed to start streaming session'
+    try {
+      const errorJson = JSON.parse(error)
+      errorMessage = errorJson.message || errorJson.error || errorMessage
+    } catch (e) {
+      errorMessage = error || errorMessage
+    }
+
+    return res.status(response.status).json({
+      error: errorMessage,
+      details: error
+    })
+  }
+
+  const data = await response.json()
+
+  console.log('HeyGen streaming session started successfully')
+
+  return res.status(200).json({
+    success: true,
+    data
   })
 }
 
