@@ -279,18 +279,16 @@ export default function VideoPage() {
       let avatarId: string
       const avatarConfig = profileData?.avatarConfig
 
-      if (avatarConfig?.type === 'custom' && avatarConfig.customAvatarId) {
-        // Use custom uploaded avatar
-        avatarId = avatarConfig.customAvatarId
-        console.log('🎭 Using custom avatar:', avatarId, avatarConfig.customAvatarName)
-      } else if (avatarConfig?.type === 'default' && avatarConfig.defaultAvatar) {
+      // IMPORTANT: Custom avatars are "Talking Photos" and cannot be used for Interactive streaming
+      // Always use default avatar for video calls
+      if (avatarConfig?.type === 'default' && avatarConfig.defaultAvatar) {
         // Use configured default avatar
         avatarId = avatarConfig.defaultAvatar
         console.log('🎭 Using default avatar:', avatarId)
       } else {
         // Fallback to environment variable or hardcoded default
         avatarId = import.meta.env.VITE_HEYGEN_AVATAR_ID || 'Angela-inblackskirt-20220820'
-        console.log('🎭 Using fallback avatar:', avatarId)
+        console.log('🎭 Using fallback avatar (custom avatars not supported for streaming):', avatarId)
       }
 
       logger.log('Creating video streaming session with avatar:', avatarId)

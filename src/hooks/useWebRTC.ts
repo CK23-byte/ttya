@@ -108,6 +108,16 @@ export function useWebRTC(options: UseWebRTCOptions) {
       updateStatus('connecting')
 
       // Get ephemeral token from backend
+      console.log('📞 Creating voice session with params:', {
+        personalityId,
+        userId,
+        personalityName,
+        personalityRelationship,
+        voiceType,
+        voiceId,
+        voice
+      })
+
       const sessionResponse = await fetch('/api/voice/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -124,7 +134,12 @@ export function useWebRTC(options: UseWebRTCOptions) {
       })
 
       if (!sessionResponse.ok) {
-        throw new Error('Failed to create session')
+        const errorData = await sessionResponse.json().catch(() => null)
+        console.error('❌ Session creation failed:', {
+          status: sessionResponse.status,
+          errorData
+        })
+        throw new Error(`Failed to create session: ${errorData?.error || sessionResponse.statusText}`)
       }
 
       const sessionData = await sessionResponse.json()
