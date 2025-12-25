@@ -93,10 +93,12 @@ export default function VideoPage() {
   }
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const localVideoRef = useRef<HTMLVideoElement>(null)
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null)
   const lastCreditDeductionRef = useRef<number>(0)
   const hasShownLowCreditWarningRef = useRef<boolean>(false)
   const callStartTimeRef = useRef<number | null>(null)
+  const localStreamRef = useRef<MediaStream | null>(null)
 
   useEffect(() => {
     // Wait for Supabase auth to finish loading
@@ -243,8 +245,11 @@ export default function VideoPage() {
   const startCall = async () => {
     if (!profile) return
 
+    console.log('📹 Starting video call...')
+
     // Check if user has Supabase account and credits
     if (!user || !supabaseProfile) {
+      console.log('❌ No user or profile')
       showModal(
         'Account Required',
         'Please sign in with email to use video call features and track your credits.',
@@ -257,7 +262,10 @@ export default function VideoPage() {
     const universalCredits = supabaseProfile.credits || 0
     const minRequiredCredits = 1 // Minimum 1 credit (3 seconds of video)
 
+    console.log('💰 Credits check:', { universalCredits, minRequiredCredits })
+
     if (universalCredits < minRequiredCredits) {
+      console.log('❌ Insufficient credits')
       showModal(
         'Insufficient Credits',
         `You need at least ${minRequiredCredits} universal credit${minRequiredCredits > 1 ? 's' : ''} for a video call.\n\nYou have ${universalCredits} universal credit${universalCredits !== 1 ? 's' : ''} remaining.\n\nPlease purchase more credits to continue.`,
@@ -271,6 +279,19 @@ export default function VideoPage() {
     setError(null)
 
     try {
+      // Start local camera first
+      console.log('📷 Requesting local camera access...')
+      const localStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      })
+      console.log('✅ Local camera access granted')
+
+      localStreamRef.current = localStream
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream
+        console.log('✅ Local video preview started')
+      }
       // Load profile data to get avatar configuration
       // Use centralized storage utility (handles both encrypted and Supabase database)
       const profileData = await loadProfileData<StoredProfileData>(profile.id, encryptionKey)
@@ -291,13 +312,14 @@ export default function VideoPage() {
         console.log('🎭 Using fallback avatar (custom avatars not supported for streaming):', avatarId)
       }
 
-      logger.log('Creating video streaming session with avatar:', avatarId)
+      console.log('🎬 Creating HeyGen streaming session with avatar:', avatarId)
 
       // Create video streaming session
       const session = await createHeyGenStreamingSession(avatarId, 'medium')
       setSessionId(session.session_id)
 
-      logger.log('Session offer received:', {
+      console.log('✅ HeyGen session created:', session.session_id)
+      console.log('📡 Session offer received:', {
         hasOffer: !!session.offer,
         offerType: session.offer?.type,
         sdpLength: session.offer?.sdp?.length || 0,
@@ -322,38 +344,56 @@ export default function VideoPage() {
 
       // Handle incoming video stream
       pc.ontrack = (event) => {
+        console.log('📹 Remote video track received:', event.streams[0])
         if (videoRef.current && event.streams[0]) {
           videoRef.current.srcObject = event.streams[0]
+          console.log('✅ Remote video stream attached to video element')
         }
       }
 
       // Set remote description (offer from video service)
+      console.log('🔌 Setting remote description...')
       await pc.setRemoteDescription(session.offer)
 
       // Create answer
+      console.log('📞 Creating answer...')
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
 
-      // Send answer back to video service
-      // Service handles this automatically via their API
-      logger.log('Video session established successfully')
+      console.log('✅ Video session established successfully')
 
       callStartTimeRef.current = Date.now()
       setCallStatus('connected')
     } catch (error) {
+      console.error('❌ Error starting call:', error)
       logger.error('Error starting call:', error)
+
+      // Stop local camera on error
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop())
+        localStreamRef.current = null
+      }
+
       setError('Failed to start video call. Please try again later.')
       setCallStatus('error')
     }
   }
 
   const endCall = async () => {
+    console.log('📴 Ending call...')
+
     if (sessionId) {
       try {
         await closeHeyGenStreamSession(sessionId)
       } catch (error) {
         logger.error('Error closing session:', error)
       }
+    }
+
+    // Stop local camera
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop())
+      localStreamRef.current = null
     }
 
     if (peerConnectionRef.current) {
@@ -363,6 +403,10 @@ export default function VideoPage() {
 
     if (videoRef.current) {
       videoRef.current.srcObject = null
+    }
+
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null
     }
 
     setCallStatus('ended')
@@ -459,12 +503,26 @@ export default function VideoPage() {
           )}
 
           {callStatus === 'connected' && (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
+            <>
+              {/* Remote video (HeyGen avatar) */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+
+              {/* Local video preview (yourself) - FaceTime style */}
+              <div className="absolute top-4 right-4 w-32 h-48 rounded-xl overflow-hidden shadow-2xl border-2 border-white/30">
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover transform scale-x-[-1]"
+                />
+              </div>
+            </>
           )}
 
           {callStatus === 'ended' && (
