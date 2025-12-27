@@ -1156,13 +1156,29 @@ export default function ProfileImprovementPage() {
 
   // Avatar creation handler
   const handleCreateAvatar = async () => {
-    if (!profile || profileData.photos.length === 0) {
-      showModal('No Photos', 'Please upload at least one photo before creating an avatar.', 'warning')
+    // Tavus requires a training VIDEO (2+ min), not just a photo
+    if (!profile || profileData.videos.length === 0) {
+      showModal(
+        'Training Video Required',
+        'Tavus requires a 2+ minute training video to create your custom avatar.\n\n' +
+        'Please upload a video in the "Videos" section above before creating an avatar.\n\n' +
+        '💡 Tips:\n' +
+        '• Video should be 2-5 minutes long\n' +
+        '• Show frontal view with good lighting\n' +
+        '• Natural speaking is recommended\n' +
+        '• MP4 format works best',
+        'warning'
+      )
       return
     }
 
-    console.group('🎬 AVATAR CREATION STARTED')
-    console.log('📸 Using photo:', profileData.photos[0].url)
+    if (!user) {
+      showModal('Authentication Required', 'Please sign in to create avatars.', 'warning')
+      return
+    }
+
+    console.group('🎬 TAVUS AVATAR CREATION STARTED')
+    console.log('📹 Using video:', profileData.videos[0].url)
     console.log('👤 Avatar name:', `${profile.name} Avatar`)
 
     setIsCreatingAvatar(true)
@@ -1170,19 +1186,21 @@ export default function ProfileImprovementPage() {
     setAvatarCreationProgress(10)
 
     try {
-      // Step 1: Upload photo to HeyGen
-      const photoUrl = profileData.photos[0].url
+      // Step 1: Create Tavus replica
+      const videoUrl = profileData.videos[0].url
       const avatarName = `${profile.name} Avatar`
 
-      console.log('📤 Step 1: Uploading photo to HeyGen...')
-      const createResponse = await fetch('/api/heygen/avatar', {
+      console.log('📤 Step 1: Creating Tavus replica...')
+      const createResponse = await fetch('/api/tavus/replica?action=create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          videoUrl: photoUrl,
-          avatarName
+          videoUrl,
+          replicaName: avatarName,
+          profileId: profile.id,
+          userId: user.id
         })
       })
 
@@ -1192,108 +1210,37 @@ export default function ProfileImprovementPage() {
       }
 
       const createData = await createResponse.json()
-      const avatarId = createData.avatarId
+      const replicaId = createData.replicaId
 
-      console.log('✅ Avatar upload successful! ID:', avatarId)
+      console.log('✅ Tavus replica created! ID:', replicaId)
       console.log('⏳ Status:', createData.status)
 
-      setAvatarCreationProgress(30)
+      setAvatarCreationProgress(50)
       setAvatarCreationStatus('processing')
 
-      // Step 2: Poll for avatar status
-      console.log('🔄 Step 2: Polling for avatar status...')
-      const maxAttempts = 60 // 5 minutes max (5 seconds * 60 = 300 seconds)
-      let attempts = 0
-      let thumbnailUrl = ''
-
-      while (attempts < maxAttempts) {
-        attempts++
-        const progress = 30 + (attempts / maxAttempts) * 60 // Progress from 30% to 90%
-        setAvatarCreationProgress(Math.min(progress, 90))
-
-        console.log(`🔍 Checking status (attempt ${attempts}/${maxAttempts})...`)
-
-        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`)
-
-        if (!statusResponse.ok) {
-          console.warn('⚠️ Status check failed, retrying...')
-          await new Promise(resolve => setTimeout(resolve, 5000))
-          continue
-        }
-
-        const statusData = await statusResponse.json()
-        const status = statusData.status
-
-        console.log(`📊 Status: ${status}`)
-
-        if (status === 'completed') {
-          thumbnailUrl = statusData.thumbnailUrl || ''
-          console.log('✅ Avatar processing completed!')
-          console.log('🖼️ Thumbnail URL:', thumbnailUrl)
-          break
-        } else if (status === 'failed' || status === 'error') {
-          throw new Error('Avatar processing failed. Please try again with a different photo.')
-        }
-
-        // Wait 5 seconds before next check
-        await new Promise(resolve => setTimeout(resolve, 5000))
-      }
-
-      if (attempts >= maxAttempts) {
-        console.warn('⚠️ Status polling timed out, but avatar was created!')
-        console.log('💾 Saving avatar anyway - it may still be processing...')
-
-        // Save avatar even if status check timed out
-        // The avatar is likely still processing and will complete later
-        setProfileData(prev => ({
-          ...prev,
-          avatarConfig: {
-            type: 'custom',
-            customAvatarId: avatarId,
-            customAvatarName: avatarName,
-            customAvatarThumbnail: thumbnailUrl || '' // May be empty if still processing
-          }
-        }))
-
-        setAvatarCreationProgress(100)
-        setAvatarCreationStatus('completed')
-        console.groupEnd()
-
-        showModal(
-          'Avatar Upload Successful!',
-          `Your avatar "${avatarName}" has been uploaded and is processing.\n\n` +
-          `Avatar ID: ${avatarId}\n\n` +
-          `The avatar may take a few more minutes to complete processing. ` +
-          `Save your changes now, and the avatar will be available for video calls once processing finishes.\n\n` +
-          `You can check status at: https://app.heygen.com/`,
-          'success'
-        )
-        return
-      }
-
-      // Step 3: Save avatar config
-      console.log('💾 Step 3: Saving avatar configuration...')
-      setAvatarCreationProgress(95)
-
+      // Tavus replicas take 10-30 minutes to train
+      // Save replica ID immediately and let webhook handle completion
       setProfileData(prev => ({
         ...prev,
         avatarConfig: {
           type: 'custom',
-          customAvatarId: avatarId,
+          customAvatarId: replicaId,
           customAvatarName: avatarName,
-          customAvatarThumbnail: thumbnailUrl
+          customAvatarThumbnail: '' // Will be set by webhook when ready
         }
       }))
 
       setAvatarCreationProgress(100)
       setAvatarCreationStatus('completed')
-
-      console.log('🎉 Avatar creation completed successfully!')
       console.groupEnd()
 
       showModal(
-        'Avatar Created Successfully!',
-        `Your custom avatar "${avatarName}" is ready to use in video calls!\n\nMake sure to save your changes to apply the avatar.`,
+        'Avatar Training Started!',
+        `Your Tavus avatar "${avatarName}" is being trained.\n\n` +
+        `Replica ID: ${replicaId}\n\n` +
+        `⏰ Training takes 10-30 minutes\n\n` +
+        `You'll be notified when it's ready. Save your changes now to apply the avatar.\n\n` +
+        `The avatar will appear in video calls once training completes.`,
         'success'
       )
 
@@ -1305,10 +1252,13 @@ export default function ProfileImprovementPage() {
 
       showModal(
         'Avatar Creation Failed',
-        errorMsg + '\n\nPlease make sure:\n' +
-        '• Your photo shows a clear frontal face\n' +
-        '• The photo has good lighting\n' +
-        '• The file format is JPG/JPEG/PNG\n\n' +
+        `Failed to create avatar:\n\n${errorMsg}\n\n` +
+        'Please ensure:\n' +
+        '• You uploaded a video (not just a photo)\n' +
+        '• Video is 2+ minutes long\n' +
+        '• Video shows clear frontal view\n' +
+        '• Video has good lighting\n' +
+        '• File format is MP4/WebM/MOV\n\n' +
         'If the problem persists, contact support.',
         'error'
       )
@@ -1333,6 +1283,34 @@ export default function ProfileImprovementPage() {
     }))
 
     console.log('✅ Avatar type update completed')
+  }
+
+  const handleDeleteAvatar = () => {
+    console.log('🗑️ Deleting avatar...')
+
+    // Clear avatar configuration
+    setProfileData(prev => ({
+      ...prev,
+      avatarConfig: {
+        type: 'custom',
+        // Remove all custom avatar data
+        customAvatarId: undefined,
+        customAvatarName: undefined,
+        customAvatarThumbnail: undefined
+      }
+    }))
+
+    // Reset avatar creation status
+    setAvatarCreationStatus('idle')
+    setAvatarCreationProgress(0)
+
+    showModal(
+      'Avatar Deleted',
+      'Your custom avatar has been removed. You can create a new one from your photos.',
+      'success'
+    )
+
+    console.log('✅ Avatar deleted successfully')
   }
 
   const formatTime = (seconds: number) => {
@@ -2138,20 +2116,28 @@ export default function ProfileImprovementPage() {
                   {!profileData.avatarConfig.customAvatarId ? (
                     <>
                       <p className="text-sm text-pink-800">
-                        <strong>Avatar Creation:</strong> Upload a clear photo of your loved one showing a frontal view of the face with good lighting. This will be used to create your custom talking AI avatar. JPG/JPEG format recommended.
+                        <strong>Avatar Creation (Tavus):</strong> Upload a 2-5 minute training video showing frontal view with good lighting and natural speaking. This creates your photorealistic digital twin for real-time video conversations. MP4 format recommended.
                       </p>
 
                       {/* Avatar Preview */}
-                      {profileData.photos.length > 0 && (
+                      {profileData.videos.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-xs font-medium text-pink-900">Preview (using first photo):</p>
-                          <div className="relative rounded-lg overflow-hidden bg-gray-100 max-w-xs mx-auto">
-                            <img
-                              src={profileData.photos[0].url}
-                              alt="Avatar preview"
-                              className="w-full object-contain"
-                            />
+                          <p className="text-xs font-medium text-pink-900">✓ Training video uploaded (using first video)</p>
+                          <div className="bg-green-100 border border-green-300 rounded-lg p-3">
+                            <p className="text-xs text-green-800">
+                              📹 Video: {profileData.videos[0].name || 'Uploaded'}<br />
+                              Ready to create your Tavus avatar!
+                            </p>
                           </div>
+                        </div>
+                      )}
+
+                      {profileData.videos.length === 0 && (
+                        <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3">
+                          <p className="text-xs text-yellow-800">
+                            ⚠️ No training video uploaded yet.<br />
+                            Please upload a 2+ minute video in the "Videos" section above.
+                          </p>
                         </div>
                       )}
 
@@ -2159,9 +2145,9 @@ export default function ProfileImprovementPage() {
                       <div className="space-y-2">
                         <button
                           onClick={handleCreateAvatar}
-                          disabled={isCreatingAvatar || profileData.photos.length === 0}
+                          disabled={isCreatingAvatar || profileData.videos.length === 0}
                           className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                            isCreatingAvatar || profileData.photos.length === 0
+                            isCreatingAvatar || profileData.videos.length === 0
                               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                               : 'bg-pink-500 text-white hover:bg-pink-600'
                           }`}
@@ -2169,7 +2155,7 @@ export default function ProfileImprovementPage() {
                           {!isCreatingAvatar && (
                             <>
                               <Upload className="w-5 h-5" />
-                              Create Avatar from Photo
+                              Create Tavus Avatar from Video
                             </>
                           )}
                           {isCreatingAvatar && avatarCreationStatus === 'uploading' && (
@@ -2227,6 +2213,15 @@ export default function ProfileImprovementPage() {
                           />
                         </div>
                       )}
+
+                      {/* Delete/Regenerate Button */}
+                      <button
+                        onClick={handleDeleteAvatar}
+                        className="w-full px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-medium transition flex items-center justify-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Avatar & Create New
+                      </button>
                     </div>
                   )}
                 </div>
