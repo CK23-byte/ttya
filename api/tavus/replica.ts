@@ -1,9 +1,10 @@
 /**
- * Vercel Serverless Function: Tavus Replica Management
+ * Vercel Serverless Function: Tavus Replica & Persona Management
  *
  * Endpoints:
  * - POST ?action=create: Create new replica from training video
  * - GET ?replicaId=xxx: Check replica status
+ * - POST ?action=create-persona: Create AI persona for replica
  *
  * Tavus API Docs: https://docs.tavus.io/api-reference/phoenix-replica-model/create-replica
  */
@@ -45,6 +46,8 @@ export default async function handler(
   try {
     if (action === 'create') {
       return await handleCreateReplica(req, res)
+    } else if (action === 'create-persona') {
+      return await handleCreatePersona(req, res)
     } else if (replicaId) {
       return await handleGetStatus(req, res)
     } else {
@@ -231,5 +234,106 @@ async function handleGetStatus(req: VercelRequest, res: VercelResponse) {
     status: data.status,
     progress: data.progress,
     errorMessage: data.error_message
+  })
+}
+
+// ============================================================================
+// Create Persona Handler (Added to consolidate endpoints)
+// ============================================================================
+
+async function handleCreatePersona(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  const { replicaId, personaName, profileId, systemPrompt, conversationalContext, voiceId, llmConfig } = req.body
+
+  if (!replicaId || !personaName || !profileId || !systemPrompt) {
+    return res.status(400).json({
+      error: 'Missing required fields: replicaId, personaName, profileId, systemPrompt'
+    })
+  }
+
+  const userId = req.body.userId
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized: userId required' })
+  }
+
+  const personaConfig: any = {
+    persona_name: personaName,
+    system_prompt: systemPrompt,
+    replica_id: replicaId,
+    layers: {
+      llm: llmConfig || {
+        model: 'gpt-4',
+        base_url: 'https://api.openai.com/v1',
+        api_key: process.env.OPENAI_API_KEY
+      }
+    }
+  }
+
+  if (conversationalContext) {
+    const contextParts = []
+    if (conversationalContext.memories?.length > 0) {
+      contextParts.push('Memories: ' + conversationalContext.memories.join(', '))
+    }
+    if (conversationalContext.personality?.length > 0) {
+      contextParts.push('Personality: ' + conversationalContext.personality.join(', '))
+    }
+    if (contextParts.length > 0) {
+      personaConfig.context = contextParts.join('\n')
+    }
+  }
+
+  if (voiceId) {
+    personaConfig.layers.tts = {
+      voice_id: voiceId,
+      provider: 'elevenlabs'
+    }
+  }
+
+  const tavusResponse = await fetch('https://tavusapi.com/v2/personas', {
+    method: 'POST',
+    headers: {
+      'x-api-key': TAVUS_API_KEY!,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(personaConfig)
+  })
+
+  if (!tavusResponse.ok) {
+    const error = await tavusResponse.text()
+    let errorMessage = 'Failed to create persona'
+    try {
+      const errorJson = JSON.parse(error)
+      errorMessage = errorJson.message || errorJson.error || errorMessage
+    } catch (e) {
+      errorMessage = error || errorMessage
+    }
+    return res.status(tavusResponse.status).json({
+      error: 'Failed to create persona',
+      details: errorMessage
+    })
+  }
+
+  const data = await tavusResponse.json()
+  const personaId = data.persona_id
+
+  if (!personaId) {
+    return res.status(500).json({
+      error: 'Persona created but no ID returned'
+    })
+  }
+
+  await supabase!.from('tavus_replicas').update({
+    persona_id: personaId,
+    persona_status: 'ready',
+    persona_ready_at: new Date().toISOString()
+  }).eq('replica_id', replicaId)
+
+  return res.status(200).json({
+    success: true,
+    personaId,
+    status: 'ready'
   })
 }

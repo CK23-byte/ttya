@@ -78,7 +78,7 @@ export default async function handler(
     }
 
     // Check if user has enough universal credits
-    const currentCredits = profile.credits || 0
+    const currentCredits = (profile as any).credits || 0
 
     if (currentCredits < amount) {
       return res.status(402).json({
@@ -93,7 +93,7 @@ export default async function handler(
     const newBalance = currentCredits - amount
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ credits: newBalance })
+      .update({ credits: newBalance } as any)
       .eq('id', userId)
 
     if (updateError) {
