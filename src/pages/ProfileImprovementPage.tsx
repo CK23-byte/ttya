@@ -830,18 +830,19 @@ export default function ProfileImprovementPage() {
     const file = e.target.files?.[0]
     if (!file || !profile) return
 
-    // Validate file size (100MB limit for Supabase)
-    const MAX_VIDEO_SIZE = 100 * 1024 * 1024 // 100MB
+    // Validate file size (50MB limit for Supabase free tier)
+    const MAX_VIDEO_SIZE = 50 * 1024 * 1024 // 50MB (Supabase free tier limit)
     if (file.size > MAX_VIDEO_SIZE) {
       const sizeMB = Math.round(file.size / (1024 * 1024))
       showModal(
         'Video Too Large',
-        `Your video is ${sizeMB}MB, which exceeds the 100MB limit.\n\n` +
+        `Your video is ${sizeMB}MB, which exceeds the 50MB limit.\n\n` +
         `💡 Tips:\n` +
         `• Tavus works best with 2-5 minute videos\n` +
         `• Compress your video using HandBrake or similar tool\n` +
         `• Lower resolution to 720p or 480p\n` +
-        `• Recommended: 2-5 min video = 20-50MB`,
+        `• Recommended: 2-5 min video = 20-50MB\n\n` +
+        `🎯 Target: Keep video under 50MB for best results`,
         'error'
       )
       // Reset input
@@ -903,8 +904,12 @@ export default function ProfileImprovementPage() {
       if (errorMsg.includes('exceeded the maximum allowed size')) {
         showModal(
           'Upload Failed - File Too Large',
-          'Your video exceeds Supabase storage limits.\n\n' +
-          'Please compress or trim your video to under 100MB.',
+          'Your video exceeds Supabase storage limits (50MB max).\n\n' +
+          '💡 Quick fix:\n' +
+          '• Trim video to 2-5 minutes\n' +
+          '• Compress using HandBrake (free)\n' +
+          '• Lower resolution to 720p\n\n' +
+          '🎯 Target size: 20-50MB for best results',
           'error'
         )
       } else {
