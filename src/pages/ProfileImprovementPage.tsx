@@ -830,6 +830,41 @@ export default function ProfileImprovementPage() {
     const file = e.target.files?.[0]
     if (!file || !profile) return
 
+    // Validate file size (100MB limit for Supabase)
+    const MAX_VIDEO_SIZE = 100 * 1024 * 1024 // 100MB
+    if (file.size > MAX_VIDEO_SIZE) {
+      const sizeMB = Math.round(file.size / (1024 * 1024))
+      showModal(
+        'Video Too Large',
+        `Your video is ${sizeMB}MB, which exceeds the 100MB limit.\n\n` +
+        `💡 Tips:\n` +
+        `• Tavus works best with 2-5 minute videos\n` +
+        `• Compress your video using HandBrake or similar tool\n` +
+        `• Lower resolution to 720p or 480p\n` +
+        `• Recommended: 2-5 min video = 20-50MB`,
+        'error'
+      )
+      // Reset input
+      e.target.value = ''
+      return
+    }
+
+    // Recommend optimal video length
+    const estimatedMinutes = Math.round(file.size / (10 * 1024 * 1024)) // Rough estimate: 10MB per minute
+    if (estimatedMinutes > 10) {
+      showModal(
+        'Video May Be Too Long',
+        `Your video appears to be ~${estimatedMinutes} minutes long.\n\n` +
+        `⚠️ Tavus recommends 2-5 minute videos for best results.\n\n` +
+        `Longer videos may:\n` +
+        `• Take longer to upload\n` +
+        `• Take longer to train\n` +
+        `• Not improve avatar quality\n\n` +
+        `You can continue, but consider trimming to 2-5 minutes.`,
+        'warning'
+      )
+    }
+
     try {
       logger.log('Uploading video to Supabase Storage...', {
         name: file.name,
@@ -862,7 +897,22 @@ export default function ProfileImprovementPage() {
       logger.log('Video uploaded successfully:', publicUrl)
     } catch (error) {
       logger.error('Error uploading video:', error)
-      showModal('Upload Failed', 'Failed to upload video. Please try again.', 'error')
+
+      // Check if it's a size limit error
+      const errorMsg = error instanceof Error ? error.message : ''
+      if (errorMsg.includes('exceeded the maximum allowed size')) {
+        showModal(
+          'Upload Failed - File Too Large',
+          'Your video exceeds Supabase storage limits.\n\n' +
+          'Please compress or trim your video to under 100MB.',
+          'error'
+        )
+      } else {
+        showModal('Upload Failed', 'Failed to upload video. Please try again.', 'error')
+      }
+
+      // Reset input
+      e.target.value = ''
     }
   }
 
@@ -1154,7 +1204,114 @@ export default function ProfileImprovementPage() {
     }))
   }
 
-  // Avatar creation handler
+  // Quick Avatar creation (Talking Photo - from 1 photo)
+  const handleCreateQuickAvatar = async () => {
+    if (!profile || profileData.photos.length === 0) {
+      showModal(
+        'Photo Required',
+        'Please upload at least one photo before creating a Quick Avatar.\n\n' +
+        '💡 Quick Avatars are faster (5-10 min) but less realistic than Video Avatars.',
+        'warning'
+      )
+      return
+    }
+
+    if (!user) {
+      showModal('Authentication Required', 'Please sign in to create avatars.', 'warning')
+      return
+    }
+
+    console.group('📸 QUICK AVATAR CREATION STARTED (Talking Photo)')
+    console.log('📷 Using photo:', profileData.photos[0].url)
+    console.log('👤 Avatar name:', `${profile.name} Quick Avatar`)
+
+    setIsCreatingAvatar(true)
+    setAvatarCreationStatus('uploading')
+    setAvatarCreationProgress(10)
+
+    try {
+      const photoUrl = profileData.photos[0].url
+      const avatarName = `${profile.name} Quick Avatar`
+
+      console.log('📤 Creating Tavus Talking Photo...')
+
+      // For now, we'll use the same replica endpoint but with a photo
+      // Tavus will automatically detect it's a photo and create a Talking Photo
+      const createResponse = await fetch('/api/tavus/replica?action=create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          videoUrl: photoUrl, // Tavus accepts photos here too
+          replicaName: avatarName,
+          profileId: profile.id,
+          userId: user.id,
+          avatarType: 'quick' // Flag for tracking
+        })
+      })
+
+      if (!createResponse.ok) {
+        const error = await createResponse.json()
+        throw new Error(error.details || error.error || 'Failed to create Quick Avatar')
+      }
+
+      const createData = await createResponse.json()
+      const replicaId = createData.replicaId
+
+      console.log('✅ Talking Photo created! ID:', replicaId)
+      setAvatarCreationProgress(50)
+      setAvatarCreationStatus('processing')
+
+      // Save config
+      setProfileData(prev => ({
+        ...prev,
+        avatarConfig: {
+          type: 'custom',
+          customAvatarId: replicaId,
+          customAvatarName: avatarName,
+          customAvatarThumbnail: photoUrl, // Use photo as thumbnail
+          avatarType: 'quick' // Track avatar type
+        } as AvatarConfig & { avatarType?: 'quick' | 'ultra' }
+      }))
+
+      setAvatarCreationProgress(100)
+      setAvatarCreationStatus('completed')
+      console.groupEnd()
+
+      showModal(
+        'Quick Avatar Created!',
+        `Your Quick Avatar "${avatarName}" is training.\n\n` +
+        `⏰ Training: 5-10 minutes\n\n` +
+        `This avatar is optimized for speed. For ultra-realistic results, use the Video Avatar option instead.\n\n` +
+        `Save your changes to apply the avatar.`,
+        'success'
+      )
+
+    } catch (error) {
+      console.error('❌ Quick Avatar creation error:', error)
+      console.groupEnd()
+
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred'
+
+      showModal(
+        'Quick Avatar Creation Failed',
+        `Failed to create Quick Avatar:\n\n${errorMsg}\n\n` +
+        'Please ensure:\n' +
+        '• Photo shows clear frontal view\n' +
+        '• Good lighting\n' +
+        '• JPG/PNG format\n\n' +
+        'If the problem persists, try the Video Avatar option.',
+        'error'
+      )
+
+      setAvatarCreationStatus('error')
+    } finally {
+      setIsCreatingAvatar(false)
+    }
+  }
+
+  // Ultra Realistic Avatar creation (Video Replica - from 2-5 min video)
   const handleCreateAvatar = async () => {
     // Tavus requires a training VIDEO (2+ min), not just a photo
     if (!profile || profileData.videos.length === 0) {
@@ -1226,8 +1383,9 @@ export default function ProfileImprovementPage() {
           type: 'custom',
           customAvatarId: replicaId,
           customAvatarName: avatarName,
-          customAvatarThumbnail: '' // Will be set by webhook when ready
-        }
+          customAvatarThumbnail: '', // Will be set by webhook when ready
+          avatarType: 'ultra' // Track avatar type
+        } as AvatarConfig & { avatarType?: 'quick' | 'ultra' }
       }))
 
       setAvatarCreationProgress(100)
@@ -1235,12 +1393,11 @@ export default function ProfileImprovementPage() {
       console.groupEnd()
 
       showModal(
-        'Avatar Training Started!',
-        `Your Tavus avatar "${avatarName}" is being trained.\n\n` +
-        `Replica ID: ${replicaId}\n\n` +
-        `⏰ Training takes 10-30 minutes\n\n` +
-        `You'll be notified when it's ready. Save your changes now to apply the avatar.\n\n` +
-        `The avatar will appear in video calls once training completes.`,
+        'Ultra Realistic Avatar Training Started!',
+        `Your Video Avatar "${avatarName}" is being trained.\n\n` +
+        `⏰ Training: 10-30 minutes\n\n` +
+        `This avatar will be ultra-realistic and ideal for natural conversations.\n\n` +
+        `Save your changes now to apply the avatar. It will appear in video calls once training completes.`,
         'success'
       )
 
@@ -2115,79 +2272,104 @@ export default function ProfileImprovementPage() {
                 <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 space-y-3">
                   {!profileData.avatarConfig.customAvatarId ? (
                     <>
-                      <p className="text-sm text-pink-800">
-                        <strong>Avatar Creation (Tavus):</strong> Upload a 2-5 minute training video showing frontal view with good lighting and natural speaking. This creates your photorealistic digital twin for real-time video conversations. MP4 format recommended.
+                      <p className="text-sm text-pink-800 font-medium">
+                        Choose Your Avatar Type:
                       </p>
 
-                      {/* Avatar Preview */}
-                      {profileData.videos.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-pink-900">✓ Training video uploaded (using first video)</p>
-                          <div className="bg-green-100 border border-green-300 rounded-lg p-3">
-                            <p className="text-xs text-green-800">
-                              📹 Video: {profileData.videos[0].name || 'Uploaded'}<br />
-                              Ready to create your Tavus avatar!
-                            </p>
+                      {/* TWO AVATAR OPTIONS */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {/* OPTION 1: Quick Avatar (Photo) */}
+                        <div className="border-2 border-blue-300 bg-blue-50 rounded-lg p-4 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">⚡</span>
+                            <div>
+                              <h3 className="font-bold text-blue-900">Quick Avatar</h3>
+                              <p className="text-xs text-blue-700">From 1 Photo • Fast (5-10 min)</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
 
-                      {profileData.videos.length === 0 && (
-                        <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3">
-                          <p className="text-xs text-yellow-800">
-                            ⚠️ No training video uploaded yet.<br />
-                            Please upload a 2+ minute video in the "Videos" section above.
+                          <p className="text-xs text-blue-800">
+                            Creates a talking photo avatar. Faster but less realistic than video avatars.
+                          </p>
+
+                          {/* Photo status */}
+                          {profileData.photos.length > 0 ? (
+                            <div className="bg-green-100 border border-green-300 rounded p-2">
+                              <p className="text-xs text-green-800">✓ Photo ready</p>
+                            </div>
+                          ) : (
+                            <div className="bg-yellow-100 border border-yellow-300 rounded p-2">
+                              <p className="text-xs text-yellow-800">⚠️ Upload photo first</p>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={handleCreateQuickAvatar}
+                            disabled={isCreatingAvatar || profileData.photos.length === 0}
+                            className={`w-full px-3 py-2 rounded-lg font-medium text-sm transition ${
+                              isCreatingAvatar || profileData.photos.length === 0
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                            }`}
+                          >
+                            Create Quick Avatar
+                          </button>
+                        </div>
+
+                        {/* OPTION 2: Ultra Realistic Avatar (Video) */}
+                        <div className="border-2 border-purple-300 bg-purple-50 rounded-lg p-4 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">🎬</span>
+                            <div>
+                              <h3 className="font-bold text-purple-900">Video Avatar</h3>
+                              <p className="text-xs text-purple-700">From 2-5 min Video • Ultra Realistic</p>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-purple-800">
+                            Creates ultra-realistic digital twin. Best quality but takes longer to train (10-30 min).
+                          </p>
+
+                          {/* Video status */}
+                          {profileData.videos.length > 0 ? (
+                            <div className="bg-green-100 border border-green-300 rounded p-2">
+                              <p className="text-xs text-green-800">✓ Video ready</p>
+                            </div>
+                          ) : (
+                            <div className="bg-yellow-100 border border-yellow-300 rounded p-2">
+                              <p className="text-xs text-yellow-800">⚠️ Upload 2-5 min video first</p>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={handleCreateAvatar}
+                            disabled={isCreatingAvatar || profileData.videos.length === 0}
+                            className={`w-full px-3 py-2 rounded-lg font-medium text-sm transition ${
+                              isCreatingAvatar || profileData.videos.length === 0
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-purple-500 text-white hover:bg-purple-600'
+                            }`}
+                          >
+                            Create Video Avatar
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar (shared for both types) */}
+                      {isCreatingAvatar && (
+                        <div className="space-y-1">
+                          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500 ease-out"
+                              style={{ width: `${avatarCreationProgress}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-center text-pink-700">
+                            {avatarCreationStatus === 'uploading' && `Uploading... ${Math.round(avatarCreationProgress)}%`}
+                            {avatarCreationStatus === 'processing' && `AI is training your avatar... ${Math.round(avatarCreationProgress)}%`}
                           </p>
                         </div>
                       )}
-
-                      {/* Avatar Creation Button with Progress */}
-                      <div className="space-y-2">
-                        <button
-                          onClick={handleCreateAvatar}
-                          disabled={isCreatingAvatar || profileData.videos.length === 0}
-                          className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                            isCreatingAvatar || profileData.videos.length === 0
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-pink-500 text-white hover:bg-pink-600'
-                          }`}
-                        >
-                          {!isCreatingAvatar && (
-                            <>
-                              <Upload className="w-5 h-5" />
-                              Create Tavus Avatar from Video
-                            </>
-                          )}
-                          {isCreatingAvatar && avatarCreationStatus === 'uploading' && (
-                            <>
-                              <span className="animate-spin">⏳</span>
-                              Preparing video... {Math.round(avatarCreationProgress)}%
-                            </>
-                          )}
-                          {isCreatingAvatar && avatarCreationStatus === 'processing' && (
-                            <>
-                              <span className="animate-pulse">🎬</span>
-                              Processing avatar... {Math.round(avatarCreationProgress)}%
-                            </>
-                          )}
-                        </button>
-
-                        {/* Progress Bar */}
-                        {isCreatingAvatar && (
-                          <div className="space-y-1">
-                            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500 ease-out"
-                                style={{ width: `${avatarCreationProgress}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-center text-pink-700">
-                              {avatarCreationStatus === 'uploading' && 'Uploading and preparing video...'}
-                              {avatarCreationStatus === 'processing' && 'AI is processing your avatar (this may take 2-5 minutes)'}
-                            </p>
-                          </div>
-                        )}
-                      </div>
                     </>
                   ) : (
                     <div className="space-y-3">
