@@ -34,6 +34,7 @@ import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import type { PersonalityProfile } from '../types'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
+import UploadFaceButton from '../components/UploadFaceButton'
 import { uploadFileToStorage, prepareAudioForVoiceCloning } from '../utils/supabaseStorage'
 import { loadProfileData as loadProfileDataFromStorage, saveProfileData as saveProfileDataToStorage, loadPersonalityProfiles, savePersonalityProfiles } from '../utils/profileStorage'
 import JSZip from 'jszip'
@@ -1839,69 +1840,81 @@ export default function ProfileImprovementPage() {
               />
 
               {profileData.photos.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="space-y-4">
                   {profileData.photos.map((photo) => {
                     console.log('🖼️ Rendering photo:', photo.url)
                     return (
-                    <div key={photo.id} className="relative group">
-                      <img
-                        src={photo.url}
-                        alt={photo.name}
-                        className="w-full h-32 object-cover rounded-lg"
-                        onError={(e) => {
-                          console.error('❌ Failed to load photo:', photo.url)
-                          e.currentTarget.style.border = '2px solid red'
-                        }}
-                        onLoad={() => {
-                          console.log('✅ Photo loaded successfully:', photo.url)
-                        }}
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg">
-                        {editingItemId === photo.id ? (
-                          <input
-                            type="text"
-                            value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleRenamePhoto(photo.id, editingName)
-                              if (e.key === 'Escape') {
-                                setEditingItemId(null)
-                                setEditingName('')
-                              }
-                            }}
-                            onBlur={() => {
-                              if (editingName.trim()) handleRenamePhoto(photo.id, editingName)
-                              else {
-                                setEditingItemId(null)
-                                setEditingName('')
-                              }
-                            }}
-                            className="w-full px-2 py-1 text-xs border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            autoFocus
-                          />
-                        ) : (
-                          <p className="text-xs text-white truncate">{photo.name}</p>
-                        )}
-                      </div>
-                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                        <button
-                          onClick={() => {
-                            setEditingItemId(photo.id)
-                            setEditingName(photo.name)
+                    <div key={photo.id} className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      {/* Photo Preview */}
+                      <div className="relative group">
+                        <img
+                          src={photo.url}
+                          alt={photo.name}
+                          className="w-full h-48 object-cover rounded-lg"
+                          onError={(e) => {
+                            console.error('❌ Failed to load photo:', photo.url)
+                            e.currentTarget.style.border = '2px solid red'
                           }}
-                          className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition"
-                          title="Rename"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => handleDeletePhoto(photo.id)}
-                          className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition"
-                          title="Delete"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                          onLoad={() => {
+                            console.log('✅ Photo loaded successfully:', photo.url)
+                          }}
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg">
+                          {editingItemId === photo.id ? (
+                            <input
+                              type="text"
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleRenamePhoto(photo.id, editingName)
+                                if (e.key === 'Escape') {
+                                  setEditingItemId(null)
+                                  setEditingName('')
+                                }
+                              }}
+                              onBlur={() => {
+                                if (editingName.trim()) handleRenamePhoto(photo.id, editingName)
+                                else {
+                                  setEditingItemId(null)
+                                  setEditingName('')
+                                }
+                              }}
+                              className="w-full px-2 py-1 text-xs border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              autoFocus
+                            />
+                          ) : (
+                            <p className="text-xs text-white truncate">{photo.name}</p>
+                          )}
+                        </div>
+                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                          <button
+                            onClick={() => {
+                              setEditingItemId(photo.id)
+                              setEditingName(photo.name)
+                            }}
+                            className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition"
+                            title="Rename"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePhoto(photo.id)}
+                            className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition"
+                            title="Delete"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
+
+                      {/* Upload Face Button */}
+                      {profile && (
+                        <UploadFaceButton
+                          profileId={profile.id}
+                          photoUrl={photo.url}
+                          avatarName={`${profile.name}'s Custom Avatar`}
+                        />
+                      )}
                     </div>
                     )
                   })}
