@@ -314,10 +314,18 @@ export default function SimliVideoPage() {
       console.log('✅ Simli session created:', {
         sessionId: session.sessionId,
         hasApiKey: !!session.apiKey,
-        apiKeyLength: session.apiKey?.length
+        apiKeyLength: session.apiKey?.length,
+        usingCustomFace: session.usingCustomFace,
+        hasFaceId: !!session.faceId
       })
 
       setSessionId(session.sessionId)
+
+      // Check if we have custom faceID
+      const useFaceId = session.faceId || session.photoUrl
+      if (!useFaceId) {
+        throw new Error('No faceID or photoURL provided by session')
+      }
 
       // Initialize Simli Client
       console.log('🔍 Step 4: Checking Simli SDK...')
@@ -332,7 +340,7 @@ export default function SimliVideoPage() {
 
       const simliConfig = {
         apiKey: session.apiKey,
-        faceID: photoUrl, // Simli accepts photo URL as faceID for photo-based avatars
+        faceID: useFaceId, // Use custom faceID if available, otherwise photo URL
         handleSilence: false, // Disable to avoid audio artifacts with listenToMediastreamTrack
         videoRef: videoRef.current,
         audioRef: audioRef.current,
@@ -343,6 +351,7 @@ export default function SimliVideoPage() {
         hasApiKey: !!simliConfig.apiKey,
         apiKeyLength: simliConfig.apiKey?.length,
         faceID: simliConfig.faceID?.substring(0, 50) + '...',
+        usingCustomFace: session.usingCustomFace,
         hasVideoRef: !!simliConfig.videoRef,
         hasAudioRef: !!simliConfig.audioRef
       })

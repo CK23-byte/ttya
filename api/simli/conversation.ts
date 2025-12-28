@@ -171,7 +171,30 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
   }
 
   // Deduct initial 1 credit (5 minutes minimum)
-  console.log('💸 Step 2: Deducting credits...')
+  // Check for custom faceID
+  console.log('🎭 Step 2: Checking for custom avatar...')
+  const { data: avatar } = await supabase
+    .from('simli_avatars')
+    .select('face_id, status')
+    .eq('profile_id', profileId)
+    .eq('user_id', userId)
+    .single()
+
+  let faceId: string | null = null
+  let usingCustomFace = false
+
+  if (avatar && avatar.face_id && avatar.status === 'ready') {
+    faceId = avatar.face_id
+    usingCustomFace = true
+    console.log('✅ Using custom faceID:', faceId)
+  } else if (avatar && avatar.status === 'processing') {
+    console.log('⏳ Custom avatar still processing, will use default face')
+  } else {
+    console.log('ℹ️ No custom avatar found, will use default face')
+  }
+
+  // Deduct initial 1 credit (5 minutes minimum)
+  console.log('💸 Step 3: Deducting credits...')
   const newCredits = currentCredits - 1
   console.log('📊 Credits calculation:', { before: currentCredits, after: newCredits, deducted: 1 })
 
@@ -191,7 +214,7 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
   console.log(`✅ Credits deducted successfully: ${currentCredits} → ${newCredits}`)
 
   // Create session record
-  console.log('📝 Step 3: Creating session record...')
+  console.log('📝 Step 4: Creating session record...')
   const sessionId = `simli_session_${Date.now()}_${Math.random().toString(36).substring(7)}`
   console.log('🆔 Session ID:', sessionId)
 
@@ -222,13 +245,15 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
   console.log('✅ Session record created successfully')
 
   // Return session configuration for frontend
-  console.log('📤 Step 4: Preparing response...')
+  console.log('📤 Step 5: Preparing response...')
   const response = {
     success: true,
     sessionId,
-    photoUrl,
+    faceId: faceId || undefined, // Custom faceID if available
+    photoUrl: !faceId ? photoUrl : undefined, // Fallback photo URL if no custom face
     voiceId,
     apiKey: SIMLI_API_KEY, // Frontend needs this for SimliClient
+    usingCustomFace,
     config: {
       maxDuration: 3600, // 1 hour max
       minCredits: 1
@@ -237,7 +262,8 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
 
   console.log('📋 Response data:', {
     ...response,
-    apiKey: response.apiKey ? `${response.apiKey.substring(0, 10)}...` : 'MISSING'
+    apiKey: response.apiKey ? `${response.apiKey.substring(0, 10)}...` : 'MISSING',
+    faceId: faceId ? `${faceId.substring(0, 20)}...` : 'none'
   })
 
   console.log('✅ Simli session created successfully')

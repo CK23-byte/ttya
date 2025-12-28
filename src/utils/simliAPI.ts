@@ -17,9 +17,11 @@ export interface SimliAvatarResponse {
 export interface SimliSessionResponse {
   success: boolean
   sessionId: string
-  photoUrl: string
+  faceId?: string // Custom Simli faceID if available
+  photoUrl?: string // Fallback photo URL if no custom face
   voiceId?: string
   apiKey: string
+  usingCustomFace: boolean // True if using custom uploaded face
   config: {
     maxDuration: number
     minCredits: number
