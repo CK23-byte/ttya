@@ -15,9 +15,9 @@ export default function VideoPage() {
   const profileId = searchParams.get('profile')
 
   useEffect(() => {
-    // Redirect to Tavus video page (HeyGen has been phased out)
+    // Redirect to Simli video page (HeyGen phased out, using Simli for photo-based avatars)
     if (profileId) {
-      navigate(`/video-tavus?profile=${profileId}`, { replace: true })
+      navigate(`/video-simli?profile=${profileId}`, { replace: true })
     } else {
       navigate('/dashboard', { replace: true })
     }

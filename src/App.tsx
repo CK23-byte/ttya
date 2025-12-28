@@ -20,6 +20,7 @@ const MemoriesPage = lazy(() => import('./pages/MemoriesPage'))
 const PersonalityBuilderPage = lazy(() => import('./pages/PersonalityBuilderPage'))
 const VideoPage = lazy(() => import('./pages/VideoPage'))
 const VideoTavusPage = lazy(() => import('./pages/VideoTavusPage'))
+const SimliVideoPage = lazy(() => import('./pages/SimliVideoPage'))
 const AccountPage = lazy(() => import('./pages/AccountPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const VoiceCallPage = lazy(() => import('./pages/VoiceCallPage'))
@@ -88,6 +89,7 @@ function App() {
                 <Route path="/personality-builder" element={<PersonalityBuilderPage />} />
                 <Route path="/video" element={<VideoPage />} />
                 <Route path="/video-tavus" element={<VideoTavusPage />} />
+                <Route path="/video-simli" element={<SimliVideoPage />} />
                 <Route path="/voice-call" element={<VoiceCallPage />} />
                 <Route path="/profile-improvement" element={<ProfileImprovementPage />} />
                 <Route path="/account" element={<AccountPage />} />
