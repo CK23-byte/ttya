@@ -535,6 +535,15 @@ export default function SimliVideoPage() {
 
       {/* Video Container */}
       <div className="flex-1 relative bg-gradient-to-b from-gray-900 to-black">
+        {/* Simli Video Output - Always rendered (hidden when not connected) */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted={!isSpeakerOn}
+          className={`w-full h-full object-cover ${callStatus === 'connected' ? '' : 'hidden'}`}
+        />
+
         {/* Main Video */}
         <div className="absolute inset-0 flex items-center justify-center">
           {callStatus === 'idle' && (
@@ -584,15 +593,6 @@ export default function SimliVideoPage() {
 
           {callStatus === 'connected' && (
             <>
-              {/* Remote video (Simli avatar) */}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted={!isSpeakerOn}
-                className="w-full h-full object-cover"
-              />
-
               {/* Local video preview */}
               <div className="absolute top-4 right-4 w-32 h-48 rounded-xl overflow-hidden shadow-2xl border-2 border-white/30">
                 <video
