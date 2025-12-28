@@ -78,6 +78,7 @@ export default function SimliVideoPage() {
   }
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const callStartTimeRef = useRef<number | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
@@ -152,6 +153,43 @@ export default function SimliVideoPage() {
         })
     }
   }, [duration, callStatus, user, supabaseProfile]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cleanup on unmount - stop camera/microphone and close Simli connection
+  useEffect(() => {
+    return () => {
+      console.log('🧹 Cleanup: Component unmounting, stopping all streams...')
+
+      // Close Simli client connection
+      if (simliClientRef.current) {
+        try {
+          simliClientRef.current.close()
+          console.log('✅ Simli client closed')
+        } catch (error) {
+          console.error('Error closing Simli client:', error)
+        }
+        simliClientRef.current = null
+      }
+
+      // Stop local camera/microphone
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => {
+          track.stop()
+          console.log(`✅ Stopped ${track.kind} track`)
+        })
+        localStreamRef.current = null
+      }
+
+      // Clear video elements
+      if (videoRef.current) {
+        videoRef.current.srcObject = null
+      }
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = null
+      }
+
+      console.log('✅ Cleanup complete')
+    }
+  }, []) // Empty deps = only run on unmount
 
   const loadProfile = async () => {
     const profileId = searchParams.get('profile')
@@ -286,22 +324,32 @@ export default function SimliVideoPage() {
       console.log('✅ SimliClient imported from npm package')
 
       console.log('🎬 Step 5: Initializing Simli Client...')
+
+      // Ensure refs are available
+      if (!videoRef.current || !audioRef.current) {
+        throw new Error('Video or audio element not found')
+      }
+
       const simliConfig = {
         apiKey: session.apiKey,
-        faceImageUrl: photoUrl,
-        voiceId: voiceId || 'default'
+        faceID: photoUrl, // Simli accepts photo URL as faceID for photo-based avatars
+        handleSilence: false, // Disable to avoid audio artifacts with listenToMediastreamTrack
+        videoRef: videoRef.current,
+        audioRef: audioRef.current,
+        enableConsoleLogs: true
       }
 
       console.log('📋 Client config:', {
         hasApiKey: !!simliConfig.apiKey,
-        apiKeyPreview: simliConfig.apiKey?.substring(0, 10) + '...',
-        faceImageUrl: simliConfig.faceImageUrl?.substring(0, 50) + '...',
-        voiceId: simliConfig.voiceId
+        apiKeyLength: simliConfig.apiKey?.length,
+        faceID: simliConfig.faceID?.substring(0, 50) + '...',
+        hasVideoRef: !!simliConfig.videoRef,
+        hasAudioRef: !!simliConfig.audioRef
       })
 
       simliClientRef.current = new SimliClient()
       await simliClientRef.current.Initialize(simliConfig)
-      console.log('✅ SimliClient initialized:', simliClientRef.current)
+      console.log('✅ SimliClient initialized')
 
       // Set up event listeners
       console.log('📡 Step 6: Setting up event listeners...')
@@ -658,6 +706,14 @@ export default function SimliVideoPage() {
           </div>
         )}
       </div>
+
+      {/* Hidden audio element for Simli output */}
+      <audio
+        ref={audioRef}
+        autoPlay
+        playsInline
+        className="hidden"
+      />
 
       {/* Modal */}
       <Modal
