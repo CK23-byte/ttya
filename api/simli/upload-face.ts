@@ -51,20 +51,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('✅ Request validation passed')
 
   try {
-    // Upload photo to Simli API for face generation
-    console.log('📤 Step 1: Uploading photo to Simli API...')
+    // Step 1: Download image from Supabase URL
+    console.log('📥 Step 1: Downloading image from Supabase...')
+    console.log('🔗 GET', photoUrl)
+
+    const imageResponse = await fetch(photoUrl)
+    if (!imageResponse.ok) {
+      console.error('❌ Failed to download image:', imageResponse.status, imageResponse.statusText)
+      return res.status(400).json({
+        error: 'Failed to download image from URL',
+        details: `HTTP ${imageResponse.status}: ${imageResponse.statusText}`
+      })
+    }
+
+    const imageBlob = await imageResponse.blob()
+    console.log('✅ Image downloaded:', {
+      size: imageBlob.size,
+      type: imageBlob.type
+    })
+
+    // Step 2: Prepare multipart/form-data request
+    console.log('📤 Step 2: Uploading photo to Simli API...')
     console.log('🔗 POST https://api.simli.ai/generateFaceID')
+
+    // Create FormData
+    const FormData = (await import('form-data')).default
+    const formData = new FormData()
+
+    // Convert Blob to Buffer for form-data
+    const buffer = Buffer.from(await imageBlob.arrayBuffer())
+    formData.append('image', buffer, {
+      filename: 'avatar.jpg',
+      contentType: imageBlob.type || 'image/jpeg'
+    })
+    formData.append('face_name', avatarName)
+
+    console.log('📋 Form data prepared:', {
+      imageSize: buffer.length,
+      faceName: avatarName
+    })
 
     const simliResponse = await fetch('https://api.simli.ai/generateFaceID', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': SIMLI_API_KEY
+        'api-key': SIMLI_API_KEY,
+        ...formData.getHeaders()
       },
-      body: JSON.stringify({
-        imageUrl: photoUrl,
-        name: avatarName
-      })
+      body: formData as any
     })
 
     console.log('📊 Simli API response status:', simliResponse.status)
