@@ -147,16 +147,18 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
   }
 
   // Deduct initial 1 credit (5 minutes minimum)
-  const { error: deductError } = await supabase.rpc('deduct_credits', {
-    p_user_id: userId,
-    p_amount: 1,
-    p_description: `Simli video call started`
-  })
+  const newCredits = currentCredits - 1
+  const { error: deductError } = await supabase
+    .from('profiles')
+    .update({ credits: newCredits })
+    .eq('id', userId)
 
   if (deductError) {
     console.error('Credit deduction error:', deductError)
     return res.status(500).json({ error: 'Failed to deduct credits' })
   }
+
+  console.log(`✅ Credits deducted: ${currentCredits} → ${newCredits}`)
 
   // Create session record
   const sessionId = `simli_session_${Date.now()}_${Math.random().toString(36).substring(7)}`
@@ -227,11 +229,24 @@ async function handleEndSession(req: VercelRequest, res: VercelResponse) {
 
   // Deduct additional credits if needed
   if (additionalCredits > 0) {
-    await supabase.rpc('deduct_credits', {
-      p_user_id: userId,
-      p_amount: additionalCredits,
-      p_description: `Simli video call - additional ${durationMinutes - 5} minutes`
-    })
+    // Get current credits
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', userId)
+      .single()
+
+    if (profile) {
+      const currentCredits = (profile as any).credits || 0
+      const newCredits = currentCredits - additionalCredits
+
+      await supabase
+        .from('profiles')
+        .update({ credits: newCredits })
+        .eq('id', userId)
+
+      console.log(`✅ Additional credits deducted: ${currentCredits} → ${newCredits} (-${additionalCredits})`)
+    }
   }
 
   // Update session record

@@ -452,8 +452,8 @@ export default function ChatPage() {
                 <Home className={`w-5 h-5 ${currentTheme.textMuted}`} />
               </button>
               <h2 className={`text-xl font-semibold ${currentTheme.text}`}>Chats</h2>
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded" title="Build: 2025-12-18 10:57 UTC">
-                v2.11.0
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded" title="Build: 2025-12-28">
+                v2.13.0
               </span>
             </div>
             <div className="flex items-center gap-2">

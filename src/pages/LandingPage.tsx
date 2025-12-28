@@ -149,7 +149,7 @@ export default function LandingPage() {
       {/* Version Badge */}
       <div className="fixed top-4 left-4 z-50">
         <div className="px-3 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
-          <span className="text-xs font-semibold text-gray-600" title="Build: 2025-12-18 10:57 UTC">v2.11.0</span>
+          <span className="text-xs font-semibold text-gray-600" title="Build: 2025-12-28">v2.13.0</span>
         </div>
       </div>
 
@@ -958,9 +958,9 @@ export default function LandingPage() {
               <span className="font-medium text-gray-900">TalkToYouAI</span>
               <span
                 className="px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-200"
-                title="Build: 2025-12-18 10:57 UTC"
+                title="Build: 2025-12-28"
               >
-                v2.11.0
+                v2.13.0
               </span>
             </div>
 
