@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { SimliClient } from 'simli-client'
 import { logger } from '../utils/logger'
 import {
   PhoneOff,
@@ -282,31 +283,25 @@ export default function SimliVideoPage() {
 
       // Initialize Simli Client
       console.log('🔍 Step 4: Checking Simli SDK...')
-      console.log('Window.SimliClient exists?', typeof (window as any).SimliClient !== 'undefined')
-      console.log('Window object keys:', Object.keys(window).filter(k => k.toLowerCase().includes('simli')))
-
-      if (typeof (window as any).SimliClient === 'undefined') {
-        console.error('❌ Simli SDK not loaded on window object')
-        console.groupEnd()
-        throw new Error('Simli SDK not loaded. Please refresh the page.')
-      }
-
-      const SimliClient = (window as any).SimliClient
-      console.log('✅ SimliClient found:', typeof SimliClient)
+      console.log('✅ SimliClient imported from npm package')
 
       console.log('🎬 Step 5: Initializing Simli Client...')
-      console.log('📋 Client config:', {
-        hasApiKey: !!session.apiKey,
-        faceImageUrl: photoUrl?.substring(0, 50) + '...',
-        voiceId: voiceId || 'default'
-      })
-
-      simliClientRef.current = new SimliClient({
+      const simliConfig = {
         apiKey: session.apiKey,
         faceImageUrl: photoUrl,
         voiceId: voiceId || 'default'
+      }
+
+      console.log('📋 Client config:', {
+        hasApiKey: !!simliConfig.apiKey,
+        apiKeyPreview: simliConfig.apiKey?.substring(0, 10) + '...',
+        faceImageUrl: simliConfig.faceImageUrl?.substring(0, 50) + '...',
+        voiceId: simliConfig.voiceId
       })
-      console.log('✅ SimliClient initialized')
+
+      simliClientRef.current = new SimliClient()
+      await simliClientRef.current.Initialize(simliConfig)
+      console.log('✅ SimliClient initialized:', simliClientRef.current)
 
       // Set up event listeners
       console.log('📡 Step 6: Setting up event listeners...')
@@ -332,16 +327,16 @@ export default function SimliVideoPage() {
       console.log('✅ Event listeners set up')
 
       // Connect to Simli
-      console.log('🔌 Step 7: Connecting to Simli servers...')
-      await simliClientRef.current.connect()
-      console.log('✅ Connected to Simli')
+      console.log('🔌 Step 7: Starting WebRTC connection...')
+      await simliClientRef.current.start()
+      console.log('✅ WebRTC connection started')
 
       // Start audio streaming
       console.log('🎤 Step 8: Starting audio streaming...')
       const audioTrack = localStream.getAudioTracks()[0]
       if (audioTrack) {
-        simliClientRef.current.sendAudio(audioTrack)
-        console.log('✅ Audio streaming started')
+        await simliClientRef.current.listenToMediastreamTrack(audioTrack)
+        console.log('✅ Audio streaming started via MediaStreamTrack')
       } else {
         console.warn('⚠️ No audio track available')
       }
@@ -388,9 +383,9 @@ export default function SimliVideoPage() {
       }
     }
 
-    // Disconnect Simli client
+    // Close Simli client connection
     if (simliClientRef.current) {
-      simliClientRef.current.disconnect()
+      simliClientRef.current.close()
       simliClientRef.current = null
     }
 
