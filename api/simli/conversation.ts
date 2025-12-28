@@ -110,35 +110,59 @@ async function handleCreateAvatar(req: VercelRequest, res: VercelResponse) {
  * Returns session configuration for WebRTC connection
  */
 async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🎬 SIMLI SESSION CREATE - START')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
   if (req.method !== 'POST') {
+    console.error('❌ Method not allowed:', req.method)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   const { profileId, userId, photoUrl, voiceId } = req.body
+  console.log('📥 Request body:', {
+    profileId,
+    userId,
+    photoUrl: photoUrl?.substring(0, 50) + '...',
+    voiceId
+  })
 
   if (!profileId || !userId) {
+    console.error('❌ Missing required fields')
     return res.status(400).json({
       error: 'Missing required fields: profileId, userId'
     })
   }
 
-  console.log('Creating Simli session:', { profileId, userId })
-
+  console.log('✅ Request validation passed')
+  console.log('🔗 Creating Supabase client...')
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  console.log('✅ Supabase client created')
 
   // Check user credits (minimum 1 credit for video call)
+  console.log('💳 Step 1: Checking user credits...')
+  console.log('📤 Query: profiles.select(credits).eq(id, userId).single()')
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('credits')
     .eq('id', userId)
     .single()
 
+  console.log('📥 Query result:', { profile, profileError })
+
   if (profileError || !profile) {
-    return res.status(404).json({ error: 'User profile not found' })
+    console.error('❌ Profile not found:', profileError)
+    return res.status(404).json({
+      error: 'User profile not found',
+      details: profileError?.message
+    })
   }
 
   const currentCredits = (profile as any).credits || 0
+  console.log('💰 Current credits:', currentCredits)
+
   if (currentCredits < 1) {
+    console.error('❌ Insufficient credits:', { required: 1, available: currentCredits })
     return res.status(402).json({
       error: 'Insufficient credits',
       required: 1,
@@ -147,43 +171,59 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
   }
 
   // Deduct initial 1 credit (5 minutes minimum)
+  console.log('💸 Step 2: Deducting credits...')
   const newCredits = currentCredits - 1
+  console.log('📊 Credits calculation:', { before: currentCredits, after: newCredits, deducted: 1 })
+
   const { error: deductError } = await supabase
     .from('profiles')
     .update({ credits: newCredits })
     .eq('id', userId)
 
   if (deductError) {
-    console.error('Credit deduction error:', deductError)
-    return res.status(500).json({ error: 'Failed to deduct credits' })
+    console.error('❌ Credit deduction error:', deductError)
+    return res.status(500).json({
+      error: 'Failed to deduct credits',
+      details: deductError.message
+    })
   }
 
-  console.log(`✅ Credits deducted: ${currentCredits} → ${newCredits}`)
+  console.log(`✅ Credits deducted successfully: ${currentCredits} → ${newCredits}`)
 
   // Create session record
+  console.log('📝 Step 3: Creating session record...')
   const sessionId = `simli_session_${Date.now()}_${Math.random().toString(36).substring(7)}`
+  console.log('🆔 Session ID:', sessionId)
+
+  const sessionData = {
+    session_id: sessionId,
+    user_id: userId,
+    profile_id: profileId,
+    photo_url: photoUrl,
+    voice_id: voiceId,
+    status: 'active',
+    credits_used: 1,
+    started_at: new Date().toISOString()
+  }
+  console.log('📋 Session data:', sessionData)
 
   const { error: sessionError } = await supabase
     .from('simli_sessions')
-    .insert({
-      session_id: sessionId,
-      user_id: userId,
-      profile_id: profileId,
-      photo_url: photoUrl,
-      voice_id: voiceId,
-      status: 'active',
-      credits_used: 1,
-      started_at: new Date().toISOString()
-    })
+    .insert(sessionData)
 
   if (sessionError) {
-    console.error('Session creation error:', sessionError)
-    return res.status(500).json({ error: 'Failed to create session' })
+    console.error('❌ Session creation error:', sessionError)
+    return res.status(500).json({
+      error: 'Failed to create session',
+      details: sessionError.message
+    })
   }
 
+  console.log('✅ Session record created successfully')
+
   // Return session configuration for frontend
-  // Simli uses WebRTC directly - no server-side session needed
-  return res.status(200).json({
+  console.log('📤 Step 4: Preparing response...')
+  const response = {
     success: true,
     sessionId,
     photoUrl,
@@ -193,7 +233,19 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
       maxDuration: 3600, // 1 hour max
       minCredits: 1
     }
+  }
+
+  console.log('📋 Response data:', {
+    ...response,
+    apiKey: response.apiKey ? `${response.apiKey.substring(0, 10)}...` : 'MISSING'
   })
+
+  console.log('✅ Simli session created successfully')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🎉 SIMLI SESSION CREATE - SUCCESS')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
+  return res.status(200).json(response)
 }
 
 /**

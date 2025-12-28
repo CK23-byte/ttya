@@ -184,13 +184,27 @@ export default function SimliVideoPage() {
   }
 
   const startCall = async () => {
-    if (!profile || !user) return
+    console.group('🎬 SIMLI VIDEO CALL START')
+    console.log('📋 Profile:', profile)
+    console.log('👤 User:', user)
+    console.log('💰 Credits:', supabaseProfile?.credits)
+    console.log('📸 Photo URL:', photoUrl)
+
+    if (!profile || !user) {
+      console.error('❌ Missing profile or user')
+      console.groupEnd()
+      return
+    }
 
     logger.log('Starting Simli video call...')
 
     // Check credits
     const universalCredits = supabaseProfile?.credits || 0
+    console.log('💳 Credits check:', { required: 1, available: universalCredits })
+
     if (universalCredits < 1) {
+      console.error('❌ Insufficient credits')
+      console.groupEnd()
       showModal(
         'Insufficient Credits',
         `You need at least 1 credit for a video call.\n\nYou have ${universalCredits} credits remaining.\n\nPlease purchase more credits to continue.`,
@@ -202,6 +216,8 @@ export default function SimliVideoPage() {
 
     // Check if photo exists
     if (!photoUrl) {
+      console.error('❌ No photo URL')
+      console.groupEnd()
       showModal(
         'Photo Required',
         'Please upload a photo in the profile settings before starting a video call.',
@@ -215,12 +231,15 @@ export default function SimliVideoPage() {
 
     try {
       // Start local camera
-      logger.log('Requesting local camera access...')
+      console.log('📹 Step 1: Requesting local camera access...')
       const localStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true
       })
-      logger.log('Local camera access granted')
+      console.log('✅ Local camera access granted:', {
+        videoTracks: localStream.getVideoTracks().length,
+        audioTracks: localStream.getAudioTracks().length
+      })
 
       localStreamRef.current = localStream
       if (localVideoRef.current) {
@@ -228,11 +247,24 @@ export default function SimliVideoPage() {
       }
 
       // Get voice configuration
+      console.log('🎤 Step 2: Loading voice configuration...')
       const profileData = await loadProfileData<StoredProfileData>(profile.id, null)
       const voiceId = profileData?.voiceConfig?.clonedVoiceId
+      console.log('✅ Voice config loaded:', {
+        hasVoiceConfig: !!profileData?.voiceConfig,
+        voiceId: voiceId || 'default',
+        voiceType: profileData?.voiceConfig?.type
+      })
 
       // Create Simli session
-      logger.log('Creating Simli session...')
+      console.log('🔄 Step 3: Creating Simli session...')
+      console.log('📤 Request data:', {
+        profileId: profile.id,
+        userId: user.id,
+        photoUrl: photoUrl?.substring(0, 50) + '...',
+        voiceId: voiceId || 'default'
+      })
+
       const session = await createSimliSession(
         profile.id,
         user.id,
@@ -240,34 +272,52 @@ export default function SimliVideoPage() {
         voiceId
       )
 
+      console.log('✅ Simli session created:', {
+        sessionId: session.sessionId,
+        hasApiKey: !!session.apiKey,
+        apiKeyLength: session.apiKey?.length
+      })
+
       setSessionId(session.sessionId)
-      logger.log('Simli session created:', session.sessionId)
 
       // Initialize Simli Client
-      // Note: This requires the Simli SDK to be loaded
-      // Add <script src="https://cdn.simli.com/simli-client.js"></script> to index.html
+      console.log('🔍 Step 4: Checking Simli SDK...')
+      console.log('Window.SimliClient exists?', typeof (window as any).SimliClient !== 'undefined')
+      console.log('Window object keys:', Object.keys(window).filter(k => k.toLowerCase().includes('simli')))
 
       if (typeof (window as any).SimliClient === 'undefined') {
+        console.error('❌ Simli SDK not loaded on window object')
+        console.groupEnd()
         throw new Error('Simli SDK not loaded. Please refresh the page.')
       }
 
       const SimliClient = (window as any).SimliClient
+      console.log('✅ SimliClient found:', typeof SimliClient)
+
+      console.log('🎬 Step 5: Initializing Simli Client...')
+      console.log('📋 Client config:', {
+        hasApiKey: !!session.apiKey,
+        faceImageUrl: photoUrl?.substring(0, 50) + '...',
+        voiceId: voiceId || 'default'
+      })
 
       simliClientRef.current = new SimliClient({
         apiKey: session.apiKey,
         faceImageUrl: photoUrl,
         voiceId: voiceId || 'default'
       })
+      console.log('✅ SimliClient initialized')
 
       // Set up event listeners
+      console.log('📡 Step 6: Setting up event listeners...')
       simliClientRef.current.on('connected', () => {
-        logger.log('Simli client connected')
+        console.log('✅ Simli client connected')
         setCallStatus('connected')
         callStartTimeRef.current = Date.now()
       })
 
       simliClientRef.current.on('videoTrack', (track: MediaStreamTrack) => {
-        logger.log('Received video track from Simli')
+        console.log('📹 Received video track from Simli:', track)
         if (videoRef.current) {
           const stream = new MediaStream([track])
           videoRef.current.srcObject = stream
@@ -275,22 +325,38 @@ export default function SimliVideoPage() {
       })
 
       simliClientRef.current.on('error', (err: Error) => {
-        logger.error('Simli client error:', err)
+        console.error('❌ Simli client error:', err)
         setError(err.message)
         setCallStatus('error')
       })
+      console.log('✅ Event listeners set up')
 
       // Connect to Simli
+      console.log('🔌 Step 7: Connecting to Simli servers...')
       await simliClientRef.current.connect()
+      console.log('✅ Connected to Simli')
 
       // Start audio streaming
+      console.log('🎤 Step 8: Starting audio streaming...')
       const audioTrack = localStream.getAudioTracks()[0]
       if (audioTrack) {
         simliClientRef.current.sendAudio(audioTrack)
+        console.log('✅ Audio streaming started')
+      } else {
+        console.warn('⚠️ No audio track available')
       }
 
+      console.log('🎉 Video call setup complete!')
+      console.groupEnd()
+
     } catch (error) {
-      logger.error('Error starting call:', error)
+      console.error('❌ ERROR in startCall:', error)
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      })
+      console.groupEnd()
 
       // Stop local camera on error
       if (localStreamRef.current) {
