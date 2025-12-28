@@ -106,9 +106,6 @@ export default function ProfileImprovementPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isCloningVoice, setIsCloningVoice] = useState(false)
   const [cloneError, setCloneError] = useState<string | null>(null)
-  const [isCreatingAvatar, setIsCreatingAvatar] = useState(false)
-  const [avatarCreationStatus, setAvatarCreationStatus] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'error'>('idle')
-  const [avatarCreationProgress, setAvatarCreationProgress] = useState(0)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
@@ -1209,227 +1206,8 @@ export default function ProfileImprovementPage() {
     }))
   }
 
-  // Quick Avatar creation (Talking Photo - from 1 photo)
-  const handleCreateQuickAvatar = async () => {
-    if (!profile || profileData.photos.length === 0) {
-      showModal(
-        'Photo Required',
-        'Please upload at least one photo before creating a Quick Avatar.\n\n' +
-        '💡 Quick Avatars are faster (5-10 min) but less realistic than Video Avatars.',
-        'warning'
-      )
-      return
-    }
-
-    if (!user) {
-      showModal('Authentication Required', 'Please sign in to create avatars.', 'warning')
-      return
-    }
-
-    console.group('📸 QUICK AVATAR CREATION STARTED (Talking Photo)')
-    console.log('📷 Using photo:', profileData.photos[0].url)
-    console.log('👤 Avatar name:', `${profile.name} Quick Avatar`)
-
-    setIsCreatingAvatar(true)
-    setAvatarCreationStatus('uploading')
-    setAvatarCreationProgress(10)
-
-    try {
-      const photoUrl = profileData.photos[0].url
-      const avatarName = `${profile.name} Quick Avatar`
-
-      console.log('📤 Creating Tavus Talking Photo...')
-
-      // For now, we'll use the same replica endpoint but with a photo
-      // Tavus will automatically detect it's a photo and create a Talking Photo
-      const createResponse = await fetch('/api/tavus/replica?action=create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          videoUrl: photoUrl, // Tavus accepts photos here too
-          replicaName: avatarName,
-          profileId: profile.id,
-          userId: user.id,
-          avatarType: 'quick' // Flag for tracking
-        })
-      })
-
-      if (!createResponse.ok) {
-        const error = await createResponse.json()
-        throw new Error(error.details || error.error || 'Failed to create Quick Avatar')
-      }
-
-      const createData = await createResponse.json()
-      const replicaId = createData.replicaId
-
-      console.log('✅ Talking Photo created! ID:', replicaId)
-      setAvatarCreationProgress(50)
-      setAvatarCreationStatus('processing')
-
-      // Save config
-      setProfileData(prev => ({
-        ...prev,
-        avatarConfig: {
-          type: 'custom',
-          customAvatarId: replicaId,
-          customAvatarName: avatarName,
-          customAvatarThumbnail: photoUrl, // Use photo as thumbnail
-          avatarType: 'quick' // Track avatar type
-        } as AvatarConfig & { avatarType?: 'quick' | 'ultra' }
-      }))
-
-      setAvatarCreationProgress(100)
-      setAvatarCreationStatus('completed')
-      console.groupEnd()
-
-      showModal(
-        'Quick Avatar Created!',
-        `Your Quick Avatar "${avatarName}" is training.\n\n` +
-        `⏰ Training: 5-10 minutes\n\n` +
-        `This avatar is optimized for speed. For ultra-realistic results, use the Video Avatar option instead.\n\n` +
-        `Save your changes to apply the avatar.`,
-        'success'
-      )
-
-    } catch (error) {
-      console.error('❌ Quick Avatar creation error:', error)
-      console.groupEnd()
-
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred'
-
-      showModal(
-        'Quick Avatar Creation Failed',
-        `Failed to create Quick Avatar:\n\n${errorMsg}\n\n` +
-        'Please ensure:\n' +
-        '• Photo shows clear frontal view\n' +
-        '• Good lighting\n' +
-        '• JPG/PNG format\n\n' +
-        'If the problem persists, try the Video Avatar option.',
-        'error'
-      )
-
-      setAvatarCreationStatus('error')
-    } finally {
-      setIsCreatingAvatar(false)
-    }
-  }
-
-  // Ultra Realistic Avatar creation (Video Replica - from 2-5 min video)
-  const handleCreateAvatar = async () => {
-    // Tavus requires a training VIDEO (2+ min), not just a photo
-    if (!profile || profileData.videos.length === 0) {
-      showModal(
-        'Training Video Required',
-        'Tavus requires a 2+ minute training video to create your custom avatar.\n\n' +
-        'Please upload a video in the "Videos" section above before creating an avatar.\n\n' +
-        '💡 Tips:\n' +
-        '• Video should be 2-5 minutes long\n' +
-        '• Show frontal view with good lighting\n' +
-        '• Natural speaking is recommended\n' +
-        '• MP4 format works best',
-        'warning'
-      )
-      return
-    }
-
-    if (!user) {
-      showModal('Authentication Required', 'Please sign in to create avatars.', 'warning')
-      return
-    }
-
-    console.group('🎬 TAVUS AVATAR CREATION STARTED')
-    console.log('📹 Using video:', profileData.videos[0].url)
-    console.log('👤 Avatar name:', `${profile.name} Avatar`)
-
-    setIsCreatingAvatar(true)
-    setAvatarCreationStatus('uploading')
-    setAvatarCreationProgress(10)
-
-    try {
-      // Step 1: Create Tavus replica
-      const videoUrl = profileData.videos[0].url
-      const avatarName = `${profile.name} Avatar`
-
-      console.log('📤 Step 1: Creating Tavus replica...')
-      const createResponse = await fetch('/api/tavus/replica?action=create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          videoUrl,
-          replicaName: avatarName,
-          profileId: profile.id,
-          userId: user.id
-        })
-      })
-
-      if (!createResponse.ok) {
-        const error = await createResponse.json()
-        throw new Error(error.details || error.error || 'Failed to create avatar')
-      }
-
-      const createData = await createResponse.json()
-      const replicaId = createData.replicaId
-
-      console.log('✅ Tavus replica created! ID:', replicaId)
-      console.log('⏳ Status:', createData.status)
-
-      setAvatarCreationProgress(50)
-      setAvatarCreationStatus('processing')
-
-      // Tavus replicas take 10-30 minutes to train
-      // Save replica ID immediately and let webhook handle completion
-      setProfileData(prev => ({
-        ...prev,
-        avatarConfig: {
-          type: 'custom',
-          customAvatarId: replicaId,
-          customAvatarName: avatarName,
-          customAvatarThumbnail: '', // Will be set by webhook when ready
-          avatarType: 'ultra' // Track avatar type
-        } as AvatarConfig & { avatarType?: 'quick' | 'ultra' }
-      }))
-
-      setAvatarCreationProgress(100)
-      setAvatarCreationStatus('completed')
-      console.groupEnd()
-
-      showModal(
-        'Ultra Realistic Avatar Training Started!',
-        `Your Video Avatar "${avatarName}" is being trained.\n\n` +
-        `⏰ Training: 10-30 minutes\n\n` +
-        `This avatar will be ultra-realistic and ideal for natural conversations.\n\n` +
-        `Save your changes now to apply the avatar. It will appear in video calls once training completes.`,
-        'success'
-      )
-
-    } catch (error) {
-      console.error('❌ Avatar creation error:', error)
-      console.groupEnd()
-
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred'
-
-      showModal(
-        'Avatar Creation Failed',
-        `Failed to create avatar:\n\n${errorMsg}\n\n` +
-        'Please ensure:\n' +
-        '• You uploaded a video (not just a photo)\n' +
-        '• Video is 2+ minutes long\n' +
-        '• Video shows clear frontal view\n' +
-        '• Video has good lighting\n' +
-        '• File format is MP4/WebM/MOV\n\n' +
-        'If the problem persists, contact support.',
-        'error'
-      )
-
-      setAvatarCreationStatus('error')
-    } finally {
-      setIsCreatingAvatar(false)
-    }
-  }
+  // NOTE: Avatar creation now handled by Simli (real-time photo-based avatars)
+  // Legacy Tavus functions removed - users access avatars via Dashboard → Video Call
 
   const handleAvatarTypeChange = (type: 'custom' | 'default') => {
     console.log('🎭 Avatar type changed to:', type)
@@ -1462,13 +1240,9 @@ export default function ProfileImprovementPage() {
       }
     }))
 
-    // Reset avatar creation status
-    setAvatarCreationStatus('idle')
-    setAvatarCreationProgress(0)
-
     showModal(
       'Avatar Deleted',
-      'Your custom avatar has been removed. You can create a new one from your photos.',
+      'Your custom avatar has been removed. Video avatars are now handled through the Video Call feature.',
       'success'
     )
 
@@ -2272,109 +2046,65 @@ export default function ProfileImprovementPage() {
                 </div>
               </div>
 
-              {/* Custom Avatar Section */}
+              {/* Custom Avatar Section - Now using Simli (photo-based real-time) */}
               {profileData.avatarConfig?.type === 'custom' && (
-                <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 space-y-3">
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-6 space-y-4">
                   {!profileData.avatarConfig.customAvatarId ? (
                     <>
-                      <p className="text-sm text-pink-800 font-medium">
-                        Choose Your Avatar Type:
-                      </p>
-
-                      {/* TWO AVATAR OPTIONS */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {/* OPTION 1: Quick Avatar (Photo) */}
-                        <div className="border-2 border-blue-300 bg-blue-50 rounded-lg p-4 space-y-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">⚡</span>
-                            <div>
-                              <h3 className="font-bold text-blue-900">Quick Avatar</h3>
-                              <p className="text-xs text-blue-700">From 1 Photo • Fast (5-10 min)</p>
-                            </div>
-                          </div>
-
-                          <p className="text-xs text-blue-800">
-                            Creates a talking photo avatar. Faster but less realistic than video avatars.
-                          </p>
-
-                          {/* Photo status */}
-                          {profileData.photos.length > 0 ? (
-                            <div className="bg-green-100 border border-green-300 rounded p-2">
-                              <p className="text-xs text-green-800">✓ Photo ready</p>
-                            </div>
-                          ) : (
-                            <div className="bg-yellow-100 border border-yellow-300 rounded p-2">
-                              <p className="text-xs text-yellow-800">⚠️ Upload photo first</p>
-                            </div>
-                          )}
-
-                          <button
-                            onClick={handleCreateQuickAvatar}
-                            disabled={isCreatingAvatar || profileData.photos.length === 0}
-                            className={`w-full px-3 py-2 rounded-lg font-medium text-sm transition ${
-                              isCreatingAvatar || profileData.photos.length === 0
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-blue-500 text-white hover:bg-blue-600'
-                            }`}
-                          >
-                            Create Quick Avatar
-                          </button>
-                        </div>
-
-                        {/* OPTION 2: Ultra Realistic Avatar (Video) */}
-                        <div className="border-2 border-purple-300 bg-purple-50 rounded-lg p-4 space-y-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">🎬</span>
-                            <div>
-                              <h3 className="font-bold text-purple-900">Video Avatar</h3>
-                              <p className="text-xs text-purple-700">From 2-5 min Video • Ultra Realistic</p>
-                            </div>
-                          </div>
-
-                          <p className="text-xs text-purple-800">
-                            Creates ultra-realistic digital twin. Best quality but takes longer to train (10-30 min).
-                          </p>
-
-                          {/* Video status */}
-                          {profileData.videos.length > 0 ? (
-                            <div className="bg-green-100 border border-green-300 rounded p-2">
-                              <p className="text-xs text-green-800">✓ Video ready</p>
-                            </div>
-                          ) : (
-                            <div className="bg-yellow-100 border border-yellow-300 rounded p-2">
-                              <p className="text-xs text-yellow-800">⚠️ Upload 2-5 min video first</p>
-                            </div>
-                          )}
-
-                          <button
-                            onClick={handleCreateAvatar}
-                            disabled={isCreatingAvatar || profileData.videos.length === 0}
-                            className={`w-full px-3 py-2 rounded-lg font-medium text-sm transition ${
-                              isCreatingAvatar || profileData.videos.length === 0
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-purple-500 text-white hover:bg-purple-600'
-                            }`}
-                          >
-                            Create Video Avatar
-                          </button>
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">🎥</span>
+                        <div>
+                          <h3 className="font-bold text-blue-900 text-lg">Real-Time Video Avatars</h3>
+                          <p className="text-sm text-blue-700">Photo-based talking avatars with instant interaction</p>
                         </div>
                       </div>
 
-                      {/* Progress Bar (shared for both types) */}
-                      {isCreatingAvatar && (
-                        <div className="space-y-1">
-                          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500 ease-out"
-                              style={{ width: `${avatarCreationProgress}%` }}
-                            />
+                      <div className="bg-white/60 rounded-lg p-4 space-y-3">
+                        <p className="text-sm text-gray-800">
+                          Your custom avatar feature now uses <strong className="text-blue-600">Simli</strong> -
+                          a real-time video avatar system that creates talking avatars from a single photo.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                          <div className="bg-blue-100 rounded p-2">
+                            <span className="font-bold text-blue-900">⚡ Instant Setup</span>
+                            <p className="text-blue-700">No training wait time</p>
                           </div>
-                          <p className="text-xs text-center text-pink-700">
-                            {avatarCreationStatus === 'uploading' && `Uploading... ${Math.round(avatarCreationProgress)}%`}
-                            {avatarCreationStatus === 'processing' && `AI is training your avatar... ${Math.round(avatarCreationProgress)}%`}
+                          <div className="bg-purple-100 rounded p-2">
+                            <span className="font-bold text-purple-900">💬 Real-Time</span>
+                            <p className="text-purple-700">&lt;300ms latency</p>
+                          </div>
+                          <div className="bg-green-100 rounded p-2">
+                            <span className="font-bold text-green-900">💰 Affordable</span>
+                            <p className="text-green-700">$0.05/minute</p>
+                          </div>
+                        </div>
+
+                        {/* Photo requirement status */}
+                        {profileData.photos.length > 0 ? (
+                          <div className="bg-green-100 border-2 border-green-400 rounded-lg p-3">
+                            <p className="text-sm font-medium text-green-900">✓ Photo uploaded - Ready for video calls!</p>
+                            <p className="text-xs text-green-700 mt-1">
+                              Go to Dashboard and click "Video Call" to start using your avatar
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-3">
+                            <p className="text-sm font-medium text-yellow-900">⚠️ Upload a photo first</p>
+                            <p className="text-xs text-yellow-700 mt-1">
+                              Upload at least one photo above, then use the Video Call feature from your Dashboard
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-blue-800">
+                          <p className="font-medium mb-1">📝 Note:</p>
+                          <p>
+                            Video avatars (trained from 2-5 min videos) are coming in Version 2.
+                            The current system uses photos for instant, real-time conversations.
                           </p>
                         </div>
-                      )}
+                      </div>
                     </>
                   ) : (
                     <div className="space-y-3">
