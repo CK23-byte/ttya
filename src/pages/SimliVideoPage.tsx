@@ -321,10 +321,10 @@ export default function SimliVideoPage() {
 
       setSessionId(session.sessionId)
 
-      // Check if we have custom faceID
-      const useFaceId = session.faceId || session.photoUrl
-      if (!useFaceId) {
-        throw new Error('No faceID or photoURL provided by session')
+      // Get faceID (always provided by backend - either custom or default preset)
+      const faceId = session.faceId
+      if (!faceId) {
+        throw new Error('No faceID provided by session')
       }
 
       // Initialize Simli Client
@@ -332,6 +332,7 @@ export default function SimliVideoPage() {
       console.log('✅ SimliClient imported from npm package')
 
       console.log('🎬 Step 5: Initializing Simli Client...')
+      console.log(`🎭 Face type: ${session.usingCustomFace ? 'CUSTOM uploaded face' : 'DEFAULT preset face'}`)
 
       // Ensure refs are available
       if (!videoRef.current || !audioRef.current) {
@@ -340,7 +341,7 @@ export default function SimliVideoPage() {
 
       const simliConfig = {
         apiKey: session.apiKey,
-        faceID: useFaceId, // Use custom faceID if available, otherwise photo URL
+        faceID: faceId,
         handleSilence: false, // Disable to avoid audio artifacts with listenToMediastreamTrack
         videoRef: videoRef.current,
         audioRef: audioRef.current,
@@ -350,8 +351,8 @@ export default function SimliVideoPage() {
       console.log('📋 Client config:', {
         hasApiKey: !!simliConfig.apiKey,
         apiKeyLength: simliConfig.apiKey?.length,
-        faceID: simliConfig.faceID?.substring(0, 50) + '...',
-        usingCustomFace: session.usingCustomFace,
+        faceID: simliConfig.faceID?.substring(0, 36) + '...',
+        faceIDType: session.usingCustomFace ? 'custom' : 'default',
         hasVideoRef: !!simliConfig.videoRef,
         hasAudioRef: !!simliConfig.audioRef
       })

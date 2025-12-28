@@ -183,14 +183,20 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
   let faceId: string | null = null
   let usingCustomFace = false
 
+  // Default fallback faceID (Mark from Simli preset faces)
+  // See: https://docs.simli.com/api-reference/preset-faces
+  const DEFAULT_FACE_ID = '804c347a-26c9-4dcf-bb49-13df4bed61e8'
+
   if (avatar && avatar.face_id && avatar.status === 'ready') {
     faceId = avatar.face_id
     usingCustomFace = true
     console.log('✅ Using custom faceID:', faceId)
   } else if (avatar && avatar.status === 'processing') {
-    console.log('⏳ Custom avatar still processing, will use default face')
+    console.log('⏳ Custom avatar still processing, using default faceID:', DEFAULT_FACE_ID)
+    faceId = DEFAULT_FACE_ID
   } else {
-    console.log('ℹ️ No custom avatar found, will use default face')
+    console.log('ℹ️ No custom avatar found, using default faceID:', DEFAULT_FACE_ID)
+    faceId = DEFAULT_FACE_ID
   }
 
   // Deduct initial 1 credit (5 minutes minimum)
@@ -249,8 +255,8 @@ async function handleCreateSession(req: VercelRequest, res: VercelResponse) {
   const response = {
     success: true,
     sessionId,
-    faceId: faceId || undefined, // Custom faceID if available
-    photoUrl: !faceId ? photoUrl : undefined, // Fallback photo URL if no custom face
+    faceId, // Always has a faceID (custom or default preset)
+    photoUrl, // Keep for reference
     voiceId,
     apiKey: SIMLI_API_KEY, // Frontend needs this for SimliClient
     usingCustomFace,
