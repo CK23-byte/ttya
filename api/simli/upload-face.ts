@@ -104,19 +104,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       faceName: avatarName
     })
 
-    const simliResponse = await fetch('https://api.simli.ai/generateFaceID', {
-      method: 'POST',
-      headers: {
-        'api-key': SIMLI_API_KEY,
-        ...formData.getHeaders()
-      },
-      body: formData as any
-    })
+    // Use axios for proper multipart/form-data streaming
+    const axios = (await import('axios')).default
+
+    console.log('📤 Sending request to Simli API...')
+    const simliResponse = await axios.post(
+      'https://api.simli.ai/generateFaceID',
+      formData,
+      {
+        headers: {
+          'api-key': SIMLI_API_KEY,
+          ...formData.getHeaders()
+        },
+        validateStatus: () => true // Don't throw on non-2xx status
+      }
+    )
 
     console.log('📊 Simli API response status:', simliResponse.status)
 
-    if (!simliResponse.ok) {
-      const errorText = await simliResponse.text()
+    if (simliResponse.status !== 200) {
+      const errorText = typeof simliResponse.data === 'string'
+        ? simliResponse.data
+        : JSON.stringify(simliResponse.data)
+
       console.error('❌ Simli API error:', {
         status: simliResponse.status,
         statusText: simliResponse.statusText,
@@ -130,7 +140,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    const simliData = await simliResponse.json()
+    const simliData = simliResponse.data
     console.log('✅ Simli API response:', simliData)
 
     // Extract faceID from response
