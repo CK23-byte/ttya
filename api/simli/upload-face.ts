@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { photoUrl, profileId, userId, avatarName } = req.body
   console.log('📥 Request body:', {
-    photoUrl: photoUrl?.substring(0, 50) + '...',
+    photoUrl: photoUrl,
     profileId,
     userId,
     avatarName
@@ -56,11 +56,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('🔗 GET', photoUrl)
 
     const imageResponse = await fetch(photoUrl)
+    console.log('📊 Image download response:', {
+      status: imageResponse.status,
+      statusText: imageResponse.statusText,
+      contentType: imageResponse.headers.get('content-type')
+    })
+
     if (!imageResponse.ok) {
-      console.error('❌ Failed to download image:', imageResponse.status, imageResponse.statusText)
+      const errorBody = await imageResponse.text()
+      console.error('❌ Failed to download image:', {
+        status: imageResponse.status,
+        statusText: imageResponse.statusText,
+        url: photoUrl,
+        errorBody: errorBody.substring(0, 200)
+      })
       return res.status(400).json({
         error: 'Failed to download image from URL',
-        details: `HTTP ${imageResponse.status}: ${imageResponse.statusText}`
+        details: `HTTP ${imageResponse.status}: ${imageResponse.statusText}. URL: ${photoUrl}`,
+        hint: 'Check if the photo URL is publicly accessible'
       })
     }
 

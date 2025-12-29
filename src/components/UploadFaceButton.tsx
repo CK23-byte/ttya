@@ -47,7 +47,8 @@ export default function UploadFaceButton({ profileId, photoUrl, avatarName }: Up
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Upload failed')
+        console.error('❌ Upload failed with status:', response.status, data)
+        throw new Error(data.details || data.error || 'Upload failed')
       }
 
       setStatus('success')
