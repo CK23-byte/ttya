@@ -30,8 +30,15 @@ import { createSimliSession, endSimliSession } from '../utils/simliAPI'
 import { loadPersonalityProfiles, loadProfileData } from '../utils/profileStorage'
 import Modal from '../components/Modal'
 import { CREDIT_PRICING } from '../types/database'
+import { useSimliConversation } from '../hooks/useSimliConversation'
 
 type CallStatus = 'idle' | 'connecting' | 'connected' | 'ended' | 'error'
+
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+}
 
 // Storage interface for profile data
 interface StoredProfileData {
@@ -61,6 +68,9 @@ export default function SimliVideoPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [duration, setDuration] = useState(0)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const [voiceId, setVoiceId] = useState<string | null>(null) // ElevenLabs voice ID
+  const [messages, setMessages] = useState<Message[]>([])
+  const [conversationEnabled, setConversationEnabled] = useState(false)
   const [modal, setModal] = useState<{
     isOpen: boolean
     title: string
@@ -83,6 +93,23 @@ export default function SimliVideoPage() {
   const callStartTimeRef = useRef<number | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
   const simliClientRef = useRef<any>(null) // SimliClient instance
+
+  // Initialize conversation hook
+  const conversation = useSimliConversation({
+    personalityName: profile?.name || 'Assistant',
+    personalityRelationship: profile?.relationship || 'friend',
+    personalityDescription: profile?.personality || '',
+    voiceId: voiceId || '',
+    simliClient: simliClientRef.current,
+    onTranscript: (message) => {
+      setMessages(prev => [...prev, message])
+      logger.log('New message:', message.role, message.content)
+    },
+    onError: (error) => {
+      logger.error('Conversation error:', error)
+      setError(error.message)
+    }
+  })
 
   useEffect(() => {
     if (supabaseLoading) return
@@ -211,10 +238,18 @@ export default function SimliVideoPage() {
 
       setProfile(foundProfile)
 
-      // Load profile data to get photo
+      // Load profile data to get photo and voice config
       const profileData = await loadProfileData<StoredProfileData>(profileId, null)
       if (profileData?.photos && profileData.photos.length > 0) {
         setPhotoUrl(profileData.photos[0].url)
+      }
+
+      // Load voice configuration for conversation
+      if (profileData?.voiceConfig?.clonedVoiceId) {
+        setVoiceId(profileData.voiceConfig.clonedVoiceId)
+        logger.log('Loaded cloned voice ID:', profileData.voiceConfig.clonedVoiceId)
+      } else {
+        logger.warn('No cloned voice configured, conversation will use default voice')
       }
     } catch (error) {
       logger.error('Error loading profile:', error)
@@ -367,6 +402,17 @@ export default function SimliVideoPage() {
         console.log('✅ Simli client connected')
         setCallStatus('connected')
         callStartTimeRef.current = Date.now()
+
+        // Start conversation flow after Simli is connected
+        if (localStreamRef.current && voiceId) {
+          console.log('🗣️ Starting conversation flow...')
+          conversation.setAudioStream(localStreamRef.current)
+          conversation.startListening()
+          setConversationEnabled(true)
+          console.log('✅ Conversation flow started')
+        } else {
+          console.warn('⚠️ No voice ID configured, conversation disabled')
+        }
       })
 
       simliClientRef.current.on('videoTrack', (track: MediaStreamTrack) => {
@@ -439,6 +485,13 @@ export default function SimliVideoPage() {
       } catch (error) {
         logger.error('Error ending session:', error)
       }
+    }
+
+    // Stop conversation flow
+    if (conversationEnabled) {
+      conversation.stopListening()
+      setConversationEnabled(false)
+      logger.log('Conversation stopped')
     }
 
     // Close Simli client connection
@@ -603,6 +656,52 @@ export default function SimliVideoPage() {
 
           {callStatus === 'connected' && (
             <>
+              {/* Conversation Transcript */}
+              {conversationEnabled && messages.length > 0 && (
+                <div className="absolute bottom-24 left-4 max-w-md bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 max-h-96 overflow-y-auto">
+                  <div className="space-y-3">
+                    {messages.slice(-5).map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`px-3 py-2 rounded-lg max-w-xs ${
+                            msg.role === 'user'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-700 text-gray-100'
+                          }`}
+                        >
+                          <p className="text-sm">{msg.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Conversation Status Indicator */}
+                  <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                    {conversation.status === 'listening' && (
+                      <>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span>Listening...</span>
+                      </>
+                    )}
+                    {conversation.status === 'processing' && (
+                      <>
+                        <Loader className="w-3 h-3 animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    )}
+                    {conversation.status === 'speaking' && (
+                      <>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                        <span>Speaking...</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Local video preview */}
               <div className="absolute top-4 right-4 w-32 h-48 rounded-xl overflow-hidden shadow-2xl border-2 border-white/30">
                 <video
