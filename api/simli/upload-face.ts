@@ -83,16 +83,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       type: imageBlob.type
     })
 
-    // Step 2: Prepare multipart/form-data request
-    console.log('📤 Step 2: Uploading photo to Simli API...')
+    // Step 2: Process and resize image to meet Simli requirements (min 512x512)
+    console.log('🖼️ Step 2: Processing image...')
+    const sharp = (await import('sharp')).default
+
+    let imageBuffer = Buffer.from(await imageBlob.arrayBuffer())
+    const metadata = await sharp(imageBuffer).metadata()
+
+    console.log('📐 Original image dimensions:', {
+      width: metadata.width,
+      height: metadata.height,
+      format: metadata.format
+    })
+
+    // Simli requires minimum 512x512 pixels
+    const MIN_SIZE = 512
+    const needsResize = (metadata.width || 0) < MIN_SIZE || (metadata.height || 0) < MIN_SIZE
+
+    if (needsResize) {
+      console.log(`⚠️ Image too small, resizing to ${MIN_SIZE}x${MIN_SIZE}...`)
+
+      // Resize maintaining aspect ratio, then crop to square
+      imageBuffer = await sharp(imageBuffer)
+        .resize(MIN_SIZE, MIN_SIZE, {
+          fit: 'cover', // Crop to fill the square
+          position: 'centre'
+        })
+        .jpeg({ quality: 90 })
+        .toBuffer()
+
+      console.log('✅ Image resized successfully')
+    } else {
+      console.log('✅ Image dimensions OK, no resize needed')
+
+      // Convert to JPEG for consistency
+      imageBuffer = await sharp(imageBuffer)
+        .jpeg({ quality: 90 })
+        .toBuffer()
+    }
+
+    // Step 3: Prepare multipart/form-data request
+    console.log('📤 Step 3: Uploading photo to Simli API...')
     console.log('🔗 POST https://api.simli.ai/generateFaceID')
 
     // Create FormData
     const FormData = (await import('form-data')).default
     const formData = new FormData()
 
-    // Convert Blob to Buffer for form-data
-    const buffer = Buffer.from(await imageBlob.arrayBuffer())
+    // Append processed image buffer
+    const buffer = imageBuffer
     formData.append('image', buffer, {
       filename: 'avatar.jpg',
       contentType: imageBlob.type || 'image/jpeg'
@@ -161,7 +200,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('📋 Status:', status)
 
     // Save avatar configuration to database
-    console.log('📝 Step 2: Saving avatar to database...')
+    console.log('📝 Step 4: Saving avatar to database...')
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
     const avatarId = `simli_${Date.now()}_${Math.random().toString(36).substring(7)}`
