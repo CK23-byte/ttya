@@ -98,7 +98,7 @@ export default function SimliVideoPage() {
   const conversation = useSimliConversation({
     personalityName: profile?.name || 'Assistant',
     personalityRelationship: profile?.relationship || 'friend',
-    personalityDescription: profile?.personality || '',
+    personalityDescription: profile?.systemPrompt || '',
     voiceId: voiceId || '',
     simliClient: simliClientRef.current,
     onTranscript: (message) => {

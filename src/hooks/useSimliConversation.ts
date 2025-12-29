@@ -174,10 +174,10 @@ export function useSimliConversation(options: UseSimliConversationOptions) {
 
     try {
       // 1. Combine audio chunks
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+      const recordedAudioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
       audioChunksRef.current = []
 
-      const base64Audio = await blobToBase64(audioBlob)
+      const base64Audio = await blobToBase64(recordedAudioBlob)
 
       // 2. Transcribe with Whisper
       logger.log('Transcribing user speech...')
