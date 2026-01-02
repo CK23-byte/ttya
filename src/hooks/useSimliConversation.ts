@@ -25,7 +25,6 @@ interface UseSimliConversationOptions {
   personalityRelationship: string
   personalityDescription: string
   voiceId: string // ElevenLabs voice ID
-  simliClient: any // SimliClient instance
   onTranscript?: (message: Message) => void
   onError?: (error: Error) => void
 }
@@ -46,7 +45,6 @@ export function useSimliConversation(options: UseSimliConversationOptions) {
     personalityRelationship,
     personalityDescription,
     voiceId,
-    simliClient,
     onTranscript,
     onError
   } = options
@@ -61,6 +59,7 @@ export function useSimliConversation(options: UseSimliConversationOptions) {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioStreamRef = useRef<MediaStream | null>(null)
+  const simliClientRef = useRef<any>(null) // Store simliClient in ref
   const audioChunksRef = useRef<Blob[]>([])
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
@@ -71,7 +70,7 @@ export function useSimliConversation(options: UseSimliConversationOptions) {
 
   // Start listening
   const startListening = useCallback(async () => {
-    if (!simliClient || !audioStreamRef.current) {
+    if (!simliClientRef.current || !audioStreamRef.current) {
       logger.error('Cannot start listening: missing simliClient or audioStream')
       return
     }
@@ -383,6 +382,9 @@ export function useSimliConversation(options: UseSimliConversationOptions) {
     stopListening,
     setAudioStream: (stream: MediaStream) => {
       audioStreamRef.current = stream
+    },
+    setSimliClient: (client: any) => {
+      simliClientRef.current = client
     }
   }
 }

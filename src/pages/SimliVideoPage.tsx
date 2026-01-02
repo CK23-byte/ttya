@@ -100,7 +100,6 @@ export default function SimliVideoPage() {
     personalityRelationship: profile?.relationship || 'friend',
     personalityDescription: profile?.systemPrompt || '',
     voiceId: voiceId || '',
-    simliClient: simliClientRef.current,
     onTranscript: (message) => {
       setMessages(prev => [...prev, message])
       logger.log('New message:', message.role, message.content)
@@ -395,6 +394,9 @@ export default function SimliVideoPage() {
       simliClientRef.current = new SimliClient()
       await simliClientRef.current.Initialize(simliConfig)
       console.log('✅ SimliClient initialized')
+
+      // Provide simliClient to conversation hook
+      conversation.setSimliClient(simliClientRef.current)
 
       // Set up event listeners
       console.log('📡 Step 6: Setting up event listeners...')

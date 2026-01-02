@@ -180,18 +180,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const simliData = simliResponse.data
-    console.log('✅ Simli API response:', simliData)
+    console.log('✅ Simli API response:', JSON.stringify(simliData, null, 2))
+    console.log('📋 Response keys:', Object.keys(simliData))
 
     // Extract faceID from response
-    // Note: Actual response format may vary - adjust based on Simli's response
-    const faceId = simliData.faceId || simliData.face_id || simliData.id
-    const status = simliData.status || 'processing'
+    // Try multiple possible field names
+    const faceId = simliData.faceId ||
+                   simliData.face_id ||
+                   simliData.id ||
+                   simliData.FaceID ||
+                   simliData.faceid ||
+                   simliData.data?.face_id ||
+                   simliData.data?.faceId
+
+    const status = simliData.status || simliData.state || 'processing'
+
+    console.log('🔍 Extracted values:', { faceId, status })
 
     if (!faceId) {
-      console.error('❌ No faceID in Simli response:', simliData)
+      console.error('❌ No faceID in Simli response')
+      console.error('📊 Full response structure:', JSON.stringify(simliData, null, 2))
       return res.status(500).json({
         error: 'Invalid response from Simli API',
-        details: 'No faceID returned',
+        details: 'No faceID returned. Response structure: ' + JSON.stringify(Object.keys(simliData)),
         response: simliData
       })
     }
