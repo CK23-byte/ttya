@@ -160,7 +160,7 @@ export function useSimliConversation(options: UseSimliConversationOptions) {
       }))
       onError?.(error instanceof Error ? error : new Error('Failed to start listening'))
     }
-  }, [simliClient, onError])
+  }, [onError])
 
   // Handle recording stop
   const handleRecordingStop = async () => {
