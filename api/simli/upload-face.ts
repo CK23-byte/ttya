@@ -184,18 +184,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('📋 Response keys:', Object.keys(simliData))
 
     // Extract faceID from response
-    // Try multiple possible field names
-    const faceId = simliData.faceId ||
+    // Simli uses "character_uid" as the faceID field
+    const faceId = simliData.character_uid ||
+                   simliData.faceId ||
                    simliData.face_id ||
                    simliData.id ||
                    simliData.FaceID ||
                    simliData.faceid ||
+                   simliData.data?.character_uid ||
                    simliData.data?.face_id ||
                    simliData.data?.faceId
 
     const status = simliData.status || simliData.state || 'processing'
+    const message = simliData.message || ''
+    const warnings = simliData.warnings || []
 
-    console.log('🔍 Extracted values:', { faceId, status })
+    console.log('🔍 Extracted values:', { faceId, status, message, warnings })
 
     if (!faceId) {
       console.error('❌ No faceID in Simli response')
@@ -207,8 +211,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
 
-    console.log('✅ FaceID received:', faceId)
+    console.log('✅ FaceID (character_uid) received:', faceId)
     console.log('📋 Status:', status)
+    if (message) console.log('💬 Message:', message)
+    if (warnings.length > 0) console.log('⚠️ Warnings:', warnings)
 
     // Save avatar configuration to database
     console.log('📝 Step 4: Saving avatar to database...')
