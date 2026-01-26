@@ -29,10 +29,24 @@ import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
 import { createHeyGenStreamingSession, closeHeyGenStreamSession } from '../utils/heygenAPI'
+import { loadProfileData as loadProfileDataFromStorage } from '../utils/profileStorage'
 import Modal from '../components/Modal'
 import { CREDIT_PRICING } from '../types/database'
 
 const PROFILES_STORAGE_KEY = 'personality_profiles'
+
+// Avatar configuration interface
+interface AvatarConfig {
+  type: 'custom'
+  customAvatarId?: string
+  customAvatarName?: string
+  customAvatarThumbnail?: string
+}
+
+// Profile data interface (what's stored for each profile)
+interface ProfileData {
+  avatarConfig?: AvatarConfig
+}
 
 type CallStatus = 'idle' | 'connecting' | 'connected' | 'ended' | 'error'
 
@@ -46,6 +60,7 @@ export default function VideoPage() {
   const isUserAuthenticated = isAuthenticated || (isConfigured && user !== null)
 
   const [profile, setProfile] = useState<PersonalityProfile | null>(null)
+  const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [callStatus, setCallStatus] = useState<CallStatus>('idle')
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOn, setIsVideoOn] = useState(true)
@@ -213,6 +228,10 @@ export default function VideoPage() {
       }
 
       setProfile(foundProfile)
+
+      // Load profile data (contains avatarConfig)
+      const data = await loadProfileDataFromStorage<ProfileData>(profileId, encryptionKey)
+      setProfileData(data)
     } catch (error) {
       logger.error('Error loading profile:', error)
       setError('Failed to load profile')
@@ -246,15 +265,25 @@ export default function VideoPage() {
       return
     }
 
+    // Check if custom avatar is configured
+    const customAvatarId = profileData?.avatarConfig?.customAvatarId
+    if (!customAvatarId) {
+      showModal(
+        'Avatar Required',
+        'Please create a custom avatar for this profile first. Go to Profile Settings and upload a photo to create your personalized avatar.',
+        'warning'
+      )
+      return
+    }
+
     setCallStatus('connecting')
     setError(null)
 
     try {
-      // Use avatar ID for video streaming
-      // Default to a professional avatar (customize in env)
-      const avatarId = import.meta.env.VITE_HEYGEN_AVATAR_ID || 'Angela-inblackskirt-20220820'
+      // Use custom avatar ID from profile
+      const avatarId = customAvatarId
 
-      logger.log('Creating video streaming session with avatar:', avatarId)
+      logger.log('Creating video streaming session with custom avatar:', avatarId)
 
       // Create video streaming session
       const session = await createHeyGenStreamingSession(avatarId, 'medium')
@@ -399,18 +428,45 @@ export default function VideoPage() {
         <div className="absolute inset-0 flex items-center justify-center">
           {callStatus === 'idle' && (
             <div className="text-center">
-              <div className="w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-5xl mx-auto mb-6">
-                {profile.name.charAt(0).toUpperCase()}
-              </div>
+              {profileData?.avatarConfig?.customAvatarThumbnail ? (
+                <img
+                  src={profileData.avatarConfig.customAvatarThumbnail}
+                  alt={profile.name}
+                  className="w-32 h-32 rounded-full object-cover mx-auto mb-6 border-4 border-purple-500/50"
+                />
+              ) : (
+                <div className="w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-5xl mx-auto mb-6">
+                  {profile.name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <h3 className="text-2xl font-bold text-white mb-2">{profile.name}</h3>
-              <p className="text-gray-400 mb-8">Start a video call</p>
-              <button
-                onClick={startCall}
-                className="px-8 py-4 bg-[#00a884] hover:bg-[#00a884]/90 rounded-full text-white font-semibold flex items-center gap-3 mx-auto transition"
-              >
-                <Video className="w-5 h-5" />
-                Start Call
-              </button>
+
+              {profileData?.avatarConfig?.customAvatarId ? (
+                <>
+                  <p className="text-gray-400 mb-8">Start a video call</p>
+                  <button
+                    onClick={startCall}
+                    className="px-8 py-4 bg-[#00a884] hover:bg-[#00a884]/90 rounded-full text-white font-semibold flex items-center gap-3 mx-auto transition"
+                  >
+                    <Video className="w-5 h-5" />
+                    Start Call
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-yellow-400 mb-4">Custom avatar required for video calls</p>
+                  <p className="text-gray-400 text-sm mb-8 max-w-md mx-auto">
+                    Upload a photo and create a custom avatar in Profile Settings to enable video calls with {profile.name}.
+                  </p>
+                  <button
+                    onClick={() => navigate(`/profile-improvement?profileId=${profile.id}`)}
+                    className="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-full text-white font-semibold flex items-center gap-3 mx-auto transition"
+                  >
+                    <Video className="w-5 h-5" />
+                    Create Avatar
+                  </button>
+                </>
+              )}
             </div>
           )}
 
