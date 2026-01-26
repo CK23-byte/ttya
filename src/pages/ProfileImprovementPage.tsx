@@ -235,7 +235,8 @@ export default function ProfileImprovementPage() {
           voiceSamples: validVoiceSamples,
           photos: data.photos || [],
           videos: data.videos || [],
-          voiceConfig: data.voiceConfig // ✅ Load voice config
+          voiceConfig: data.voiceConfig, // ✅ Load voice config
+          avatarConfig: data.avatarConfig // ✅ Load avatar config
         })
 
         logger.log('Profile data loaded successfully:', {
@@ -282,7 +283,8 @@ export default function ProfileImprovementPage() {
         voiceSamples: voiceSamplesForStorage,
         photos: profileData.photos,
         videos: profileData.videos,
-        voiceConfig: profileData.voiceConfig // ✅ Save voice config
+        voiceConfig: profileData.voiceConfig, // ✅ Save voice config
+        avatarConfig: profileData.avatarConfig // ✅ Save avatar config
       }
 
       logger.log('Saving profile data:', {
