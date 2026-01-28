@@ -22,7 +22,7 @@ export async function createSimliFace(
 ): Promise<SimliFaceResponse> {
   logger.log('Creating Simli face...', { faceName, photoUrl: photoUrl.substring(0, 80) })
 
-  const response = await fetch('/api/simli/face', {
+  const response = await fetch('/api/simli?action=face', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ photoUrl, faceName })
@@ -53,7 +53,7 @@ export async function startSimliSession(
 ): Promise<SimliSessionResponse> {
   logger.log('Starting Simli session...', { faceId })
 
-  const response = await fetch('/api/simli/session?action=start', {
+  const response = await fetch('/api/simli?action=start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ faceId })
@@ -81,7 +81,7 @@ export interface SimliIceServersResponse {
 export async function getSimliIceServers(): Promise<SimliIceServersResponse> {
   logger.log('Getting Simli ICE servers...')
 
-  const response = await fetch('/api/simli/session?action=ice', {
+  const response = await fetch('/api/simli?action=ice', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
   })

@@ -1,8 +1,10 @@
 /**
- * Vercel Serverless Function: Simli Face Management
+ * Vercel Serverless Function: Simli API
  *
- * Endpoint for creating Simli face IDs from uploaded photos.
- * Uses Simli API: POST https://api.simli.ai/generateFaceID
+ * Consolidated endpoint for all Simli operations:
+ * - face: Create face ID from photo (POST with action=face)
+ * - start: Start audio-to-video session (POST with action=start)
+ * - ice: Get ICE servers (POST with action=ice)
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -31,16 +33,29 @@ export default async function handler(
     })
   }
 
+  const { action } = req.query
+
   try {
-    return await handleCreateFace(req, res)
+    switch (action) {
+      case 'face':
+        return await handleCreateFace(req, res)
+      case 'start':
+        return await handleStartSession(req, res)
+      case 'ice':
+        return await handleGetIceServers(res)
+      default:
+        return res.status(400).json({ error: 'Invalid action. Use: face, start, ice' })
+    }
   } catch (error) {
-    console.error('Simli face endpoint error:', error)
+    console.error('Simli endpoint error:', error)
     return res.status(500).json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
     })
   }
 }
+
+// --- Face Creation ---
 
 async function handleCreateFace(req: VercelRequest, res: VercelResponse) {
   const { photoUrl, faceName } = req.body
@@ -53,7 +68,6 @@ async function handleCreateFace(req: VercelRequest, res: VercelResponse) {
 
   console.log('Creating Simli face:', { faceName, photoUrl: photoUrl.substring(0, 80) })
 
-  // Download photo from Supabase Storage
   const urlParts = photoUrl.split('/storage/v1/object/public/')
   if (urlParts.length < 2) {
     return res.status(400).json({
@@ -90,25 +104,34 @@ async function handleCreateFace(req: VercelRequest, res: VercelResponse) {
 
   console.log('Photo downloaded:', { size: fileData.size, type: fileData.type })
 
-  // Convert to buffer
-  const buffer = Buffer.from(await fileData.arrayBuffer() as ArrayBuffer)
+  const arrayBuffer = await fileData.arrayBuffer()
 
-  // Upload to Simli generateFaceID as multipart form data
-  const FormData = (await import('form-data')).default
-  const formData = new FormData()
-  formData.append('image', buffer, {
-    filename: `${faceName}.jpg`,
-    contentType: fileData.type || 'image/jpeg'
-  })
+  // Build multipart form data manually to avoid type issues with form-data + fetch
+  const boundary = '----SimliFormBoundary' + Date.now()
+  const filename = `${faceName}.jpg`
+  const contentType = fileData.type || 'image/jpeg'
+
+  const header = `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${filename}"\r\nContent-Type: ${contentType}\r\n\r\n`
+  const footer = `\r\n--${boundary}--\r\n`
+
+  const headerBytes = new TextEncoder().encode(header)
+  const footerBytes = new TextEncoder().encode(footer)
+  const fileBytes = new Uint8Array(arrayBuffer)
+
+  // Combine into single Uint8Array
+  const body = new Uint8Array(headerBytes.length + fileBytes.length + footerBytes.length)
+  body.set(headerBytes, 0)
+  body.set(fileBytes, headerBytes.length)
+  body.set(footerBytes, headerBytes.length + fileBytes.length)
 
   console.log('Uploading to Simli generateFaceID...')
   const response = await fetch(`https://api.simli.ai/generateFaceID?face_name=${encodeURIComponent(faceName)}`, {
     method: 'POST',
     headers: {
       'api-key': SIMLI_API_KEY!,
-      ...formData.getHeaders()
+      'Content-Type': `multipart/form-data; boundary=${boundary}`
     },
-    body: formData.getBuffer()
+    body: body
   })
 
   if (!response.ok) {
@@ -147,5 +170,77 @@ async function handleCreateFace(req: VercelRequest, res: VercelResponse) {
     success: true,
     faceId,
     faceName: data.face_name || faceName
+  })
+}
+
+// --- Session Management ---
+
+async function handleStartSession(req: VercelRequest, res: VercelResponse) {
+  const { faceId } = req.body
+
+  if (!faceId) {
+    return res.status(400).json({ error: 'Missing required field: faceId' })
+  }
+
+  console.log('Creating Simli audio-to-video session:', { faceId })
+
+  const response = await fetch('https://api.simli.ai/startAudioToVideoSession', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      faceId,
+      apiKey: SIMLI_API_KEY!,
+      handleSilence: true,
+      maxSessionLength: 3600,
+      maxIdleTime: 300,
+      syncAudio: true,
+      audioInputFormat: 'pcm16'
+    })
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('Simli startAudioToVideoSession error:', { status: response.status, error: errorText })
+    return res.status(response.status).json({
+      error: 'Failed to create streaming session',
+      details: errorText,
+      hint: 'Check that faceId is valid and Simli API key has permissions'
+    })
+  }
+
+  const data = await response.json()
+  console.log('Simli session created:', data)
+
+  return res.status(200).json({
+    success: true,
+    sessionToken: data.session_token || data.sessionToken,
+    ...data
+  })
+}
+
+async function handleGetIceServers(res: VercelResponse) {
+  console.log('Getting Simli ICE servers...')
+
+  const response = await fetch('https://api.simli.ai/getIceServers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apiKey: SIMLI_API_KEY! })
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('Simli getIceServers error:', { status: response.status, error: errorText })
+    return res.status(response.status).json({
+      error: 'Failed to get ICE servers',
+      details: errorText
+    })
+  }
+
+  const data = await response.json()
+  console.log('ICE servers retrieved:', data)
+
+  return res.status(200).json({
+    success: true,
+    iceServers: data.iceServers || data.ice_servers || [{ urls: 'stun:stun.l.google.com:19302' }]
   })
 }

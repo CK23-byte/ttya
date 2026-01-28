@@ -1162,7 +1162,7 @@ export default function ProfileImprovementPage() {
       logger.log('Sending photo to Simli generateFaceID:', photoUrl.substring(0, 100) + '...')
 
       setAvatarCreationProgress(50)
-      const response = await fetch('/api/simli/face', {
+      const response = await fetch('/api/simli?action=face', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photoUrl, faceName })
