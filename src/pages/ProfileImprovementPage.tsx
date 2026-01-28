@@ -235,7 +235,8 @@ export default function ProfileImprovementPage() {
           voiceSamples: validVoiceSamples,
           photos: data.photos || [],
           videos: data.videos || [],
-          voiceConfig: data.voiceConfig // ✅ Load voice config
+          voiceConfig: data.voiceConfig, // ✅ Load voice config
+          avatarConfig: data.avatarConfig // ✅ Load avatar config
         })
 
         logger.log('Profile data loaded successfully:', {
@@ -282,7 +283,8 @@ export default function ProfileImprovementPage() {
         voiceSamples: voiceSamplesForStorage,
         photos: profileData.photos,
         videos: profileData.videos,
-        voiceConfig: profileData.voiceConfig // ✅ Save voice config
+        voiceConfig: profileData.voiceConfig, // ✅ Save voice config
+        avatarConfig: profileData.avatarConfig // ✅ Save avatar config
       }
 
       logger.log('Saving profile data:', {
@@ -1133,115 +1135,64 @@ export default function ProfileImprovementPage() {
     }))
   }
 
-  // Avatar creation handler
+  // Avatar creation handler - uses Simli generateFaceID API
   const handleCreateAvatar = async () => {
     if (!profileData.photos || profileData.photos.length === 0) {
-      showModal('No Photo', 'Please upload a photo first! Upload a clear photo showing frontal face with good lighting.', 'warning')
+      showModal('No Photo', 'Please upload a photo first! Upload a clear, front-facing photo with good lighting and a neutral expression.', 'warning')
       return
     }
 
     setIsCreatingAvatar(true)
     setAvatarCreationStatus('uploading')
-    setAvatarCreationProgress(10) // Initial progress
+    setAvatarCreationProgress(10)
 
     try {
-      // Get the first uploaded photo
       const firstPhoto = profileData.photos[0]
-      const avatarName = `${profile?.name || 'Avatar'}_${Date.now()}`
+      const faceName = `${profile?.name || 'Avatar'}_${Date.now()}`
 
-      logger.log('Creating avatar from photo:', {
+      logger.log('Creating Simli face from photo:', {
         photoPath: firstPhoto.storagePath || 'unknown',
         photoUrl: firstPhoto.url,
-        avatarName
+        faceName
       })
 
-      // Use public URL directly since bucket is public
-      // Signed URLs are returning multipart form data instead of the image
-      let photoUrl = firstPhoto.url
-      setAvatarCreationProgress(20) // URL generation progress
+      const photoUrl = firstPhoto.url
+      setAvatarCreationProgress(30)
 
-      logger.log('Using public URL for video service:', photoUrl.substring(0, 100) + '...')
+      logger.log('Sending photo to Simli generateFaceID:', photoUrl.substring(0, 100) + '...')
 
-      setAvatarCreationProgress(30) // Before API call
-      // Send photo URL to API (API will download and convert it to JPG if needed)
-      const response = await fetch('/api/heygen/avatar', {
+      setAvatarCreationProgress(50)
+      const response = await fetch('/api/simli/face', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          videoUrl: photoUrl, // Keep param name for compatibility
-          avatarName
-        })
+        body: JSON.stringify({ photoUrl, faceName })
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.details || error.error || 'Failed to create avatar')
+        throw new Error(error.details || error.error || 'Failed to create face')
       }
 
       const data = await response.json()
-      logger.log('Avatar creation response:', data)
+      logger.log('Simli face creation response:', data)
 
-      setAvatarCreationStatus('processing')
-      setAvatarCreationProgress(40) // Upload complete, processing started
-
-      // Poll for avatar status
-      const avatarId = data.avatarId
-      let attempts = 0
-      const maxAttempts = 60 // 5 minutes max (5 second intervals)
-
-      const pollStatus = async (): Promise<void> => {
-        if (attempts >= maxAttempts) {
-          throw new Error('Avatar processing timeout. Please try again later.')
+      setAvatarCreationProgress(100)
+      setProfileData(prev => ({
+        ...prev,
+        avatarConfig: {
+          type: 'custom',
+          customAvatarId: data.faceId,
+          customAvatarName: data.faceName || faceName,
+          customAvatarThumbnail: firstPhoto.url
         }
+      }))
 
-        attempts++
-        // Update progress incrementally (40% to 95%)
-        const progressIncrement = 55 / maxAttempts
-        setAvatarCreationProgress(prev => Math.min(95, prev + progressIncrement))
-
-        const statusResponse = await fetch(`/api/heygen/avatar?avatarId=${avatarId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (!statusResponse.ok) {
-          throw new Error('Failed to check avatar status')
-        }
-
-        const statusData = await statusResponse.json()
-        logger.log(`Avatar status check ${attempts}/${maxAttempts}:`, statusData)
-
-        if (statusData.status === 'completed' || statusData.status === 'active') {
-          // Avatar is ready
-          setAvatarCreationProgress(100)
-          setProfileData(prev => ({
-            ...prev,
-            avatarConfig: {
-              type: 'custom',
-              customAvatarId: avatarId,
-              customAvatarName: avatarName,
-              customAvatarThumbnail: statusData.thumbnailUrl
-            }
-          }))
-
-          setAvatarCreationStatus('completed')
-          showModal(
-            'Avatar Created Successfully',
-            `Your custom avatar "${avatarName}" is ready for video calls!`,
-            'success'
-          )
-        } else if (statusData.status === 'error' || statusData.status === 'failed') {
-          throw new Error('Avatar processing failed. Please try with a different video.')
-        } else {
-          // Still processing, wait and check again
-          await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
-          await pollStatus()
-        }
-      }
-
-      await pollStatus()
+      setAvatarCreationStatus('completed')
+      showModal(
+        'Avatar Created Successfully',
+        `Your custom avatar "${data.faceName || faceName}" is ready for video calls!`,
+        'success'
+      )
 
     } catch (error) {
       logger.error('Avatar creation error:', error)

@@ -28,7 +28,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { getSecure } from '../utils/secureStorage'
 import { PersonalityProfile } from '../types'
-import { createHeyGenStreamingSession, closeHeyGenStreamSession } from '../utils/heygenAPI'
+import { SimliClient } from 'simli-client'
+import { startSimliSession } from '../utils/simliAPI'
 import { loadProfileData as loadProfileDataFromStorage } from '../utils/profileStorage'
 import Modal from '../components/Modal'
 import { CREDIT_PRICING } from '../types/database'
@@ -67,7 +68,7 @@ export default function VideoPage() {
   const [isSpeakerOn, setIsSpeakerOn] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [_sessionId, setSessionId] = useState<string | null>(null)
   const [duration, setDuration] = useState(0)
   const [modal, setModal] = useState<{
     isOpen: boolean
@@ -86,6 +87,8 @@ export default function VideoPage() {
   }
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const simliClientRef = useRef<SimliClient | null>(null)
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null)
   const lastCreditDeductionRef = useRef<number>(0)
   const hasShownLowCreditWarningRef = useRef<boolean>(false)
@@ -280,55 +283,34 @@ export default function VideoPage() {
     setError(null)
 
     try {
-      // Use custom avatar ID from profile
-      const avatarId = customAvatarId
+      const faceId = customAvatarId
+      logger.log('Creating Simli video streaming session with face:', faceId)
 
-      logger.log('Creating video streaming session with custom avatar:', avatarId)
+      // Initialize SimliClient
+      const simliClient = new SimliClient()
+      simliClientRef.current = simliClient
 
-      // Create video streaming session
-      const session = await createHeyGenStreamingSession(avatarId, 'medium')
-      setSessionId(session.session_id)
+      // Get session token from our backend (keeps API key server-side)
+      const sessionData = await startSimliSession(faceId)
+      setSessionId(sessionData.sessionToken || 'simli-session')
 
-      logger.log('Session offer received:', {
-        hasOffer: !!session.offer,
-        offerType: session.offer?.type,
-        sdpLength: session.offer?.sdp?.length || 0,
-        sdpPreview: session.offer?.sdp?.substring(0, 100) || 'EMPTY'
-      })
+      logger.log('Simli session started:', sessionData)
 
-      // Validate SDP
-      if (!session.offer || !session.offer.sdp || session.offer.sdp.length === 0) {
-        throw new Error('Invalid SDP received from video service - SDP is empty')
-      }
+      // Initialize SimliClient with config
+      // Note: SimliClient handles WebRTC internally
+      simliClient.Initialize({
+        apiKey: '', // API key is handled server-side via session token
+        faceId: faceId,
+        handleSilence: true,
+        videoRef: videoRef.current,
+        audioRef: audioRef.current,
+        maxSessionLength: 3600,
+        maxIdleTime: 300
+      } as any)
 
-      if (!session.offer.sdp.startsWith('v=')) {
-        throw new Error(`Invalid SDP format - expected to start with 'v=' but got: ${session.offer.sdp.substring(0, 50)}`)
-      }
+      await simliClient.start()
 
-      // Set up WebRTC peer connection
-      const pc = new RTCPeerConnection({
-        iceServers: session.ice_servers || [{ urls: 'stun:stun.l.google.com:19302' }],
-      })
-
-      peerConnectionRef.current = pc
-
-      // Handle incoming video stream
-      pc.ontrack = (event) => {
-        if (videoRef.current && event.streams[0]) {
-          videoRef.current.srcObject = event.streams[0]
-        }
-      }
-
-      // Set remote description (offer from video service)
-      await pc.setRemoteDescription(session.offer)
-
-      // Create answer
-      const answer = await pc.createAnswer()
-      await pc.setLocalDescription(answer)
-
-      // Send answer back to video service
-      // Service handles this automatically via their API
-      logger.log('Video session established successfully')
+      logger.log('Simli video session established successfully')
 
       callStartTimeRef.current = Date.now()
       setCallStatus('connected')
@@ -339,13 +321,38 @@ export default function VideoPage() {
     }
   }
 
+  /**
+   * Send audio data to Simli for lip-sync video generation.
+   * Audio must be PCM16 format, 16kHz, mono.
+   * Called from the TTS pipeline when ElevenLabs returns audio.
+   */
+  const sendAudioToSimli = (audioData: Uint8Array) => {
+    if (simliClientRef.current) {
+      simliClientRef.current.sendAudioData(audioData)
+    }
+  }
+
+  // Expose sendAudioToSimli for use by voice pipeline
+  // This can be called when TTS audio (PCM16 16kHz) is received from ElevenLabs
+  useEffect(() => {
+    if (callStatus === 'connected') {
+      // Store on window for cross-component access (voice pipeline)
+      (window as any).__simliSendAudio = sendAudioToSimli
+    }
+    return () => {
+      delete (window as any).__simliSendAudio
+    }
+  }, [callStatus]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const endCall = async () => {
-    if (sessionId) {
+    // Close Simli client
+    if (simliClientRef.current) {
       try {
-        await closeHeyGenStreamSession(sessionId)
+        simliClientRef.current.close()
       } catch (error) {
-        logger.error('Error closing session:', error)
+        logger.error('Error closing Simli session:', error)
       }
+      simliClientRef.current = null
     }
 
     if (peerConnectionRef.current) {
@@ -478,12 +485,15 @@ export default function VideoPage() {
           )}
 
           {callStatus === 'connected' && (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              <audio ref={audioRef} autoPlay style={{ display: 'none' }} />
+            </>
           )}
 
           {callStatus === 'ended' && (
