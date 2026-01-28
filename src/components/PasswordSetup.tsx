@@ -83,76 +83,85 @@ export default function PasswordSetup() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Password Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
                 Master Password
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Lock className="w-5 h-5 text-gray-400" />
+                  <Lock className="w-5 h-5 text-gray-400" aria-hidden="true" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  id="newPassword"
+                  name="newPassword"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                   placeholder="Minimum 12 characters"
                   required
+                  autoComplete="new-password"
+                  aria-describedby="password-requirements"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                 </button>
               </div>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-700 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Lock className="w-5 h-5 text-gray-400" />
+                  <Lock className="w-5 h-5 text-gray-400" aria-hidden="true" />
                 </div>
                 <input
                   type={showConfirm ? 'text' : 'password'}
+                  id="confirmNewPassword"
+                  name="confirmNewPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                   placeholder="Re-enter your password"
                   required
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label={showConfirm ? 'Hide password' : 'Show password'}
                 >
-                  {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showConfirm ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                 </button>
               </div>
             </div>
 
             {/* Password Requirements */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <div id="password-requirements" className="bg-gray-50 border border-gray-200 rounded-lg p-3" aria-live="polite">
               <p className="text-xs font-medium text-gray-700 mb-2">Password requirements:</p>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li className={password.length >= 12 ? 'text-green-600' : ''}>
-                  • At least 12 characters
+              <ul className="text-xs text-gray-600 space-y-1" role="list">
+                <li className={password.length >= 12 ? 'text-green-600' : ''} aria-label={password.length >= 12 ? 'Met: At least 12 characters' : 'Required: At least 12 characters'}>
+                  <span aria-hidden="true">•</span> At least 12 characters
                 </li>
-                <li className={/[A-Z]/.test(password) ? 'text-green-600' : ''}>
-                  • At least one uppercase letter
+                <li className={/[A-Z]/.test(password) ? 'text-green-600' : ''} aria-label={/[A-Z]/.test(password) ? 'Met: At least one uppercase letter' : 'Required: At least one uppercase letter'}>
+                  <span aria-hidden="true">•</span> At least one uppercase letter
                 </li>
-                <li className={/[a-z]/.test(password) ? 'text-green-600' : ''}>
-                  • At least one lowercase letter
+                <li className={/[a-z]/.test(password) ? 'text-green-600' : ''} aria-label={/[a-z]/.test(password) ? 'Met: At least one lowercase letter' : 'Required: At least one lowercase letter'}>
+                  <span aria-hidden="true">•</span> At least one lowercase letter
                 </li>
-                <li className={/[0-9]/.test(password) ? 'text-green-600' : ''}>
-                  • At least one number
+                <li className={/[0-9]/.test(password) ? 'text-green-600' : ''} aria-label={/[0-9]/.test(password) ? 'Met: At least one number' : 'Required: At least one number'}>
+                  <span aria-hidden="true">•</span> At least one number
                 </li>
-                <li className={/[^a-zA-Z0-9]/.test(password) ? 'text-green-600' : ''}>
-                  • At least one special character
+                <li className={/[^a-zA-Z0-9]/.test(password) ? 'text-green-600' : ''} aria-label={/[^a-zA-Z0-9]/.test(password) ? 'Met: At least one special character' : 'Required: At least one special character'}>
+                  <span aria-hidden="true">•</span> At least one special character
                 </li>
               </ul>
             </div>

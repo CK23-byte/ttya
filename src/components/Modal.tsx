@@ -79,31 +79,38 @@ export default function Modal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-message"
+    >
       {/* Modal */}
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl animate-scale-in">
         {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition"
+          aria-label="Close dialog"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5" aria-hidden="true" />
         </button>
 
         {/* Content */}
         <div className="p-6 text-center">
           {/* Icon */}
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-4" aria-hidden="true">
             {getIcon()}
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">
+          <h2 id="modal-title" className="text-2xl font-bold text-gray-900 mb-3">
             {title}
           </h2>
 
           {/* Message */}
-          <p className="text-gray-600 mb-6 whitespace-pre-line">
+          <p id="modal-message" className="text-gray-600 mb-6 whitespace-pre-line">
             {message}
           </p>
 

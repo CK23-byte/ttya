@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Mail, Lock, User, Heart, Gift, ArrowLeft } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { CREDIT_PRICING } from '../types/database'
@@ -22,11 +22,6 @@ const GoogleIcon = () => (
   </svg>
 )
 
-const AppleIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-  </svg>
-)
 
 type AuthMode = 'signin' | 'signup' | 'reset'
 
@@ -38,6 +33,7 @@ interface EmailAuthProps {
 export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
   const { signIn, signUp, signInWithOAuth, resetPassword, isConfigured } = useSupabaseAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const [mode, setMode] = useState<AuthMode>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -56,10 +52,10 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
     if (state?.message) {
       setMessage(state.message)
       setMode('signin') // Switch to sign in mode
-      // Clear the state after reading it
-      window.history.replaceState({}, document.title)
+      // Clear the state after reading it using React Router's navigate
+      navigate(location.pathname, { replace: true, state: null })
     }
-  }, [location])
+  }, [location, navigate])
 
   if (!isConfigured) {
     return (
@@ -174,11 +170,11 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
     setPasswordStrength(null)
   }
 
-  const handleOAuthSignIn = async (provider: 'google' | 'apple') => {
+  const handleOAuthSignIn = async () => {
     setError('')
     setIsLoading(true)
 
-    const { error } = await signInWithOAuth(provider)
+    const { error } = await signInWithOAuth('google')
 
     if (error) {
       setError(error.message)
@@ -253,19 +249,22 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
             {/* Display Name (signup only) */}
             {mode === 'signup' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-2">
                   Name (optional)
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                    <User className="w-5 h-5 text-gray-400" />
+                    <User className="w-5 h-5 text-gray-400" aria-hidden="true" />
                   </div>
                   <input
                     type="text"
+                    id="displayName"
+                    name="displayName"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                     placeholder="Your name"
+                    autoComplete="name"
                   />
                 </div>
               </div>
@@ -273,21 +272,24 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Mail className="w-5 h-5 text-gray-400" />
+                  <Mail className="w-5 h-5 text-gray-400" aria-hidden="true" />
                 </div>
                 <input
                   type="email"
+                  id="email"
+                  name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                   placeholder="your@email.com"
                   required
                   disabled={isLoading}
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -295,28 +297,33 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
             {/* Password (not for reset) */}
             {mode !== 'reset' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                    <Lock className="w-5 h-5 text-gray-400" />
+                    <Lock className="w-5 h-5 text-gray-400" aria-hidden="true" />
                   </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
                     value={password}
                     onChange={(e) => handlePasswordChange(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                     placeholder={mode === 'signup' ? 'Minimum 12 characters' : 'Your password'}
                     required
                     disabled={isLoading}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    aria-describedby={mode === 'signup' && passwordErrors.length > 0 ? 'password-errors' : undefined}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                   </button>
                 </div>
 
@@ -348,10 +355,10 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
 
                     {/* Password Requirements */}
                     {passwordErrors.length > 0 && (
-                      <div className="text-xs text-gray-600 space-y-1">
+                      <div id="password-errors" className="text-xs text-gray-600 space-y-1" role="alert" aria-live="polite">
                         {passwordErrors.map((err, idx) => (
                           <div key={idx} className="flex items-start gap-1.5">
-                            <span className="text-red-500 mt-0.5">•</span>
+                            <span className="text-red-500 mt-0.5" aria-hidden="true">•</span>
                             <span>{err}</span>
                           </div>
                         ))}
@@ -365,21 +372,24 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
             {/* Confirm Password (signup only) */}
             {mode === 'signup' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                    <Lock className="w-5 h-5 text-gray-400" />
+                    <Lock className="w-5 h-5 text-gray-400" aria-hidden="true" />
                   </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    name="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                     placeholder="Repeat your password"
                     required
                     disabled={isLoading}
+                    autoComplete="new-password"
                   />
                 </div>
               </div>
@@ -418,27 +428,17 @@ export default function EmailAuth({ onBack, onSuccess }: EmailAuthProps) {
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3">
+              <div className="mt-6">
                 {/* Google Sign In */}
                 <button
                   type="button"
-                  onClick={() => handleOAuthSignIn('google')}
+                  onClick={handleOAuthSignIn}
                   disabled={isLoading}
-                  className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Sign in with Google"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <GoogleIcon />
-                  <span className="text-sm font-medium text-gray-700">Google</span>
-                </button>
-
-                {/* Apple Sign In */}
-                <button
-                  type="button"
-                  onClick={() => handleOAuthSignIn('apple')}
-                  disabled={isLoading}
-                  className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <AppleIcon />
-                  <span className="text-sm font-medium text-gray-700">Apple</span>
+                  <span className="text-sm font-medium text-gray-700">Continue with Google</span>
                 </button>
               </div>
             </div>

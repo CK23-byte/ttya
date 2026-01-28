@@ -49,14 +49,18 @@ export default function MessageInput({ onSend, disabled }: MessageInputProps) {
           type="button"
           className="p-2 text-gray-500 hover:text-gray-700 transition mb-1"
           disabled={disabled}
+          aria-label="Open emoji picker"
         >
-          <Smile className="w-6 h-6" />
+          <Smile className="w-6 h-6" aria-hidden="true" />
         </button>
 
         {/* Text Input */}
         <div className="flex-1 bg-white rounded-full px-4 py-2 flex items-center">
+          <label htmlFor="messageInput" className="sr-only">Type a message</label>
           <textarea
             ref={textareaRef}
+            id="messageInput"
+            name="messageInput"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -64,6 +68,7 @@ export default function MessageInput({ onSend, disabled }: MessageInputProps) {
             className="flex-1 outline-none resize-none max-h-[100px] text-[15px] leading-relaxed"
             rows={1}
             disabled={disabled}
+            aria-label="Message input"
           />
         </div>
 
@@ -73,16 +78,18 @@ export default function MessageInput({ onSend, disabled }: MessageInputProps) {
             type="submit"
             disabled={disabled}
             className="p-2 bg-whatsapp-teal text-white rounded-full hover:bg-whatsapp-darkgreen transition disabled:opacity-50 mb-1"
+            aria-label="Send message"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-5 h-5" aria-hidden="true" />
           </button>
         ) : (
           <button
             type="button"
             className="p-2 text-gray-500 hover:text-gray-700 transition mb-1"
             disabled={disabled}
+            aria-label="Start voice recording"
           >
-            <Mic className="w-6 h-6" />
+            <Mic className="w-6 h-6" aria-hidden="true" />
           </button>
         )}
       </form>

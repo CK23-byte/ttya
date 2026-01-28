@@ -90,8 +90,10 @@ export default async function handler(
     }
 
     // Deduct credits (using atomic update)
-    const updateField = `${creditType}_credits`
-    const updateData: { [key: string]: number } = { [updateField]: currentCredits - amount }
+    type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
+    const updateData: ProfileUpdate = {
+      [`${creditType}_credits`]: currentCredits - amount
+    } as ProfileUpdate
     const { error: updateError } = await supabase
       .from('profiles')
       .update(updateData)
@@ -105,15 +107,17 @@ export default async function handler(
     }
 
     // Create transaction record
+    type TransactionInsert = Database['public']['Tables']['credit_transactions']['Insert']
+    const transactionData: TransactionInsert = {
+      user_id: userId,
+      amount: -amount, // Negative for usage
+      type: 'usage',
+      credit_type: creditType,
+      description: description || `Used ${amount} ${creditType} credits`
+    }
     const { error: transactionError } = await supabase
       .from('credit_transactions')
-      .insert({
-        user_id: userId,
-        amount: -amount, // Negative for usage
-        type: 'usage' as const,
-        credit_type: creditType,
-        description: description || `Used ${amount} ${creditType} credits`
-      } as any)
+      .insert(transactionData)
 
     if (transactionError) {
       console.error('Failed to create transaction record:', transactionError)
