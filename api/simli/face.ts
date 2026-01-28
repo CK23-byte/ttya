@@ -1,8 +1,15 @@
 /**
  * Vercel Serverless Function: Simli Face Management
  *
- * Endpoint for creating Simli face IDs from uploaded photos.
- * Uses Simli API: POST https://api.simli.ai/generateFaceID
+ * Endpoints:
+ * - POST /api/simli/face - Create a Simli face ID from uploaded photo
+ * - POST /api/simli/face?action=status - Check status of pending face creation
+ *
+ * Uses Simli API:
+ * - POST https://api.simli.ai/generateFaceID
+ * - POST https://api.simli.ai/getRequestStatus
+ *
+ * Note: Face generation is an asynchronous process that can take several hours.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -31,7 +38,12 @@ export default async function handler(
     })
   }
 
+  const action = req.query.action as string
+
   try {
+    if (action === 'status') {
+      return await handleCheckStatus(req, res)
+    }
     return await handleCreateFace(req, res)
   } catch (error) {
     console.error('Simli face endpoint error:', error)
@@ -40,6 +52,63 @@ export default async function handler(
       message: error instanceof Error ? error.message : 'Unknown error'
     })
   }
+}
+
+/**
+ * Check the status of a pending face creation request
+ */
+async function handleCheckStatus(req: VercelRequest, res: VercelResponse) {
+  const { faceId } = req.body
+
+  if (!faceId) {
+    return res.status(400).json({
+      error: 'Missing required field: faceId'
+    })
+  }
+
+  console.log('Checking Simli face status for:', faceId)
+
+  const response = await fetch(`https://api.simli.ai/getRequestStatus?face_id=${encodeURIComponent(faceId)}`, {
+    method: 'POST',
+    headers: {
+      'api-key': SIMLI_API_KEY!,
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('Simli getRequestStatus error:', { status: response.status, error: errorText })
+    return res.status(response.status).json({
+      error: 'Failed to check face status',
+      details: errorText
+    })
+  }
+
+  const data = await response.json()
+  console.log('Simli getRequestStatus response:', JSON.stringify(data, null, 2))
+
+  // Determine if the face is ready
+  const isReady = data.status === 'completed' || data.status === 'ready' || data.state === 'completed'
+  const isProcessing = data.status === 'processing' || data.status === 'pending' || data.state === 'processing'
+  const isFailed = data.status === 'failed' || data.status === 'error' || data.state === 'failed'
+
+  return res.status(200).json({
+    success: true,
+    faceId,
+    status: data.status || data.state || 'unknown',
+    isReady,
+    isProcessing,
+    isFailed,
+    message: isReady
+      ? 'Face is ready for use'
+      : isProcessing
+        ? 'Face is still being processed. This can take several hours.'
+        : isFailed
+          ? 'Face creation failed'
+          : 'Unknown status',
+    fullResponse: data
+  })
 }
 
 async function handleCreateFace(req: VercelRequest, res: VercelResponse) {
@@ -130,13 +199,33 @@ async function handleCreateFace(req: VercelRequest, res: VercelResponse) {
   }
 
   const data = await response.json()
-  console.log('Simli generateFaceID response:', JSON.stringify(data, null, 2))
+  console.log('Simli generateFaceID raw response:', JSON.stringify(data, null, 2))
 
-  const faceId = data.faceId || data.face_id || data.id
-  if (!faceId) {
-    console.error('No face ID in Simli response:', data)
+  // Try various field names that Simli might use for the face ID
+  const faceId = data.faceId || data.face_id || data.id || data.faceID || data.request_id
+
+  // Check if the response indicates the request is being processed asynchronously
+  const isProcessing = data.status === 'processing' || data.status === 'pending' || data.state === 'processing'
+
+  if (!faceId && !isProcessing) {
+    console.error('No face ID in Simli response. Available fields:', Object.keys(data))
     return res.status(500).json({
       error: 'Face created but no ID returned',
+      hint: 'The Simli API response did not contain a face ID in expected fields (faceId, face_id, id, faceID, request_id)',
+      availableFields: Object.keys(data),
+      fullResponse: data
+    })
+  }
+
+  // If still processing, return appropriate status
+  if (isProcessing && !faceId) {
+    console.log('Face creation is processing asynchronously')
+    return res.status(202).json({
+      success: true,
+      processing: true,
+      status: data.status || data.state || 'processing',
+      message: 'Face creation has been submitted and is being processed. This can take several hours.',
+      requestId: data.request_id || data.id,
       fullResponse: data
     })
   }

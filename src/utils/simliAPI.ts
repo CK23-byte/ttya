@@ -3,18 +3,38 @@
  *
  * Client-side wrapper for Simli avatar and streaming API calls.
  * Replaces HeyGen API for video avatar functionality.
+ *
+ * Note: Face generation is an asynchronous process that can take several hours.
  */
 
 import { logger } from './logger'
 
 export interface SimliFaceResponse {
   success: boolean
+  faceId?: string
+  faceName?: string
+  processing?: boolean
+  status?: string
+  message?: string
+  requestId?: string
+}
+
+export interface SimliFaceStatusResponse {
+  success: boolean
   faceId: string
-  faceName: string
+  status: string
+  isReady: boolean
+  isProcessing: boolean
+  isFailed: boolean
+  message: string
 }
 
 /**
  * Create a Simli face ID from a photo URL
+ *
+ * Note: Face creation can take several hours. The response may indicate
+ * that the request is still processing, in which case you should poll
+ * the status using checkSimliFaceStatus().
  */
 export async function createSimliFace(
   photoUrl: string,
@@ -28,6 +48,13 @@ export async function createSimliFace(
     body: JSON.stringify({ photoUrl, faceName })
   })
 
+  // Handle 202 Accepted (processing) as a valid response
+  if (response.status === 202) {
+    const data = await response.json()
+    logger.log('Simli face creation submitted (processing):', data)
+    return data
+  }
+
   if (!response.ok) {
     const error = await response.json()
     logger.error('Simli face creation error:', error)
@@ -36,6 +63,33 @@ export async function createSimliFace(
 
   const data = await response.json()
   logger.log('Simli face created:', data)
+  return data
+}
+
+/**
+ * Check the status of a pending face creation
+ *
+ * Use this to poll for completion when createSimliFace returns a processing status.
+ */
+export async function checkSimliFaceStatus(
+  faceId: string
+): Promise<SimliFaceStatusResponse> {
+  logger.log('Checking Simli face status...', { faceId })
+
+  const response = await fetch('/api/simli/face?action=status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ faceId })
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    logger.error('Simli face status error:', error)
+    throw new Error(error.details || error.error || 'Failed to check face status')
+  }
+
+  const data = await response.json()
+  logger.log('Simli face status:', data)
   return data
 }
 
