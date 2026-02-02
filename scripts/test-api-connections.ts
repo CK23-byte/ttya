@@ -254,63 +254,6 @@ async function testOpenAIAPI(): Promise<TestResult> {
 }
 
 /**
- * Test HeyGen API
- */
-async function testHeyGenAPI(): Promise<TestResult> {
-  const startTime = Date.now()
-  const apiKey = process.env.HEYGEN_API_KEY
-
-  if (!apiKey) {
-    return {
-      service: 'HeyGen API',
-      status: 'skipped',
-      message: 'API key not configured (HEYGEN_API_KEY)',
-    }
-  }
-
-  try {
-    // Test with HeyGen's avatar list endpoint
-    const response = await fetch('https://api.heygen.com/v1/avatar.list', {
-      headers: {
-        'X-Api-Key': apiKey,
-      },
-    })
-
-    const duration = Date.now() - startTime
-
-    if (response.ok) {
-      const data = await response.json()
-      return {
-        service: 'HeyGen API',
-        status: 'success',
-        message: 'Connection successful',
-        details: {
-          avatarsCount: data.data?.avatars?.length || 0,
-          avatars: data.data?.avatars?.map((a: any) => a.avatar_name) || [],
-        },
-        duration,
-      }
-    } else {
-      const error = await response.json()
-      return {
-        service: 'HeyGen API',
-        status: 'failure',
-        message: `API returned ${response.status}: ${error.message || 'Unknown error'}`,
-        details: error,
-        duration,
-      }
-    }
-  } catch (error) {
-    return {
-      service: 'HeyGen API',
-      status: 'failure',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      duration: Date.now() - startTime,
-    }
-  }
-}
-
-/**
  * Test Supabase Connection
  */
 async function testSupabase(): Promise<TestResult> {
@@ -436,7 +379,6 @@ async function runTests() {
     testDIDAPI(),
     testElevenLabsAPI(),
     testOpenAIAPI(),
-    testHeyGenAPI(),
     testSupabase(),
   ]
 

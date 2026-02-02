@@ -17,7 +17,6 @@ export interface Database {
           credits: number
           text_credits: number
           voice_credits: number
-          video_credits: number
           created_at: string
           updated_at: string
         }
@@ -29,7 +28,6 @@ export interface Database {
           credits?: number
           text_credits?: number
           voice_credits?: number
-          video_credits?: number
           created_at?: string
           updated_at?: string
         }
@@ -41,7 +39,6 @@ export interface Database {
           credits?: number
           text_credits?: number
           voice_credits?: number
-          video_credits?: number
           created_at?: string
           updated_at?: string
         }
@@ -52,7 +49,7 @@ export interface Database {
           user_id: string
           amount: number
           type: 'purchase' | 'usage' | 'bonus' | 'refund'
-          credit_type: 'general' | 'text' | 'voice' | 'video'
+          credit_type: 'general' | 'text' | 'voice'
           description: string | null
           stripe_payment_id: string | null
           created_at: string
@@ -131,28 +128,32 @@ export interface CreditPackage {
 }
 
 // Credit pricing (in credits)
+// Based on 300% margin target:
+// - Text: ~$0.0135/msg cost → $0.04/msg price
+// - Voice: ~$0.30/min cost → $1.00/min price
 export const CREDIT_PRICING = {
   // Text message costs based on token usage (approximate)
-  MESSAGE_BASE_COST: 1, // 1 text credit per message minimum
-  TOKEN_COST_PER_1K: 0.5, // 0.5 text credits per 1000 tokens
+  MESSAGE_BASE_COST: 1, // 1 credit per message minimum
+  TOKEN_COST_PER_1K: 0.5, // 0.5 credits per 1000 tokens
 
   // Voice call costs (per minute)
-  VOICE_COST_PER_MINUTE: 2, // 2 voice credits per minute (Whisper STT + GPT-4o + ElevenLabs TTS)
+  // OpenAI Realtime: $0.06 input + $0.24 output = $0.30/min
+  // With 300% margin: $1.00/min → 25 credits/min
+  VOICE_COST_PER_MINUTE: 25, // 25 credits per minute (OpenAI Realtime API)
 
-  // Video call costs (per minute)
-  VIDEO_COST_PER_MINUTE: 5, // 5 video credits per minute (HeyGen streaming + GPT-4o)
+  // Credit conversion
+  CREDITS_PER_VOICE_MINUTE: 25, // 1 voice minute = 25 text credits
 
-  // Credit packages (EUR)
+  // Credit packages (USD)
   PACKAGES: [
-    { credits: 100, price: 5.00, id: 'credits_100' },
-    { credits: 250, price: 10.00, id: 'credits_250', popular: true },
-    { credits: 600, price: 20.00, id: 'credits_600' },
-    { credits: 1500, price: 45.00, id: 'credits_1500' },
+    { credits: 100, price: 9.99, id: 'credits_100' },
+    { credits: 500, price: 39.99, id: 'credits_500', popular: true },
+    { credits: 1000, price: 69.99, id: 'credits_1000' },
+    { credits: 2500, price: 149.99, id: 'credits_2500' },
   ] as CreditPackage[],
 
   // Bonus credits for new users
-  SIGNUP_BONUS: 10, // General credits
-  SIGNUP_BONUS_TEXT: 10, // Text credits
-  SIGNUP_BONUS_VOICE: 5, // Voice credits (2.5 minutes)
-  SIGNUP_BONUS_VIDEO: 2, // Video credits (24 seconds)
+  SIGNUP_BONUS: 50, // Universal credits (50 messages or 2 voice minutes)
+  SIGNUP_BONUS_TEXT: 50, // Text credits
+  SIGNUP_BONUS_VOICE: 50, // Voice credits (same as text, can be used for 2 voice minutes)
 }

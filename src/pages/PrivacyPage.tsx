@@ -129,8 +129,8 @@ export default function PrivacyPage() {
                   <span className="text-orange-600 font-bold text-sm">2</span>
                 </div>
                 <div>
-                  <strong className="block mb-1">Create Living Legacy Avatars</strong>
-                  <span>Generate voice clones, video avatars, and personality-based AI models</span>
+                  <strong className="block mb-1">Create Living Legacy Profiles</strong>
+                  <span>Generate voice clones and personality-based AI models</span>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -239,7 +239,7 @@ export default function PrivacyPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-orange-600 font-bold">•</span>
-                <span><strong>AI Service Providers:</strong> For voice cloning and video avatar generation (data processing agreements in place)</span>
+                <span><strong>AI Service Providers:</strong> For voice cloning and AI chat generation (data processing agreements in place)</span>
               </li>
             </ul>
           </div>

@@ -85,29 +85,34 @@ export default function LoginScreen() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Password Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="masterPassword" className="block text-sm font-medium text-gray-700 mb-2">
                 Master Password
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Lock className="w-5 h-5 text-gray-400" />
+                  <Lock className="w-5 h-5 text-gray-400" aria-hidden="true" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  id="masterPassword"
+                  name="masterPassword"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                   placeholder="Enter your password"
                   required
                   disabled={isLockedOut || isLoading}
+                  autoComplete="current-password"
+                  aria-describedby={error ? 'login-error' : undefined}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   disabled={isLockedOut}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -126,7 +131,7 @@ export default function LoginScreen() {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div id="login-error" className="bg-red-50 border border-red-200 rounded-lg p-3" role="alert">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}

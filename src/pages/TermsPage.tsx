@@ -101,7 +101,7 @@ export default function TermsPage() {
               <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                 <h3 className="font-bold text-gray-900 mb-2">Living Legacy</h3>
                 <p className="text-sm text-gray-700">
-                  Create digital avatars with voice cloning, video avatars, and personality capture to preserve your
+                  Create digital profiles with voice cloning and personality capture to preserve your
                   legacy for future generations.
                 </p>
               </div>
@@ -151,7 +151,7 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-600 font-bold">✗</span>
-                <span>Create avatars or chat models of people without their consent</span>
+                <span>Create AI profiles or chat models of people without their consent</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-red-600 font-bold">✗</span>
@@ -207,7 +207,7 @@ export default function TermsPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-600 font-bold">•</span>
-                  <span>Generate voice clones and video avatars from your recordings</span>
+                  <span>Generate voice clones from your recordings</span>
                 </li>
               </ul>
             </div>
@@ -242,7 +242,7 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-orange-600 font-bold">•</span>
-                <span>All plans include text, voice, and video capabilities</span>
+                <span>All plans include text and voice capabilities</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-orange-600 font-bold">•</span>
@@ -257,11 +257,11 @@ export default function TermsPage() {
             <ul className="space-y-2 text-gray-700">
               <li className="flex items-start gap-2">
                 <span className="text-orange-600 font-bold">•</span>
-                <span>Refunds are available within 14 days of purchase if no avatar creation has begun</span>
+                <span>Refunds are available within 14 days of purchase if no AI model creation has begun</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-orange-600 font-bold">•</span>
-                <span>Once AI model training or avatar creation has started, refunds are not available</span>
+                <span>Once AI model training has started, refunds are not available</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-orange-600 font-bold">•</span>

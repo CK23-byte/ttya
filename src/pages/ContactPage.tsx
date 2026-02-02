@@ -250,23 +250,23 @@ export default function ContactPage() {
 
           <div className="space-y-4">
             <div className="border-b border-gray-200 pb-4">
-              <h3 className="font-semibold text-gray-900 mb-2">How long does it take to create a Living Legacy avatar?</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">How long does it take to create an AI personality?</h3>
               <p className="text-sm text-gray-600">
-                Avatar creation typically takes 2-5 business days, depending on the complexity and amount of content provided.
+                AI personality creation is instant once you upload your conversation exports. Voice cloning may take a few minutes to process.
               </p>
             </div>
 
             <div className="border-b border-gray-200 pb-4">
-              <h3 className="font-semibold text-gray-900 mb-2">Can I update my avatar after it's created?</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Can I update my AI profile after it's created?</h3>
               <p className="text-sm text-gray-600">
-                Yes! All avatars can be updated at any time. The Lifetime plan includes 10 years of annual AI technology updates.
+                Yes! All AI profiles can be updated at any time by adding new conversation exports or voice samples.
               </p>
             </div>
 
             <div className="border-b border-gray-200 pb-4">
               <h3 className="font-semibold text-gray-900 mb-2">How do credits work?</h3>
               <p className="text-sm text-gray-600">
-                Each conversation (chat, voice, or video) uses credits. Credits never expire and can be purchased anytime.
+                Each conversation (chat or voice call) uses credits. Credits never expire and can be purchased anytime.
                 The system will notify you when credits are running low.
               </p>
             </div>
