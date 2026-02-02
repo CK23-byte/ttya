@@ -64,7 +64,7 @@ export interface AuthState {
   lastActivity: number
 }
 
-// Video call types
+// Voice call types
 export type CallState = 'idle' | 'ringing' | 'connected' | 'ended'
 
 export interface CallLog {
