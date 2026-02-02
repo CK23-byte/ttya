@@ -19,7 +19,6 @@ import {
   Phone,
   Smile,
   Paperclip,
-  Mic,
   Plus,
   MessageCircle,
   Home,
@@ -618,7 +617,8 @@ export default function ChatPage() {
                       personalityId: activeConvo.profileId,
                       name: profile.name,
                       relationship: profile.relationship || '',
-                      description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`
+                      description: profile.systemPrompt || `${profile.name} is a ${profile.relationship} with a warm and loving personality.`,
+                      returnTo: `/chat?profile=${activeConvo.profileId}` // Return to this chat after call ends
                     })
                     navigate(`/voice-call?${params.toString()}`)
                   }}
@@ -712,19 +712,18 @@ export default function ChatPage() {
                 className={`flex-1 px-4 py-2.5 ${currentTheme.input} ${currentTheme.text} ${currentTheme.placeholder} ${theme === 'messenger' ? 'rounded-full' : 'rounded-lg'} border ${currentTheme.border} focus:outline-none focus:ring-2`}
                 style={{ '--tw-ring-color': currentTheme.accent } as React.CSSProperties}
               />
-              {messageInput.trim() ? (
-                <button
-                  onClick={handleSendMessage}
-                  className="p-2.5 rounded-full transition text-white"
-                  style={{ backgroundColor: currentTheme.accent }}
-                >
-                  <Send className="w-5 h-5" />
-                </button>
-              ) : (
-                <button className="p-2 hover:bg-black/10 rounded-full transition">
-                  <Mic className={`w-6 h-6 ${currentTheme.textMuted}`} />
-                </button>
-              )}
+              <button
+                onClick={handleSendMessage}
+                disabled={!messageInput.trim()}
+                className={`p-2.5 rounded-full transition text-white ${
+                  messageInput.trim()
+                    ? 'opacity-100 cursor-pointer'
+                    : 'opacity-40 cursor-not-allowed'
+                }`}
+                style={{ backgroundColor: currentTheme.accent }}
+              >
+                <Send className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>

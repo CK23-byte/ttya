@@ -30,6 +30,7 @@ export default function VoiceCallPage() {
   const personalityName = searchParams.get('name') || 'Unknown'
   const personalityRelationship = searchParams.get('relationship') || 'loved one'
   const personalityDescription = searchParams.get('description') || ''
+  const returnTo = searchParams.get('returnTo') || '/dashboard' // Where to navigate after call ends
 
   // Get voice config from URL params
   const voiceType = searchParams.get('voiceType') as 'cloned' | 'standard' | null
@@ -221,7 +222,7 @@ export default function VoiceCallPage() {
   // Handle end call
   const handleEndCall = async () => {
     await endCall()
-    navigate('/dashboard')
+    navigate(returnTo) // Navigate back to chat or dashboard
   }
 
   // Toggle mute
@@ -275,10 +276,10 @@ export default function VoiceCallPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Call Failed</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(returnTo)}
             className="px-6 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-rose-600 transition"
           >
-            Back to Dashboard
+            {returnTo.includes('/chat') ? 'Back to Chat' : 'Back to Dashboard'}
           </button>
         </div>
       </div>

@@ -466,41 +466,38 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Credits Card */}
+        {/* Credits Card - Centralized Universal Credits Display */}
         <div className="bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl shadow-lg p-6 mb-6 text-white">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Coins className="w-8 h-8" />
-              <div>
-                <p className="text-white/80 text-sm">Total Balance</p>
-                <p className="text-3xl font-bold">{credits} credits</p>
+          {/* Main Credits Display - Centered */}
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Coins className="w-6 h-6 text-white/80" />
+              <p className="text-white/80 text-sm font-medium uppercase tracking-wide">Universal Credits</p>
+            </div>
+            <p className="text-5xl font-bold mb-1">{credits.toLocaleString()}</p>
+          </div>
+
+          {/* Credit Equivalents - Explanation */}
+          <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
+            <p className="text-center text-white/90 text-sm mb-3 font-medium">Your credits can be used for:</p>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Text Messages */}
+              <div className="text-center">
+                <p className="text-2xl font-bold">{credits.toLocaleString()}</p>
+                <p className="text-white/80 text-xs mt-1">💬 text messages</p>
+              </div>
+              {/* Voice Minutes */}
+              <div className="text-center">
+                <p className="text-2xl font-bold">{Math.floor(credits / 25)}</p>
+                <p className="text-white/80 text-xs mt-1">🎙️ voice minutes</p>
               </div>
             </div>
-            <Crown className="w-12 h-12 text-white/30" />
-          </div>
-
-          {/* Credit Breakdown */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            {/* Text Credits */}
-            <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{profile?.text_credits || 0}</p>
-              <p className="text-white/80 text-xs mt-1">💬 Text</p>
-              <p className="text-white/60 text-xs">(messages)</p>
+            <div className="mt-4 pt-3 border-t border-white/20 text-center">
+              <p className="text-white/70 text-xs flex items-center justify-center gap-2">
+                <Sparkles className="w-3 h-3" />
+                <span>1 credit = 1 message • 25 credits = 1 voice minute</span>
+              </p>
             </div>
-
-            {/* Voice Credits */}
-            <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{profile?.voice_credits || 0}</p>
-              <p className="text-white/80 text-xs mt-1">🎙️ Voice</p>
-              <p className="text-white/60 text-xs">({Math.floor((profile?.voice_credits || 0) / 25)}min)</p>
-            </div>
-          </div>
-
-          <div className="bg-white/20 rounded-lg p-3 text-sm">
-            <p className="flex items-center gap-2 text-xs">
-              <Sparkles className="w-4 h-4" />
-              <span>Text: 1 credit/msg • Voice: 25 credits/min</span>
-            </p>
           </div>
         </div>
 
@@ -512,7 +509,7 @@ export default function AccountPage() {
           </h3>
 
           <p className="text-sm text-gray-600 mb-4">
-            Purchase voice and video credits for calling features. Click to view all options.
+            Purchase Universal Credits for text chat and voice calls. Click to view all options.
           </p>
 
           <button

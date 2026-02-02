@@ -59,7 +59,7 @@ export interface Database {
           user_id: string
           amount: number
           type: 'purchase' | 'usage' | 'bonus' | 'refund'
-          credit_type?: 'general' | 'text' | 'voice' | 'video'
+          credit_type?: 'general' | 'text' | 'voice'
           description?: string | null
           stripe_payment_id?: string | null
           created_at?: string
@@ -69,7 +69,7 @@ export interface Database {
           user_id?: string
           amount?: number
           type?: 'purchase' | 'usage' | 'bonus' | 'refund'
-          credit_type?: 'general' | 'text' | 'voice' | 'video'
+          credit_type?: 'general' | 'text' | 'voice'
           description?: string | null
           stripe_payment_id?: string | null
           created_at?: string
