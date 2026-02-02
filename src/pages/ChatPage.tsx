@@ -17,7 +17,6 @@ import {
   Search,
   Send,
   Phone,
-  Video,
   Smile,
   Paperclip,
   Mic,
@@ -611,13 +610,6 @@ export default function ChatPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => navigate(`/video?profile=${activeConvo.profileId}`)}
-                  className="p-2 hover:bg-purple-500/20 rounded-full transition group"
-                  title="Start Video Call"
-                >
-                  <Video className={`w-5 h-5 ${currentTheme.textMuted} group-hover:text-purple-500 transition`} />
-                </button>
                 <button
                   onClick={() => {
                     // Navigate to voice call with personality data

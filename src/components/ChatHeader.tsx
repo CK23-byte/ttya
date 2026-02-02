@@ -4,7 +4,7 @@
  * Top bar with avatar, name, and status (WhatsApp style)
  */
 
-import { ArrowLeft, MoreVertical, Phone, Video } from 'lucide-react'
+import { ArrowLeft, MoreVertical, Phone } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface ChatHeaderProps {
@@ -50,18 +50,13 @@ export default function ChatHeader({ name, avatar, isOnline, lastSeen }: ChatHea
 
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate('/video')}
+          onClick={() => navigate('/voice-call')}
           className="p-2 hover:bg-white/10 rounded-full transition"
-        >
-          <Video className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => navigate('/video')}
-          className="p-2 hover:bg-white/10 rounded-full transition"
+          aria-label="Start voice call"
         >
           <Phone className="w-5 h-5" />
         </button>
-        <button className="p-2 hover:bg-white/10 rounded-full transition">
+        <button className="p-2 hover:bg-white/10 rounded-full transition" aria-label="More options">
           <MoreVertical className="w-5 h-5" />
         </button>
       </div>

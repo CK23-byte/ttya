@@ -254,67 +254,6 @@ async function testOpenAIAPI(): Promise<TestResult> {
 }
 
 /**
- * Test Simli API
- */
-async function testSimliAPI(): Promise<TestResult> {
-  const startTime = Date.now()
-  const apiKey = process.env.SIMLI_API_KEY
-
-  if (!apiKey) {
-    return {
-      service: 'Simli API',
-      status: 'skipped',
-      message: 'API key not configured (SIMLI_API_KEY)',
-    }
-  }
-
-  try {
-    // Test Simli API connection
-    const response = await fetch('https://api.simli.ai/startAudioToVideoSession', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        apiKey,
-        faceId: 'tmp9i8bbq7c', // Default test face ID
-      }),
-    })
-
-    const duration = Date.now() - startTime
-
-    if (response.ok) {
-      const data = await response.json()
-      return {
-        service: 'Simli API',
-        status: 'success',
-        message: 'Connection successful',
-        details: {
-          sessionId: data.session_id ? 'Session created' : 'No session',
-        },
-        duration,
-      }
-    } else {
-      const error = await response.json().catch(() => ({}))
-      return {
-        service: 'Simli API',
-        status: 'failure',
-        message: `API returned ${response.status}: ${error.message || 'Unknown error'}`,
-        details: error,
-        duration,
-      }
-    }
-  } catch (error) {
-    return {
-      service: 'Simli API',
-      status: 'failure',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      duration: Date.now() - startTime,
-    }
-  }
-}
-
-/**
  * Test Supabase Connection
  */
 async function testSupabase(): Promise<TestResult> {
@@ -440,7 +379,6 @@ async function runTests() {
     testDIDAPI(),
     testElevenLabsAPI(),
     testOpenAIAPI(),
-    testSimliAPI(),
     testSupabase(),
   ]
 

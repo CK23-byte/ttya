@@ -13,7 +13,6 @@ import {
   MessageCircle,
   Clock,
   Phone,
-  Video,
   Upload,
   CreditCard,
   Crown,
@@ -410,25 +409,15 @@ export default function DashboardPage() {
                       Open Chat
                     </button>
 
-                    {/* Secondary: Voice & Video */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleStartCall(profile)}
-                        className="flex-1 px-3 py-2 bg-green-50 text-green-700 rounded-lg font-medium hover:bg-green-100 transition flex items-center justify-center gap-2 border border-green-200"
-                        title="Start Voice Call (requires voice sample)"
-                      >
-                        <Phone className="w-4 h-4" />
-                        Call
-                      </button>
-                      <button
-                        onClick={() => navigate(`/video?profile=${profile.id}`)}
-                        className="flex-1 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium hover:bg-purple-100 transition flex items-center justify-center gap-2 border border-purple-200"
-                        title="Start Video Call"
-                      >
-                        <Video className="w-4 h-4" />
-                        Video
-                      </button>
-                    </div>
+                    {/* Secondary: Voice Call */}
+                    <button
+                      onClick={() => handleStartCall(profile)}
+                      className="w-full px-3 py-2 bg-green-50 text-green-700 rounded-lg font-medium hover:bg-green-100 transition flex items-center justify-center gap-2 border border-green-200"
+                      title="Start Voice Call (requires voice sample)"
+                    >
+                      <Phone className="w-4 h-4" />
+                      Voice Call
+                    </button>
 
                     {/* Tertiary: Improve Profile */}
                     <button
