@@ -14,7 +14,7 @@ import {
   MessageCircle,
   Sparkles,
   Users,
-  Video,
+  Phone,
   Lock,
   Shield,
   Check,
@@ -199,7 +199,7 @@ export default function LandingPage() {
 
             <p className="text-lg text-gray-600 mb-6 leading-relaxed">
               Upload conversations from WhatsApp, Messenger, Telegram, or any messaging app to recreate the personality of loved ones.
-              Chat, make voice calls, or video call with AI recreations that sound and feel like them. Secure, private, and deeply personal.
+              Chat or make voice calls with AI recreations that sound and feel like them. Secure, private, and deeply personal.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-6">
@@ -380,9 +380,9 @@ export default function LandingPage() {
 
             {/* Story 2: Oma's verhalen voor de volgende generatie */}
             <div className="group">
-              <div className="bg-black rounded-2xl shadow-lg overflow-hidden border-2 border-gray-800 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                {/* Video Call Interface - Messenger Style */}
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white">
+              <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Voice Call Interface */}
+                <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 text-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <img
@@ -394,49 +394,48 @@ export default function LandingPage() {
                     </div>
                     <div className="flex gap-1 items-center">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-xs">02:34</span>
+                      <span className="text-xs">Voice Call • 05:34</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-900 to-slate-900 min-h-[280px] flex flex-col relative overflow-hidden">
-                  {/* Main video frame - Grandma */}
-                  <div className="flex-1 flex items-center justify-center p-6 relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-blue-900/20"></div>
-                    <div className="relative">
-                      {/* Video frame with subtle animation */}
-                      <div className="bg-gradient-to-br from-amber-100 to-rose-100 rounded-2xl p-8 shadow-2xl border-4 border-white/10 animate-pulse" style={{animationDuration: '3s'}}>
-                        <div className="text-center">
-                          <img
-                            src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop&crop=faces"
-                            alt="Grandma Rose on video call"
-                            className="w-24 h-24 rounded-full mx-auto mb-3 object-cover shadow-xl border-4 border-white/30"
-                          />
-                          <div className="bg-white/90 rounded-lg px-4 py-2 text-sm text-gray-800 italic mt-3 max-w-[200px]">
-                            "...and then I would walk to the bakery every morning for fresh bread..."
-                          </div>
-                        </div>
-                      </div>
+                <div className="p-6 min-h-[280px] flex flex-col justify-center items-center">
+                  {/* Profile photo */}
+                  <img
+                    src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop&crop=faces"
+                    alt="Grandma Rose"
+                    className="w-28 h-28 rounded-full mb-4 object-cover shadow-xl border-4 border-purple-400/30"
+                  />
+
+                  <h4 className="text-white font-semibold text-lg mb-1">Grandma Rose</h4>
+                  <p className="text-purple-300 text-sm mb-4">Voice Call Active</p>
+
+                  {/* Audio waveform */}
+                  <div className="w-full mb-3">
+                    <div className="flex items-center justify-center gap-1 h-12">
+                      {[...Array(20)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1 bg-gradient-to-t from-purple-500 to-pink-400 rounded-full animate-pulse"
+                          style={{
+                            height: `${Math.random() * 100 + 20}%`,
+                            animationDelay: `${i * 50}ms`
+                          }}
+                        />
+                      ))}
                     </div>
                   </div>
 
-                  {/* Small self-view in corner */}
-                  <div className="absolute top-4 right-4 w-20 h-28 bg-gray-800 rounded-lg border-2 border-gray-600 flex items-center justify-center shadow-xl">
-                    <div className="text-2xl">👧</div>
-                  </div>
-
-                  {/* Subtitles bar */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-4 py-2 text-center">
-                    <p className="text-white text-xs">
-                      "Grandma, tell me about when you were little! 🏠"
-                    </p>
+                  {/* Speech bubble */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 text-sm text-white/90 text-center border border-white/10">
+                    "...and then I would walk to the bakery every morning for fresh bread. The smell was absolutely divine, sweetheart..."
                   </div>
                 </div>
 
-                <div className="px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 border-t border-blue-700">
+                <div className="px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 border-t border-purple-700">
                   <div className="flex items-center justify-center gap-2">
-                    <Video className="w-4 h-4 text-white" />
-                    <span className="text-xs text-white font-medium">Video Call - Messenger Style</span>
+                    <Phone className="w-4 h-4 text-white" />
+                    <span className="text-xs text-white font-medium">Voice Call with AI Voice Clone</span>
                   </div>
                 </div>
               </div>
@@ -444,7 +443,7 @@ export default function LandingPage() {
               <div className="mt-4 px-2">
                 <h4 className="font-bold text-gray-900 mb-2 text-lg">Stories for the next generation</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Emma (4) will never meet her great-grandmother, but she can still hear her stories, her voice, and her laughter. Grandma's memories live on.
+                  Emma (4) will never meet her great-grandmother, but she can still hear her stories in her own voice. Grandma's memories live on through voice calls.
                 </p>
                 <p className="text-xs text-gray-500 italic">
                   "Stories that connect generations."
@@ -716,29 +715,29 @@ export default function LandingPage() {
                 </ul>
               </div>
 
-              {/* Recorded Conversations */}
+              {/* Voice Recordings */}
               <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center">
-                    <Video className="w-6 h-6 text-white" />
+                    <Phone className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900">Video Recordings</h4>
+                    <h4 className="font-bold text-gray-900">Voice Recordings</h4>
                     <p className="text-sm text-gray-600">Family moments captured</p>
                   </div>
                 </div>
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-                    <span>Family dinners on video</span>
+                    <span>Birthday voice messages</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-                    <span>Birthday messages</span>
+                    <span>Voice notes and recordings</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-                    <span>Random vlogs or home videos</span>
+                    <span>Phone call recordings</span>
                   </li>
                 </ul>
               </div>

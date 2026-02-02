@@ -2,8 +2,8 @@
  * Pricing Page - Subscription Plans & Credit Packs
  *
  * Features:
- * - 4 subscription tiers (Free, Starter, Pro, Premium) for text messaging
- * - Voice & Video credit packs as add-ons
+ * - 4 subscription tiers (Free, Starter, Pro, Premium) for text + voice
+ * - Universal credit packs (can be used for text OR voice)
  * - Monthly/yearly billing toggle
  * - Stripe checkout integration
  */
@@ -404,7 +404,7 @@ export default function PricingPage() {
               Buy Credits On-Demand
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              No subscription? No problem. Purchase universal credits that work for <strong>text chat, voice calls, AND video calls</strong>. Credits never expire.
+              No subscription? No problem. Purchase universal credits that work for <strong>text chat AND voice calls</strong>. Credits never expire.
             </p>
           </div>
 
@@ -480,14 +480,6 @@ export default function PricingPage() {
                   </li>
                   <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-pink-100 text-pink-600'
-                    }`}>
-                      <Crown className="w-3 h-3" />
-                    </div>
-                    <span>Works for video calls</span>
-                  </li>
-                  <li className={`flex items-center gap-2 ${pack.popular || pack.bestValue ? 'text-white/90' : 'text-gray-600'}`}>
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
                       pack.popular || pack.bestValue ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
                     }`}>
                       <Shield className="w-3 h-3" />
@@ -524,7 +516,7 @@ export default function PricingPage() {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
-              💡 <strong>Tip:</strong> Credits can be used across all features. 1 credit = 1 text message, ~12 seconds of voice, or ~12 seconds of video.
+              💡 <strong>Tip:</strong> Credits can be used for both text chat and voice calls. 1 credit = 1 text message OR ~2.4 seconds of voice call time (25 credits = 1 minute). Mix and match however you like - credits never expire!
             </p>
           </div>
         </div>
@@ -572,8 +564,8 @@ export default function PricingPage() {
                 How do subscriptions work?
               </h3>
               <p className="text-gray-600">
-                All plans include unlimited text chat, voice, and video calls with your AI personalities.
-                Higher tiers unlock more profiles and advanced features.
+                All plans include text chat and voice call credits with your AI personalities.
+                Higher tiers unlock more profiles, more credits, and advanced features.
               </p>
             </div>
 

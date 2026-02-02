@@ -426,10 +426,10 @@ Important: You are a digital memory. Be respectful and empathetic.`
                   <ImageIcon className="w-8 h-8 text-orange-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Add Photos for Video Calls
+                  Add Profile Photo
                 </h2>
                 <p className="text-gray-600">
-                  Upload 3-5 photos for better video avatar quality
+                  Upload a photo for this personality's profile
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Optional - you can skip this step
@@ -475,10 +475,10 @@ Important: You are a digital memory. Be respectful and empathetic.`
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-medium text-blue-800 mb-2">
-                  💡 Why multiple photos?
+                  💡 Profile photo tip
                 </p>
                 <p className="text-xs text-blue-700">
-                  Multiple photos of {selectedSender} from different angles help create a more realistic and natural video avatar for video calls. Upload 3-5 clear photos showing the face from different perspectives.
+                  A clear, front-facing photo of {selectedSender} helps you quickly identify this personality in your dashboard and chat list.
                 </p>
               </div>
 

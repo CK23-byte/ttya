@@ -50,39 +50,6 @@ export async function uploadVoiceRecording(
 }
 
 /**
- * Upload video recording to Supabase Storage
- */
-export async function uploadVideoRecording(
-  file: File,
-  userId: string
-): Promise<UploadResult> {
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${userId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
-  const filePath = `video/${fileName}`
-
-  const { data, error } = await supabase.storage
-    .from('living-legacy')
-    .upload(filePath, file, {
-      contentType: file.type,
-      upsert: false,
-    })
-
-  if (error) {
-    throw new Error(`Failed to upload video recording: ${error.message}`)
-  }
-
-  const { data: urlData } = supabase.storage
-    .from('living-legacy')
-    .getPublicUrl(data.path)
-
-  return {
-    path: data.path,
-    publicUrl: urlData.publicUrl,
-    bucket: 'living-legacy',
-  }
-}
-
-/**
  * Upload text content to Supabase Storage
  */
 export async function uploadTextContent(
@@ -116,25 +83,25 @@ export async function uploadTextContent(
 }
 
 /**
- * Upload generated avatar video to storage
+ * Upload photo to Supabase Storage
  */
-export async function uploadGeneratedVideo(
-  videoBlob: Blob,
-  userId: string,
-  messageId: string
+export async function uploadPhoto(
+  file: File,
+  userId: string
 ): Promise<UploadResult> {
-  const fileName = `${userId}/generated/${messageId}_${Date.now()}.mp4`
-  const filePath = `avatars/${fileName}`
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${userId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+  const filePath = `photos/${fileName}`
 
   const { data, error } = await supabase.storage
     .from('living-legacy')
-    .upload(filePath, videoBlob, {
-      contentType: 'video/mp4',
+    .upload(filePath, file, {
+      contentType: file.type,
       upsert: false,
     })
 
   if (error) {
-    throw new Error(`Failed to upload generated video: ${error.message}`)
+    throw new Error(`Failed to upload photo: ${error.message}`)
   }
 
   const { data: urlData } = supabase.storage
@@ -181,7 +148,7 @@ export async function getDownloadUrl(
 /**
  * List all files for a user
  */
-export async function listUserFiles(userId: string, type?: 'voice' | 'video' | 'text') {
+export async function listUserFiles(userId: string, type?: 'voice' | 'text' | 'photos') {
   const prefix = type ? `${type}/${userId}/` : userId
 
   const { data, error } = await supabase.storage

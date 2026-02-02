@@ -157,7 +157,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
               credits: CREDIT_PRICING.SIGNUP_BONUS,
               text_credits: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
               voice_credits: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
-              video_credits: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
             })
             .select()
 
@@ -206,13 +205,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
                 type: 'bonus' as const,
                 credit_type: 'voice' as const,
                 description: 'Voice credits welcome bonus',
-              },
-              {
-                user_id: userId,
-                amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
-                type: 'bonus' as const,
-                credit_type: 'video' as const,
-                description: 'Video credits welcome bonus',
               },
             ]
 
@@ -289,7 +281,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           credits: CREDIT_PRICING.SIGNUP_BONUS,
           text_credits: CREDIT_PRICING.SIGNUP_BONUS_TEXT,
           voice_credits: CREDIT_PRICING.SIGNUP_BONUS_VOICE,
-          video_credits: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
         })
 
       if (profileError) {
@@ -317,13 +308,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             type: 'bonus' as const,
             credit_type: 'voice' as const,
             description: 'Voice credits welcome bonus',
-          },
-          {
-            user_id: data.user.id,
-            amount: CREDIT_PRICING.SIGNUP_BONUS_VIDEO,
-            type: 'bonus' as const,
-            credit_type: 'video' as const,
-            description: 'Video credits welcome bonus',
           },
         ]
 

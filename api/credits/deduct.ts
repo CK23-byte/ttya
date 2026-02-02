@@ -2,7 +2,7 @@
  * Vercel Serverless Function: Deduct Credits
  *
  * Deducts credits from a user's account based on credit type
- * Supports: text, voice, video credits
+ * Supports: text, voice credits
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -15,7 +15,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 interface DeductCreditsRequest {
   userId: string
   amount: number
-  creditType: 'text' | 'voice' | 'video'
+  creditType: 'text' | 'voice'
   description?: string
 }
 
@@ -53,9 +53,9 @@ export default async function handler(
       })
     }
 
-    if (!['text', 'voice', 'video'].includes(creditType)) {
+    if (!['text', 'voice'].includes(creditType)) {
       return res.status(400).json({
-        error: 'Invalid creditType. Must be: text, voice, or video'
+        error: 'Invalid creditType. Must be: text or voice'
       })
     }
 
@@ -65,7 +65,7 @@ export default async function handler(
     // Get current credits
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('text_credits, voice_credits, video_credits')
+      .select('text_credits, voice_credits')
       .eq('id', userId)
       .single()
 

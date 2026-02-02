@@ -492,21 +492,14 @@ export default function AccountPage() {
             <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
               <p className="text-2xl font-bold">{profile?.voice_credits || 0}</p>
               <p className="text-white/80 text-xs mt-1">🎙️ Voice</p>
-              <p className="text-white/60 text-xs">({Math.floor((profile?.voice_credits || 0) / 2)}min)</p>
-            </div>
-
-            {/* Video Credits */}
-            <div className="bg-white/20 rounded-lg p-3 text-center backdrop-blur-sm">
-              <p className="text-2xl font-bold">{profile?.video_credits || 0}</p>
-              <p className="text-white/80 text-xs mt-1">📹 Video</p>
-              <p className="text-white/60 text-xs">({Math.floor((profile?.video_credits || 0) / 5)}min)</p>
+              <p className="text-white/60 text-xs">({Math.floor((profile?.voice_credits || 0) / 25)}min)</p>
             </div>
           </div>
 
           <div className="bg-white/20 rounded-lg p-3 text-sm">
             <p className="flex items-center gap-2 text-xs">
               <Sparkles className="w-4 h-4" />
-              <span>Text: 1 credit/msg • Voice: 2 credits/min • Video: 5 credits/min</span>
+              <span>Text: 1 credit/msg • Voice: 25 credits/min</span>
             </p>
           </div>
         </div>

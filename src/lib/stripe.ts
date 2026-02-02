@@ -16,7 +16,11 @@ export function arePaymentLinksConfigured(): boolean {
   return Object.values(PAYMENT_LINKS).some(link => !!link)
 }
 
-// Subscription Plans Configuration - Text Chat Only
+// Subscription Plans Configuration - Text Chat with Voice Minutes
+// Based on cost analysis:
+// - Text: ~$0.0135/msg cost → $0.04/msg price (300% margin)
+// - Voice: ~$0.30/min cost → $1.00/min price (300% margin)
+// - 1 voice minute = 25 text messages in value
 export const SUBSCRIPTION_PLANS = {
   free: {
     name: 'Free',
@@ -40,11 +44,11 @@ export const SUBSCRIPTION_PLANS = {
     name: 'Starter',
     description: 'Perfect for getting started',
     features: [
-      '1,500 messages per month',
+      '250 messages OR 10 voice minutes/month',
       '3 AI Personalities',
       'All chat themes',
-      'Priority text generation',
       'Upload up to 3 chat archives',
+      'Mix text & voice freely',
     ],
     monthly: {
       price: 9.99,
@@ -61,7 +65,7 @@ export const SUBSCRIPTION_PLANS = {
     description: 'Deep, emotional continuity',
     popular: true,
     features: [
-      '6,000 messages per month',
+      '625 messages OR 25 voice minutes/month',
       '10 AI Personalities',
       'Faster responses',
       'All chat themes',
@@ -82,7 +86,7 @@ export const SUBSCRIPTION_PLANS = {
     name: 'Premium',
     description: 'Closest experience to real life',
     features: [
-      '20,000 messages per month',
+      '1,250 messages OR 50 voice minutes/month',
       'Unlimited AI Personalities',
       'Ultra fast responses',
       'Extended memory model',
@@ -100,77 +104,16 @@ export const SUBSCRIPTION_PLANS = {
   },
 } as const
 
-// Voice Credits (separate from text subscriptions)
-// 1 voice credit = 30 seconds of voice call (2 credits per minute)
-export const VOICE_CREDIT_PACKS = {
-  small: {
-    name: '50 Voice Credits',
-    credits: 50,
-    minutes: 25,
-    price: 5.99,
-    pricePerCredit: 0.12,
-    priceId: 'voice_credits_50',
-  },
-  medium: {
-    name: '100 Voice Credits',
-    credits: 100,
-    minutes: 50,
-    price: 9.99,
-    pricePerCredit: 0.10,
-    popular: true,
-    priceId: 'voice_credits_100',
-  },
-  large: {
-    name: '500 Voice Credits',
-    credits: 500,
-    minutes: 250,
-    price: 39.99,
-    pricePerCredit: 0.08,
-    bestValue: true,
-    priceId: 'voice_credits_500',
-  },
-} as const
-
-// Video Credits (separate from text subscriptions and voice credits)
-// 1 video credit = 12 seconds of video call (5 credits per minute)
-export const VIDEO_CREDIT_PACKS = {
-  small: {
-    name: '50 Video Credits',
-    credits: 50,
-    minutes: 10,
-    price: 19.99,
-    pricePerCredit: 0.40,
-    priceId: 'video_credits_50',
-  },
-  medium: {
-    name: '100 Video Credits',
-    credits: 100,
-    minutes: 20,
-    price: 34.99,
-    pricePerCredit: 0.35,
-    popular: true,
-    priceId: 'video_credits_100',
-  },
-  large: {
-    name: '500 Video Credits',
-    credits: 500,
-    minutes: 100,
-    price: 149.99,
-    pricePerCredit: 0.30,
-    bestValue: true,
-    priceId: 'video_credits_500',
-  },
-} as const
-
-// Universal Credits (can be used for text, voice, AND video)
-// 1 credit = 1 message, 12 seconds of voice, or 12 seconds of video
+// Universal Credits (can be used for text AND voice)
+// 1 credit = 1 text message
+// 25 credits = 1 voice minute
 export const UNIVERSAL_CREDIT_PACKS = {
   small: {
     name: '100 Universal Credits',
     credits: 100,
     price: 9.99,
     pricePerCredit: 0.10,
-    description: 'Perfect for casual use',
+    description: '100 messages OR 4 voice minutes',
     priceId: 'universal_credits_100',
     popular: false,
     bestValue: false,
@@ -182,7 +125,7 @@ export const UNIVERSAL_CREDIT_PACKS = {
     pricePerCredit: 0.08,
     popular: true,
     bestValue: false,
-    description: 'Most popular',
+    description: '500 messages OR 20 voice minutes',
     priceId: 'universal_credits_500',
   },
   large: {
@@ -192,7 +135,7 @@ export const UNIVERSAL_CREDIT_PACKS = {
     pricePerCredit: 0.07,
     popular: false,
     bestValue: true,
-    description: 'Best value',
+    description: '1,000 messages OR 40 voice minutes',
     priceId: 'universal_credits_1000',
   },
   xlarge: {
@@ -200,7 +143,7 @@ export const UNIVERSAL_CREDIT_PACKS = {
     credits: 2500,
     price: 149.99,
     pricePerCredit: 0.06,
-    description: 'Maximum savings',
+    description: '2,500 messages OR 100 voice minutes',
     priceId: 'universal_credits_2500',
     popular: false,
     bestValue: false,
@@ -208,8 +151,6 @@ export const UNIVERSAL_CREDIT_PACKS = {
 } as const
 
 export type PlanType = keyof typeof SUBSCRIPTION_PLANS
-export type VoiceCreditPackType = keyof typeof VOICE_CREDIT_PACKS
-export type VideoCreditPackType = keyof typeof VIDEO_CREDIT_PACKS
 export type UniversalCreditPackType = keyof typeof UNIVERSAL_CREDIT_PACKS
 export type BillingPeriod = 'monthly' | 'yearly'
 
@@ -222,14 +163,6 @@ export const PAYMENT_LINKS: Record<string, string> = {
   pro_yearly: import.meta.env.VITE_STRIPE_PRO_YEARLY_LINK || '',
   premium_monthly: import.meta.env.VITE_STRIPE_PREMIUM_MONTHLY_LINK || '',
   premium_yearly: import.meta.env.VITE_STRIPE_PREMIUM_YEARLY_LINK || '',
-  // Voice Credit Packs
-  voice_credits_50: import.meta.env.VITE_STRIPE_VOICE_CREDITS_50_LINK || '',
-  voice_credits_100: import.meta.env.VITE_STRIPE_VOICE_CREDITS_100_LINK || '',
-  voice_credits_500: import.meta.env.VITE_STRIPE_VOICE_CREDITS_500_LINK || '',
-  // Video Credit Packs
-  video_credits_50: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_50_LINK || '',
-  video_credits_100: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_100_LINK || '',
-  video_credits_500: import.meta.env.VITE_STRIPE_VIDEO_CREDITS_500_LINK || '',
   // Universal Credit Packs
   universal_credits_100: import.meta.env.VITE_STRIPE_UNIVERSAL_CREDITS_100_LINK || '',
   universal_credits_500: import.meta.env.VITE_STRIPE_UNIVERSAL_CREDITS_500_LINK || '',
@@ -260,18 +193,6 @@ export async function redirectToCheckout(priceId: string, userEmail?: string): P
   window.location.href = url.toString()
 }
 
-// Helper to buy voice credits
-export async function buyVoiceCredits(packType: VoiceCreditPackType, userEmail?: string): Promise<void> {
-  const pack = VOICE_CREDIT_PACKS[packType]
-  await redirectToCheckout(pack.priceId, userEmail)
-}
-
-// Helper to buy video credits
-export async function buyVideoCredits(packType: VideoCreditPackType, userEmail?: string): Promise<void> {
-  const pack = VIDEO_CREDIT_PACKS[packType]
-  await redirectToCheckout(pack.priceId, userEmail)
-}
-
 // Helper to buy universal credits
 export async function buyUniversalCredits(packType: UniversalCreditPackType, userEmail?: string): Promise<void> {
   const pack = UNIVERSAL_CREDIT_PACKS[packType]
@@ -288,22 +209,18 @@ Je Stripe API key is geconfigureerd! Nu moet je Payment Links aanmaken:
 Ga naar: https://dashboard.stripe.com/products
 
 **Subscriptions (recurring):**
-- Starter Monthly: $9.99/month
+- Starter Monthly: $9.99/month (250 messages OR 10 voice minutes)
 - Starter Yearly: $99/year
-- Pro Monthly: $24.99/month
+- Pro Monthly: $24.99/month (625 messages OR 25 voice minutes)
 - Pro Yearly: $249/year
-- Premium Monthly: $49.99/month
+- Premium Monthly: $49.99/month (1,250 messages OR 50 voice minutes)
 - Premium Yearly: $499/year
 
-**Voice Credit Packs (one-time):**
-- 50 Voice Credits (25 minutes): $5.99
-- 100 Voice Credits (50 minutes): $9.99
-- 500 Voice Credits (250 minutes): $39.99
-
-**Video Credit Packs (one-time):**
-- 50 Video Credits (10 minutes): $19.99
-- 100 Video Credits (20 minutes): $34.99
-- 500 Video Credits (100 minutes): $149.99
+**Universal Credit Packs (one-time):**
+- 100 Credits: $9.99 (100 messages OR 4 voice minutes)
+- 500 Credits: $39.99 (500 messages OR 20 voice minutes)
+- 1,000 Credits: $69.99 (1,000 messages OR 40 voice minutes)
+- 2,500 Credits: $149.99 (2,500 messages OR 100 voice minutes)
 
 ### Stap 2: Maak Payment Links
 Voor elk product:
@@ -321,15 +238,11 @@ VITE_STRIPE_PRO_YEARLY_LINK=https://buy.stripe.com/xxx
 VITE_STRIPE_PREMIUM_MONTHLY_LINK=https://buy.stripe.com/xxx
 VITE_STRIPE_PREMIUM_YEARLY_LINK=https://buy.stripe.com/xxx
 
-# Voice Credit Packs
-VITE_STRIPE_VOICE_CREDITS_50_LINK=https://buy.stripe.com/xxx
-VITE_STRIPE_VOICE_CREDITS_100_LINK=https://buy.stripe.com/xxx
-VITE_STRIPE_VOICE_CREDITS_500_LINK=https://buy.stripe.com/xxx
-
-# Video Credit Packs
-VITE_STRIPE_VIDEO_CREDITS_50_LINK=https://buy.stripe.com/xxx
-VITE_STRIPE_VIDEO_CREDITS_100_LINK=https://buy.stripe.com/xxx
-VITE_STRIPE_VIDEO_CREDITS_500_LINK=https://buy.stripe.com/xxx
+# Universal Credit Packs
+VITE_STRIPE_UNIVERSAL_CREDITS_100_LINK=https://buy.stripe.com/xxx
+VITE_STRIPE_UNIVERSAL_CREDITS_500_LINK=https://buy.stripe.com/xxx
+VITE_STRIPE_UNIVERSAL_CREDITS_1000_LINK=https://buy.stripe.com/xxx
+VITE_STRIPE_UNIVERSAL_CREDITS_2500_LINK=https://buy.stripe.com/xxx
 \`\`\`
 
 ### Stap 4: Herstart de dev server

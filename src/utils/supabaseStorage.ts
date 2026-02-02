@@ -127,7 +127,7 @@ export async function uploadFileToStorage(
 
 /**
  * Get a signed URL for temporary access to a file (expires in 1 hour)
- * Use this when you need to share files with external services like HeyGen
+ * Use this when you need to share files with external services
  *
  * @param path - The file path in storage
  * @param bucket - Storage bucket name (default: 'user-uploads')

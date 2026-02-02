@@ -98,7 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Get user profile from Supabase
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, voice_credits, video_credits, email')
+        .select('id, credits, voice_credits, email')
         .eq('email', customerEmail)
         .single()
 
@@ -111,7 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Parse metadata from checkout session
       const metadata = session.metadata || {}
-      const creditType = metadata.credit_type as 'voice' | 'video' | undefined
+      const creditType = metadata.credit_type as 'voice' | 'universal' | undefined
       const creditAmount = parseInt(metadata.credit_amount || '0')
 
       if (!creditType || !creditAmount || isNaN(creditAmount)) {
@@ -124,14 +124,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Calculate new credit balance
       const currentCredits = creditType === 'voice'
         ? profile.voice_credits
-        : profile.video_credits
+        : profile.credits
 
       const newCredits = currentCredits + creditAmount
 
-      // Update user credits
+      // Update user credits (universal credits go to main credits pool)
       const updates = creditType === 'voice'
         ? { voice_credits: newCredits }
-        : { video_credits: newCredits }
+        : { credits: newCredits }
 
       const { error: updateError } = await supabase
         .from('profiles')
