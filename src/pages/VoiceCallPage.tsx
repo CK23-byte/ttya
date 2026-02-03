@@ -11,13 +11,14 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Phone, PhoneOff, Mic, MicOff, User, AlertCircle } from 'lucide-react'
+import { Phone, PhoneOff, Mic, MicOff, User, AlertCircle, Settings } from 'lucide-react'
 import { useWebRTC } from '../hooks/useWebRTC'
 import { logger } from '../utils/logger'
 import { useHybridVoice } from '../hooks/useHybridVoice'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import AudioVisualizer from '../components/AudioVisualizer'
 import Modal from '../components/Modal'
+import PermissionModal from '../components/PermissionModal'
 import { CREDIT_PRICING } from '../types/database'
 
 export default function VoiceCallPage() {
@@ -39,6 +40,8 @@ export default function VoiceCallPage() {
 
   const [isMuted, setIsMuted] = useState(false)
   const [showTranscript, setShowTranscript] = useState(true)
+  const [showPermissionModal, setShowPermissionModal] = useState(false)
+  const [permissionDenied, setPermissionDenied] = useState(false)
   const [modal, setModal] = useState<{
     isOpen: boolean
     title: string
@@ -105,7 +108,7 @@ export default function VoiceCallPage() {
   const isSpeaking = useClonedVoice ? hybridState.isSpeaking : webrtcState.isSpeaking
   const isUserSpeaking = useClonedVoice ? hybridState.isListening : webrtcState.isUserSpeaking
 
-  // Check credits and auto-start call on mount
+  // Check credits and show permission modal on mount
   useEffect(() => {
     if (!personalityId) {
       navigate('/dashboard')
@@ -137,13 +140,56 @@ export default function VoiceCallPage() {
       return
     }
 
-    // Start call after brief delay
-    const timer = setTimeout(() => {
-      startCall()
-    }, 500)
+    // Check existing microphone permission
+    const checkExistingPermission = async () => {
+      try {
+        const result = await navigator.permissions.query({ name: 'microphone' as PermissionName })
+        logger.log('Microphone permission status:', result.state)
 
+        if (result.state === 'granted') {
+          // Already have permission, start the call
+          startCall()
+        } else if (result.state === 'denied') {
+          // Permission was denied previously
+          setPermissionDenied(true)
+        } else {
+          // Permission is 'prompt' - show our friendly modal first
+          setShowPermissionModal(true)
+        }
+      } catch {
+        // Permissions API not supported, show our modal anyway
+        setShowPermissionModal(true)
+      }
+    }
+
+    const timer = setTimeout(checkExistingPermission, 300)
     return () => clearTimeout(timer)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle permission allow
+  const handlePermissionAllow = async () => {
+    setShowPermissionModal(false)
+
+    try {
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+      // Got permission, stop the test stream
+      stream.getTracks().forEach(track => track.stop())
+
+      // Now start the actual call
+      startCall()
+    } catch (error) {
+      logger.error('Microphone permission denied:', error)
+      setPermissionDenied(true)
+    }
+  }
+
+  // Handle permission cancel
+  const handlePermissionCancel = () => {
+    setShowPermissionModal(false)
+    navigate(returnTo)
+  }
 
   // Track call duration and deduct credits
   useEffect(() => {
@@ -263,6 +309,47 @@ export default function VoiceCallPage() {
       default:
         return `${modePrefix}Initializing...`
     }
+  }
+
+  // Permission denied state
+  if (permissionDenied) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MicOff className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Microphone Access Denied</h2>
+          <p className="text-gray-600 mb-4">
+            To make voice calls, you need to allow microphone access.
+          </p>
+          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+            <p className="text-sm font-medium text-gray-700 mb-2">To enable microphone:</p>
+            <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+              <li>Click the lock/info icon in your browser address bar</li>
+              <li>Find "Microphone" in the permissions list</li>
+              <li>Change it from "Block" to "Allow"</li>
+              <li>Refresh this page and try again</li>
+            </ol>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate(returnTo)}
+              className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-rose-600 transition flex items-center justify-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Error state
@@ -418,6 +505,14 @@ export default function VoiceCallPage() {
         title={modal.title}
         message={modal.message}
         type={modal.type}
+      />
+
+      {/* Permission Request Modal */}
+      <PermissionModal
+        isOpen={showPermissionModal}
+        permissionType="microphone"
+        onAllow={handlePermissionAllow}
+        onCancel={handlePermissionCancel}
       />
     </div>
   )
