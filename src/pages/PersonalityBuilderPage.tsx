@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Upload, User, Check, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, Upload, User, Check, Image as ImageIcon, MessageCircle, MousePointerClick, Share, ImageOff, Save, ArrowUp, Lightbulb, PartyPopper } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { parseWhatsAppExport, getUniqueSenders, filterBySender } from '../utils/whatsappParser'
@@ -276,7 +276,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                       <p className="font-semibold text-gray-900 mb-1">Open WhatsApp</p>
                       <p className="text-sm text-gray-600">Go to the chat with the person you want to create a profile for</p>
                     </div>
-                    <div className="text-2xl">💬</div>
+                    <MessageCircle className="w-6 h-6 text-green-600" />
                   </div>
 
                   {/* Step 2 */}
@@ -288,7 +288,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                       <p className="font-semibold text-gray-900 mb-1">Tap the name</p>
                       <p className="text-sm text-gray-600">At the top of the screen, tap the name or group name</p>
                     </div>
-                    <div className="text-2xl">👆</div>
+                    <MousePointerClick className="w-6 h-6 text-green-600" />
                   </div>
 
                   {/* Step 3 */}
@@ -300,7 +300,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                       <p className="font-semibold text-gray-900 mb-1">Scroll down</p>
                       <p className="text-sm text-gray-600">Look for and tap <span className="font-mono bg-green-100 px-2 py-0.5 rounded">"Export chat"</span> of <span className="font-mono bg-green-100 px-2 py-0.5 rounded">"Export chat"</span></p>
                     </div>
-                    <div className="text-2xl">📤</div>
+                    <Share className="w-6 h-6 text-green-600" />
                   </div>
 
                   {/* Step 4 */}
@@ -312,7 +312,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                       <p className="font-semibold text-gray-900 mb-1">Choose "Without media"</p>
                       <p className="text-sm text-gray-600">Select <span className="font-semibold">"Without media"</span> for faster upload (photos and videos not needed)</p>
                     </div>
-                    <div className="text-2xl">🚫📷</div>
+                    <ImageOff className="w-6 h-6 text-green-600" />
                   </div>
 
                   {/* Step 5 */}
@@ -324,7 +324,7 @@ Important: You are a digital memory. Be respectful and empathetic.`
                       <p className="font-semibold text-gray-900 mb-1">Save the file</p>
                       <p className="text-sm text-gray-600">The .txt file is saved to your Downloads folder or you can share it directly</p>
                     </div>
-                    <div className="text-2xl">💾</div>
+                    <Save className="w-6 h-6 text-green-600" />
                   </div>
 
                   {/* Step 6 */}
@@ -336,13 +336,14 @@ Important: You are a digital memory. Be respectful and empathetic.`
                       <p className="font-semibold text-gray-900 mb-1">Upload here</p>
                       <p className="text-sm text-gray-600">Click the upload field above and select the .txt file</p>
                     </div>
-                    <div className="text-2xl">⬆️</div>
+                    <ArrowUp className="w-6 h-6 text-green-600" />
                   </div>
                 </div>
 
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
-                  <p className="text-xs text-amber-800">
-                    <span className="font-semibold">💡 Tip:</span> The file is usually named something like <span className="font-mono bg-amber-100 px-1 rounded">"WhatsApp Chat with [Name].txt"</span>
+                  <p className="text-xs text-amber-800 flex items-start gap-1">
+                    <Lightbulb className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <span><span className="font-semibold">Tip:</span> The file is usually named something like <span className="font-mono bg-amber-100 px-1 rounded">"WhatsApp Chat with [Name].txt"</span></span>
                   </p>
                 </div>
               </div>
@@ -474,8 +475,8 @@ Important: You are a digital memory. Be respectful and empathetic.`
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-blue-800 mb-2">
-                  💡 Profile photo tip
+                <p className="text-sm font-medium text-blue-800 mb-2 flex items-center gap-1">
+                  <Lightbulb className="w-4 h-4" /> Profile photo tip
                 </p>
                 <p className="text-xs text-blue-700">
                   A clear, front-facing photo of {selectedSender} helps you quickly identify this personality in your dashboard and chat list.
@@ -525,8 +526,8 @@ Important: You are a digital memory. Be respectful and empathetic.`
               <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
                 <Check className="w-10 h-10 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800">
-                Profile Created! 🎉
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
+                Profile Created! <PartyPopper className="w-6 h-6 text-amber-500" />
               </h2>
               <p className="text-gray-600">
                 You can now chat with {selectedSender}

@@ -58,10 +58,17 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       // For Supabase users without encryption key: give default free plan
       // But check if they have a custom profile_limit in their profile
       if (!encryptionKey && user) {
+        // Wait for profile to be loaded from Supabase before reading profile_limit
+        // If profile hasn't loaded yet, keep in loading state - effect will re-run when it loads
+        if (!supabaseProfile) {
+          logger.log('Supabase user detected - waiting for profile to load...')
+          return
+        }
+
         logger.log('Supabase user detected - providing default free plan')
 
         // Check if user has custom profile limit in Supabase profile
-        const customLimit = (supabaseProfile as any)?.profile_limit
+        const customLimit = supabaseProfile.profile_limit
 
         const subscriptionWithLimit = {
           ...DEFAULT_SUBSCRIPTION,
