@@ -303,7 +303,7 @@ export default function DashboardPage() {
                     {subscription.plan === 'pro' && <Crown className="w-4 h-4 text-orange-500" />}
                     {subscription.plan === 'lifetime' && <Crown className="w-4 h-4 text-purple-500" />}
                     <span className="text-sm font-semibold text-gray-900">
-                      {subscription.plan === 'free' && `Free Plan (${profiles.length}/1)`}
+                      {subscription.plan === 'free' && `Free Plan (${profiles.length}/${subscription.profileLimit})`}
                       {subscription.plan === 'pro' && 'Pro Plan'}
                       {subscription.plan === 'lifetime' && 'Lifetime Access'}
                     </span>
