@@ -17,6 +17,7 @@ export interface Database {
           credits: number
           text_credits: number
           voice_credits: number
+          profile_limit: number | null // Custom profile limit (null = use default)
           created_at: string
           updated_at: string
         }
@@ -28,6 +29,7 @@ export interface Database {
           credits?: number
           text_credits?: number
           voice_credits?: number
+          profile_limit?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -39,6 +41,7 @@ export interface Database {
           credits?: number
           text_credits?: number
           voice_credits?: number
+          profile_limit?: number | null
           created_at?: string
           updated_at?: string
         }

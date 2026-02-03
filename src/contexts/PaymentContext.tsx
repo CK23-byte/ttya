@@ -48,7 +48,7 @@ const DEFAULT_SUBSCRIPTION: SubscriptionStatus = {
 
 export function PaymentProvider({ children }: { children: ReactNode }) {
   const { encryptionKey } = useAuth()
-  const { user } = useSupabaseAuth()
+  const { user, profile: supabaseProfile } = useSupabaseAuth()
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -56,9 +56,20 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadSubscription = async () => {
       // For Supabase users without encryption key: give default free plan
+      // But check if they have a custom profile_limit in their profile
       if (!encryptionKey && user) {
         logger.log('Supabase user detected - providing default free plan')
-        setSubscription(DEFAULT_SUBSCRIPTION)
+
+        // Check if user has custom profile limit in Supabase profile
+        const customLimit = (supabaseProfile as any)?.profile_limit
+
+        const subscriptionWithLimit = {
+          ...DEFAULT_SUBSCRIPTION,
+          profileLimit: customLimit && customLimit > 0 ? customLimit : DEFAULT_SUBSCRIPTION.profileLimit
+        }
+
+        logger.log('Profile limit:', subscriptionWithLimit.profileLimit, '(custom:', customLimit, ')')
+        setSubscription(subscriptionWithLimit)
         setIsLoading(false)
         return
       }
@@ -99,7 +110,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
     }
 
     loadSubscription()
-  }, [encryptionKey, user])
+  }, [encryptionKey, user, supabaseProfile])
 
   const updateSubscription = async (plan: SubscriptionPlan) => {
     if (!encryptionKey) return
