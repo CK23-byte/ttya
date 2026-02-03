@@ -24,6 +24,8 @@ import {
   Check,
   X,
   Camera,
+  MessageCircle,
+  Mic,
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import Header from '../components/Header'
@@ -484,12 +486,12 @@ export default function AccountPage() {
               {/* Text Messages */}
               <div className="text-center">
                 <p className="text-2xl font-bold">{credits.toLocaleString()}</p>
-                <p className="text-white/80 text-xs mt-1">💬 text messages</p>
+                <p className="text-white/80 text-xs mt-1 flex items-center justify-center gap-1"><MessageCircle className="w-3 h-3" /> text messages</p>
               </div>
               {/* Voice Minutes */}
               <div className="text-center">
                 <p className="text-2xl font-bold">{Math.floor(credits / 25)}</p>
-                <p className="text-white/80 text-xs mt-1">🎙️ voice minutes</p>
+                <p className="text-white/80 text-xs mt-1 flex items-center justify-center gap-1"><Mic className="w-3 h-3" /> voice minutes</p>
               </div>
             </div>
             <div className="mt-4 pt-3 border-t border-white/20 text-center">

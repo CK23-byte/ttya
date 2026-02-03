@@ -3,7 +3,7 @@
  */
 
 import { useNavigate } from 'react-router-dom'
-import { Heart, ArrowLeft, Shield, Lock, Eye, UserCheck, Database, FileText } from 'lucide-react'
+import { Heart, ArrowLeft, Shield, Lock, Eye, UserCheck, Database, FileText, Check } from 'lucide-react'
 
 export default function PrivacyPage() {
   const navigate = useNavigate()
@@ -253,27 +253,27 @@ export default function PrivacyPage() {
             <p className="text-gray-700 mb-4">You have the right to:</p>
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-start gap-2">
-                <span className="text-orange-600 font-bold">✓</span>
+                <Check className="w-5 h-5 text-orange-600 flex-shrink-0" />
                 <span><strong>Access:</strong> Request a copy of all personal data we hold about you</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-orange-600 font-bold">✓</span>
+                <Check className="w-5 h-5 text-orange-600 flex-shrink-0" />
                 <span><strong>Correction:</strong> Request corrections to inaccurate or incomplete data</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-orange-600 font-bold">✓</span>
+                <Check className="w-5 h-5 text-orange-600 flex-shrink-0" />
                 <span><strong>Deletion:</strong> Request deletion of your data ("right to be forgotten")</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-orange-600 font-bold">✓</span>
+                <Check className="w-5 h-5 text-orange-600 flex-shrink-0" />
                 <span><strong>Portability:</strong> Receive your data in a machine-readable format</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-orange-600 font-bold">✓</span>
+                <Check className="w-5 h-5 text-orange-600 flex-shrink-0" />
                 <span><strong>Object:</strong> Object to certain processing of your data</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-orange-600 font-bold">✓</span>
+                <Check className="w-5 h-5 text-orange-600 flex-shrink-0" />
                 <span><strong>Withdraw Consent:</strong> Withdraw consent for data processing at any time</span>
               </li>
             </ul>

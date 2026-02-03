@@ -23,7 +23,8 @@ import {
   Crown,
   Upload,
   Brain,
-  Coins
+  Coins,
+  Lightbulb
 } from 'lucide-react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import {
@@ -515,8 +516,9 @@ export default function PricingPage() {
           </div>
 
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-600">
-              💡 <strong>Tip:</strong> Credits can be used for both text chat and voice calls. 1 credit = 1 text message OR ~2.4 seconds of voice call time (25 credits = 1 minute). Mix and match however you like - credits never expire!
+            <p className="text-sm text-gray-600 flex items-start gap-2">
+              <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <span><strong>Tip:</strong> Credits can be used for both text chat and voice calls. 1 credit = 1 text message OR ~2.4 seconds of voice call time (25 credits = 1 minute). Mix and match however you like - credits never expire!</span>
             </p>
           </div>
         </div>

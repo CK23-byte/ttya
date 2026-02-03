@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, Check } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseAuth } from '../contexts/SupabaseAuthContext'
 import { setSecure, getSecure } from '../utils/secureStorage'
@@ -181,11 +181,11 @@ export default function MemoriesPage() {
           <h3 className="font-semibold text-purple-900 mb-2">
             Privacy & Beveiliging
           </h3>
-          <ul className="text-sm text-purple-800 space-y-1">
-            <li>✓ Alle bestanden worden alleen lokaal verwerkt</li>
-            <li>✓ Niets wordt naar externe servers gestuurd</li>
-            <li>✓ Data wordt versleuteld opgeslagen op je apparaat</li>
-            <li>✓ Je hebt volledige controle over je gegevens</li>
+          <ul className="text-sm text-purple-800 space-y-2">
+            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600" /> Alle bestanden worden alleen lokaal verwerkt</li>
+            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600" /> Niets wordt naar externe servers gestuurd</li>
+            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600" /> Data wordt versleuteld opgeslagen op je apparaat</li>
+            <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600" /> Je hebt volledige controle over je gegevens</li>
           </ul>
         </div>
       </div>

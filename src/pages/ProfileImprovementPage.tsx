@@ -2,10 +2,9 @@
  * Profile Improvement Page
  *
  * Allows users to enhance personality profiles by adding:
- * - Text notes and memories
+ * - Text notes and memories (from manual input or chat exports)
  * - Voice samples (for voice cloning)
  * - Photos (profile picture)
- * - Videos (reference material)
  *
  * Shows profile completeness indicator (but everything is optional)
  */
@@ -18,7 +17,6 @@ import {
   FileText,
   Mic,
   Image as ImageIcon,
-  Video as VideoIcon,
   Upload,
   Check,
   X,
@@ -133,7 +131,6 @@ export default function ProfileImprovementPage() {
   const chatFileInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const profilePhotoInputRef = useRef<HTMLInputElement>(null)
-  const videoInputRef = useRef<HTMLInputElement>(null)
   const voiceSectionRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -318,10 +315,9 @@ export default function ProfileImprovementPage() {
     let score = 0
     const weights = {
       basic: 20, // Name, relationship (always filled)
-      text: 20,
-      voice: 30,
-      photos: 15,
-      videos: 15
+      text: 25,
+      voice: 35, // Voice is most important for calls
+      photos: 20
     }
 
     // Basic profile info (always 20%)
@@ -340,11 +336,6 @@ export default function ProfileImprovementPage() {
     // Photos
     if (profileData.photos.length > 0) {
       score += weights.photos
-    }
-
-    // Videos
-    if (profileData.videos.length > 0) {
-      score += weights.videos
     }
 
     return Math.min(100, score)
@@ -447,13 +438,12 @@ export default function ProfileImprovementPage() {
           showModal('No Messages Found', 'No messages found in the file. Please check the file format.', 'warning')
         }
       } else if (file.name.endsWith('.zip')) {
-        // Handle ZIP files with text, photos, and videos
+        // Handle ZIP files with text and photos
         const zip = new JSZip()
         const zipContents = await zip.loadAsync(file)
 
         let textMessages: string[] = []
         let photoCount = 0
-        let videoCount = 0
 
         // Process all files in ZIP
         for (const [filename, zipEntry] of Object.entries(zipContents.files)) {
@@ -488,35 +478,11 @@ export default function ProfileImprovementPage() {
             } catch (error) {
               logger.error('Error uploading photo from ZIP:', error)
             }
-          } else if (filename.match(/\.(mp4|mov|avi|webm|mkv)$/i)) {
-            // Extract and upload videos
-            const blob = await zipEntry.async('blob')
-            const videoFile = new File([blob], filename, { type: `video/${filename.split('.').pop()}` })
-
-            try {
-              const { publicUrl, path } = await uploadFileToStorage(
-                videoFile,
-                'user-uploads',
-                `profiles/${profile.id}/videos`
-              )
-
-              const id = `video_${Date.now()}_${Math.random()}`
-              setProfileData(prev => ({
-                ...prev,
-                videos: [
-                  ...prev.videos,
-                  { id, url: publicUrl, name: filename, storagePath: path }
-                ]
-              }))
-              videoCount++
-            } catch (error) {
-              logger.error('Error uploading video from ZIP:', error)
-            }
           }
         }
 
         // Update text notes and archive metadata
-        if (textMessages.length > 0 || photoCount > 0 || videoCount > 0) {
+        if (textMessages.length > 0 || photoCount > 0) {
           // Create archive metadata
           const archiveMetadata: ChatArchive = {
             id: `archive_${Date.now()}`,
@@ -536,7 +502,7 @@ export default function ProfileImprovementPage() {
         // Show summary
         showModal(
           'ZIP Import Successful',
-          `Successfully imported from ZIP:\n- ${textMessages.length} text messages\n- ${photoCount} photos\n- ${videoCount} videos`,
+          `Successfully imported from ZIP:\n- ${textMessages.length} text messages\n- ${photoCount} photos`,
           'success'
         )
       } else {
@@ -850,46 +816,6 @@ export default function ProfileImprovementPage() {
     }
   }
 
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !profile) return
-
-    try {
-      logger.log('Uploading video to Supabase Storage...', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      })
-
-      // Upload to Supabase Storage
-      const { publicUrl, path } = await uploadFileToStorage(
-        file,
-        'user-uploads',
-        `profiles/${profile.id}/videos`
-      )
-
-      const id = `video_${Date.now()}`
-
-      setProfileData(prev => ({
-        ...prev,
-        videos: [
-          ...prev.videos,
-          {
-            id,
-            url: publicUrl,
-            name: file.name,
-            storagePath: path // Store path for deletion
-          }
-        ]
-      }))
-
-      logger.log('Video uploaded successfully:', publicUrl)
-    } catch (error) {
-      logger.error('Error uploading video:', error)
-      showModal('Upload Failed', 'Failed to upload video. Please try again.', 'error')
-    }
-  }
-
   const handleProfileNameSave = async () => {
     if (!tempProfileName.trim() || !profile) return
 
@@ -991,13 +917,6 @@ export default function ProfileImprovementPage() {
     }))
   }
 
-  const handleDeleteVideo = (id: string) => {
-    setProfileData(prev => ({
-      ...prev,
-      videos: prev.videos.filter(v => v.id !== id)
-    }))
-  }
-
   const handleDeleteChatArchive = (id: string) => {
     setProfileData(prev => ({
       ...prev,
@@ -1022,17 +941,6 @@ export default function ProfileImprovementPage() {
       ...prev,
       photos: prev.photos.map(p =>
         p.id === id ? { ...p, name: newName } : p
-      )
-    }))
-    setEditingItemId(null)
-    setEditingName('')
-  }
-
-  const handleRenameVideo = (id: string, newName: string) => {
-    setProfileData(prev => ({
-      ...prev,
-      videos: prev.videos.map(v =>
-        v.id === id ? { ...v, name: newName } : v
       )
     }))
     setEditingItemId(null)
@@ -1414,8 +1322,8 @@ export default function ProfileImprovementPage() {
                         <li>Upload the exported file</li>
                       </ol>
 
-                      <p className="mt-3 text-xs text-gray-500">
-                        💡 ZIP files can contain text, photos, and videos - all will be imported automatically!
+                      <p className="mt-3 text-xs text-gray-500 flex items-start gap-1">
+                        <HelpCircle className="w-3 h-3 mt-0.5 flex-shrink-0" /> ZIP files can contain text and photos - all will be imported automatically!
                       </p>
                     </div>
                     <button
@@ -1698,13 +1606,16 @@ export default function ProfileImprovementPage() {
                     }`}
                   >
                     <div className="text-left">
-                      <p className="font-semibold text-gray-900">🎭 Cloned Voice</p>
+                      <div className="flex items-center gap-2">
+                        <Mic className="w-5 h-5 text-purple-500" />
+                        <p className="font-semibold text-gray-900">Cloned Voice</p>
+                      </div>
                       <p className="text-xs text-gray-600 mt-1">
                         Clone the voice for a more personalized experience
                       </p>
                       {profileData.voiceConfig?.type === 'cloned' && profileData.voiceConfig.clonedVoiceName && (
-                        <p className="text-xs text-purple-600 mt-2 font-medium">
-                          ✓ {profileData.voiceConfig.clonedVoiceName}
+                        <p className="text-xs text-purple-600 mt-2 font-medium flex items-center gap-1">
+                          <Check className="w-3 h-3" /> {profileData.voiceConfig.clonedVoiceName}
                         </p>
                       )}
                     </div>
@@ -1719,7 +1630,10 @@ export default function ProfileImprovementPage() {
                     }`}
                   >
                     <div className="text-left">
-                      <p className="font-semibold text-gray-900">🔊 Standard Voice</p>
+                      <div className="flex items-center gap-2">
+                        <Play className="w-5 h-5 text-blue-500" />
+                        <p className="font-semibold text-gray-900">Standard Voice</p>
+                      </div>
                       <p className="text-xs text-gray-600 mt-1">
                         Use preset AI voices
                       </p>
@@ -1747,7 +1661,7 @@ export default function ProfileImprovementPage() {
                       >
                         {isCloningVoice ? (
                           <>
-                            <span className="animate-spin">⏳</span>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             Cloning Voice...
                           </>
                         ) : (
@@ -1758,13 +1672,13 @@ export default function ProfileImprovementPage() {
                         )}
                       </button>
                       {profileData.voiceSamples.length === 0 && (
-                        <p className="text-xs text-purple-600">
-                          ⚠️ Please record or upload a voice sample first
+                        <p className="text-xs text-purple-600 flex items-center gap-1">
+                          <HelpCircle className="w-3 h-3" /> Please record or upload a voice sample first
                         </p>
                       )}
                       {cloneError && (
-                        <p className="text-xs text-red-600">
-                          ❌ Error: {cloneError}
+                        <p className="text-xs text-red-600 flex items-center gap-1">
+                          <X className="w-3 h-3" /> Error: {cloneError}
                         </p>
                       )}
                     </>
@@ -1802,8 +1716,8 @@ export default function ProfileImprovementPage() {
                     <option value="nova">Nova (Female, Energetic)</option>
                     <option value="shimmer">Shimmer (Soft Female)</option>
                   </select>
-                  <p className="text-xs text-blue-700">
-                    💡 These are preset AI voices. No voice cloning required.
+                  <p className="text-xs text-blue-700 flex items-center gap-1">
+                    <HelpCircle className="w-3 h-3" /> These are preset AI voices. No voice cloning required.
                   </p>
                 </div>
               )}
@@ -1931,88 +1845,6 @@ export default function ProfileImprovementPage() {
                     </div>
                     )
                   })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Videos */}
-          <div className="bg-white rounded-2xl p-6 shadow-md">
-            <div className="flex items-center gap-3 mb-4">
-              <VideoIcon className="w-6 h-6 text-purple-500" />
-              <h2 className="text-xl font-bold text-gray-900">Videos</h2>
-            </div>
-
-            <div className="space-y-4">
-              <button
-                onClick={() => videoInputRef.current?.click()}
-                className="w-full px-4 py-3 bg-purple-50 text-purple-700 rounded-lg font-medium hover:bg-purple-100 transition border border-purple-200 flex items-center justify-center gap-2"
-              >
-                <Upload className="w-5 h-5" />
-                Upload Video
-              </button>
-              <input
-                ref={videoInputRef}
-                type="file"
-                accept="video/*"
-                onChange={handleVideoUpload}
-                className="hidden"
-              />
-
-              {profileData.videos.length > 0 && (
-                <div className="space-y-3">
-                  {profileData.videos.map((video) => (
-                    <div
-                      key={video.id}
-                      className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100"
-                    >
-                      <VideoIcon className="w-5 h-5 text-purple-500" />
-                      <div className="flex-1">
-                        {editingItemId === video.id ? (
-                          <input
-                            type="text"
-                            value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleRenameVideo(video.id, editingName)
-                              if (e.key === 'Escape') {
-                                setEditingItemId(null)
-                                setEditingName('')
-                              }
-                            }}
-                            onBlur={() => {
-                              if (editingName.trim()) handleRenameVideo(video.id, editingName)
-                              else {
-                                setEditingItemId(null)
-                                setEditingName('')
-                              }
-                            }}
-                            className="w-full px-2 py-1 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            autoFocus
-                          />
-                        ) : (
-                          <p className="font-medium text-gray-700">{video.name}</p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => {
-                          setEditingItemId(video.id)
-                          setEditingName(video.name)
-                        }}
-                        className="text-gray-500 hover:text-purple-600 transition"
-                        title="Rename"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteVideo(video.id)}
-                        className="text-red-500 hover:text-red-700 transition"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
