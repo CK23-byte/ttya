@@ -46,12 +46,22 @@ interface VoiceConfig {
   standardVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' // Standard voice (if type is 'standard')
 }
 
+// Chat archive metadata
+interface ChatArchive {
+  id: string
+  name: string
+  size: number
+  uploadedAt: string
+  messageCount: number
+}
+
 // Storage interface (what gets saved - with base64)
 interface StoredProfileData {
   textNotes: string[]
   voiceSamples: { id: string; base64Data: string; duration: number; name: string; mimeType: string }[]
   photos: { id: string; url: string; name: string; storagePath?: string }[]
   videos: { id: string; url: string; name: string; storagePath?: string }[]
+  chatArchives?: ChatArchive[] // Metadata about uploaded chat files
   voiceConfig?: VoiceConfig // Voice configuration for calls
 }
 
@@ -61,6 +71,7 @@ interface ProfileData {
   voiceSamples: { id: string; blob: Blob; duration: number; name: string }[]
   photos: { id: string; url: string; name: string; storagePath?: string }[]
   videos: { id: string; url: string; name: string; storagePath?: string }[]
+  chatArchives: ChatArchive[] // Metadata about uploaded chat files
   voiceConfig?: VoiceConfig // Voice configuration for calls
 }
 
@@ -77,6 +88,7 @@ export default function ProfileImprovementPage() {
     voiceSamples: [],
     photos: [],
     videos: [],
+    chatArchives: [],
     voiceConfig: {
       type: 'standard',
       standardVoice: 'alloy'
@@ -91,6 +103,7 @@ export default function ProfileImprovementPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isCloningVoice, setIsCloningVoice] = useState(false)
   const [cloneError, setCloneError] = useState<string | null>(null)
+  const [uploadingPhotos, setUploadingPhotos] = useState<string[]>([]) // Track photos being uploaded
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [showTextNotesHelp, setShowTextNotesHelp] = useState(false)
@@ -219,6 +232,7 @@ export default function ProfileImprovementPage() {
           voiceSamples: validVoiceSamples,
           photos: data.photos || [],
           videos: data.videos || [],
+          chatArchives: data.chatArchives || [],
           voiceConfig: data.voiceConfig
         })
 
@@ -227,6 +241,7 @@ export default function ProfileImprovementPage() {
           voiceSamples: validVoiceSamples.length,
           photos: data.photos?.length || 0,
           videos: data.videos?.length || 0,
+          chatArchives: data.chatArchives?.length || 0,
           voiceConfig: data.voiceConfig ? `${data.voiceConfig.type}` : 'none'
         })
       }
@@ -266,6 +281,7 @@ export default function ProfileImprovementPage() {
         voiceSamples: voiceSamplesForStorage,
         photos: profileData.photos,
         videos: profileData.videos,
+        chatArchives: profileData.chatArchives,
         voiceConfig: profileData.voiceConfig
       }
 
@@ -274,6 +290,7 @@ export default function ProfileImprovementPage() {
         voiceSamples: dataToStore.voiceSamples.length,
         photos: dataToStore.photos.length,
         videos: dataToStore.videos.length,
+        chatArchives: dataToStore.chatArchives?.length || 0,
         voiceConfig: dataToStore.voiceConfig ? `${dataToStore.voiceConfig.type}` : 'none'
       })
 
@@ -411,9 +428,19 @@ export default function ProfileImprovementPage() {
         const messages = parseChatFile(text)
 
         if (messages.length > 0) {
+          // Create archive metadata
+          const archiveMetadata: ChatArchive = {
+            id: `archive_${Date.now()}`,
+            name: file.name,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+            messageCount: messages.length
+          }
+
           setProfileData(prev => ({
             ...prev,
-            textNotes: [...prev.textNotes, ...messages]
+            textNotes: [...prev.textNotes, ...messages],
+            chatArchives: [...prev.chatArchives, archiveMetadata]
           }))
           showModal('Import Successful', `Successfully imported ${messages.length} messages from chat export!`, 'success')
         } else {
@@ -488,11 +515,21 @@ export default function ProfileImprovementPage() {
           }
         }
 
-        // Update text notes
-        if (textMessages.length > 0) {
+        // Update text notes and archive metadata
+        if (textMessages.length > 0 || photoCount > 0 || videoCount > 0) {
+          // Create archive metadata
+          const archiveMetadata: ChatArchive = {
+            id: `archive_${Date.now()}`,
+            name: file.name,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+            messageCount: textMessages.length
+          }
+
           setProfileData(prev => ({
             ...prev,
-            textNotes: [...prev.textNotes, ...textMessages]
+            textNotes: [...prev.textNotes, ...textMessages],
+            chatArchives: [...prev.chatArchives, archiveMetadata]
           }))
         }
 
@@ -743,7 +780,27 @@ export default function ProfileImprovementPage() {
       return
     }
 
+    // Reset file input immediately to allow re-selecting
+    e.target.value = ''
+
     for (const file of files) {
+      // Generate a temporary ID for tracking this upload
+      const tempId = `uploading_${Date.now()}_${Math.random()}`
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        console.error('❌ File too large:', file.name, file.size)
+        showModal('File Too Large', `${file.name} is too large. Maximum size is 10MB.`, 'error')
+        continue
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        console.error('❌ Invalid file type:', file.name, file.type)
+        showModal('Invalid File Type', `${file.name} is not a valid image file.`, 'error')
+        continue
+      }
+
       try {
         console.log('📤 Uploading photo:', file.name, file.type, file.size)
         logger.log('Uploading photo to Supabase Storage...', {
@@ -751,6 +808,9 @@ export default function ProfileImprovementPage() {
           size: file.size,
           type: file.type
         })
+
+        // Add to uploading state to show loading indicator
+        setUploadingPhotos(prev => [...prev, tempId])
 
         // Upload to Supabase Storage
         const { publicUrl, path } = await uploadFileToStorage(
@@ -781,12 +841,13 @@ export default function ProfileImprovementPage() {
       } catch (error) {
         console.error('❌ Error uploading photo:', error)
         logger.error('Error uploading photo:', error)
-        showModal('Upload Failed', `Failed to upload ${file.name}. Please try again.`, 'error')
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+        showModal('Upload Failed', `Failed to upload ${file.name}.\n\n${errorMsg}`, 'error')
+      } finally {
+        // Remove from uploading state
+        setUploadingPhotos(prev => prev.filter(id => id !== tempId))
       }
     }
-
-    // Reset file input to allow re-uploading same file
-    e.target.value = ''
   }
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -934,6 +995,13 @@ export default function ProfileImprovementPage() {
     setProfileData(prev => ({
       ...prev,
       videos: prev.videos.filter(v => v.id !== id)
+    }))
+  }
+
+  const handleDeleteChatArchive = (id: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      chatArchives: prev.chatArchives.filter(a => a.id !== id)
     }))
   }
 
@@ -1140,11 +1208,15 @@ export default function ProfileImprovementPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition"
+          type="button"
+          onClick={() => {
+            console.log('🔙 Back to Dashboard clicked')
+            navigate('/dashboard')
+          }}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200 px-3 py-2 -ml-3 rounded-lg mb-6 transition-all duration-150"
         >
           <ArrowLeft className="w-5 h-5" />
-          Back to Dashboard
+          <span>Back to Dashboard</span>
         </button>
 
         {/* Profile Header */}
@@ -1405,9 +1477,49 @@ export default function ProfileImprovementPage() {
                 </p>
               </div>
 
+              {/* Chat Archives */}
+              {profileData.chatArchives.length > 0 && (
+                <div className="space-y-3 mt-4">
+                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-500" />
+                    Uploaded Chat Archives ({profileData.chatArchives.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {profileData.chatArchives.map((archive) => (
+                      <div
+                        key={archive.id}
+                        className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100"
+                      >
+                        <FileText className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-700 truncate">{archive.name}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>{(archive.size / 1024).toFixed(1)} KB</span>
+                            <span>•</span>
+                            <span>{archive.messageCount} messages</span>
+                            <span>•</span>
+                            <span>{new Date(archive.uploadedAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteChatArchive(archive.id)}
+                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition"
+                          title="Remove archive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Notes List */}
               {profileData.textNotes.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 mt-4">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Imported Messages ({profileData.textNotes.length})
+                  </h3>
                   {profileData.textNotes.map((note, index) => (
                     <div
                       key={index}
@@ -1439,32 +1551,22 @@ export default function ProfileImprovementPage() {
               {/* Instructions */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Tip:</strong> If the microphone doesn't work, click the <strong>lock icon</strong> in your browser address bar and ensure microphone access is allowed. Then refresh the page.
+                  <strong>Tip:</strong> Upload existing audio recordings of this person for the best voice cloning results. Longer samples (1+ minutes) work better.
                 </p>
               </div>
 
-              {/* Recording Controls */}
-              <div className="flex gap-2">
-                <button
-                  onClick={isRecording ? stopRecording : startRecording}
-                  disabled={isRecording && recordingTime === 0}
-                  className={`flex-1 px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                    isRecording
-                      ? 'bg-red-500 text-white hover:bg-red-600'
-                      : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
-                  }`}
-                >
-                  <Mic className="w-5 h-5" />
-                  {isRecording ? `Recording... ${formatTime(recordingTime)}` : 'Record Voice'}
-                </button>
-
+              {/* Primary: Upload Voice File */}
+              <div className="space-y-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-3 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition border border-blue-200 flex items-center gap-2"
+                  className="w-full px-4 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition flex items-center justify-center gap-3 shadow-md"
                 >
-                  <Upload className="w-5 h-5" />
-                  Upload File
+                  <Upload className="w-6 h-6" />
+                  Upload Voice Sample
                 </button>
+                <p className="text-xs text-gray-500 text-center">
+                  Supports MP3, WAV, M4A, OGG, and video files (audio will be extracted)
+                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1472,6 +1574,32 @@ export default function ProfileImprovementPage() {
                   onChange={handleVoiceUpload}
                   className="hidden"
                 />
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-sm text-gray-400">or</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              {/* Secondary: Record Voice */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={isRecording && recordingTime === 0}
+                  className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                    isRecording
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                  }`}
+                >
+                  <Mic className="w-4 h-4" />
+                  {isRecording ? `Recording... ${formatTime(recordingTime)}` : 'Record Now'}
+                </button>
+                <p className="text-xs text-gray-500 flex-shrink-0">
+                  Record your own voice
+                </p>
               </div>
 
               {/* Voice Samples List */}
@@ -1687,15 +1815,34 @@ export default function ProfileImprovementPage() {
             <div className="flex items-center gap-3 mb-4">
               <ImageIcon className="w-6 h-6 text-blue-500" />
               <h2 className="text-xl font-bold text-gray-900">Photos</h2>
+              {uploadingPhotos.length > 0 && (
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full animate-pulse">
+                  Uploading {uploadingPhotos.length}...
+                </span>
+              )}
             </div>
 
             <div className="space-y-4">
               <button
                 onClick={() => photoInputRef.current?.click()}
-                className="w-full px-4 py-3 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition border border-blue-200 flex items-center justify-center gap-2"
+                disabled={uploadingPhotos.length > 0}
+                className={`w-full px-4 py-3 rounded-lg font-medium transition border flex items-center justify-center gap-2 ${
+                  uploadingPhotos.length > 0
+                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                }`}
               >
-                <Upload className="w-5 h-5" />
-                Upload Photos
+                {uploadingPhotos.length > 0 ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5" />
+                    Upload Photos
+                  </>
+                )}
               </button>
               <input
                 ref={photoInputRef}
@@ -1706,8 +1853,19 @@ export default function ProfileImprovementPage() {
                 className="hidden"
               />
 
-              {profileData.photos.length > 0 && (
+              {(profileData.photos.length > 0 || uploadingPhotos.length > 0) && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {/* Uploading placeholders */}
+                  {uploadingPhotos.map((tempId) => (
+                    <div key={tempId} className="relative h-32 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-blue-300">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                        <p className="text-xs text-gray-500">Uploading...</p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Existing photos */}
                   {profileData.photos.map((photo) => {
                     console.log('🖼️ Rendering photo:', photo.url)
                     return (
